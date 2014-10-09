@@ -1,0 +1,37 @@
+
+pbin=$(project)/bin
+
+git_version=$(shell git describe --tags --long --always)
+
+
+install : check-env
+	# make directories
+	mkdir -p $(pbin)
+	mkdir -p $(pbin)/lib
+	mkdir -p $(project)/raw_data
+	mkdir -p $(project)/pipeline_output
+	mkdir -p $(project)/quality_control
+	# copy scripts (overwrite)
+	cp -f *.pm *.pl *.sh *.R Makefile Makefile.sanger $(pbin)
+	# copy metainfo and lib (overwrite)
+	cp -f metainfo/* $(pbin)
+	cp -f lib/* $(pbin)/lib/
+	# do not overwrite config file
+	cp -n config $(project)
+	# log git status and version
+	git status >> $(pbin)/git-status-log
+	git log    >> $(pbin)/git-status-log
+	echo "version=$(git_version)" >> $(project)/config
+ifdef database
+	echo "database=$(database)"    >> $(project)/config
+endif
+
+
+check-env:
+ifndef project
+	@echo "specify project using project=<path to your project dir>"
+	exit 1
+endif
+	test -d $(project) || { echo "project dir does not exist"; exit 1; }
+
+

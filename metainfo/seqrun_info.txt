@@ -1,0 +1,17 @@
+# no # in the non-comment lines
+# no spaces before and after '='
+
+# name of the run, nedded to be able to later on identify where reads come from
+runname=
+
+# needs to be YYYY-MM-DD
+rundate=
+
+# who did the sequencing, e.g. Dahlem Corefacility
+processed_by=Dahlem Corefacility
+
+# platelayout id as according to library DB (384 well -> 1)
+platelayout_id=1
+
+# optional information (only one line!!!)
+optional=

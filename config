@@ -1,0 +1,78 @@
+# name of the project, will be used for repository structure and database scheme
+# example: malaria, hiv, ....
+database=
+
+# human or mouse
+species=
+
+# 48_48 or 240_256
+matrix=
+nrows=
+ncols=
+
+# Hs_IGH_G_001 or Ms_IGH_G_001 
+tag_batch=
+tag_landing_zone=300
+
+# none or D01_plateposition
+tag_correction=none
+
+plate_layout=1
+nrows_per_plate=16
+ncols_per_plate=24
+
+# IgBLAST settings
+
+num_V=3;
+num_D=3;
+num_J=3;
+num_align_igblast=10;
+out_format_igblast=7;
+
+# BLAST settings
+# not used ?
+#mismatch_penalty=-1; # default = 3
+#e_value=10;  # default = 10
+#word_size=7; # default = 11
+#gap_open_cost=2; # default = 5
+#gap_extension_cost=1; # default = 2  
+out_format_blast=6;
+num_align_blast=1;
+
+# consensus settings
+n_consensus=5
+
+# motif search
+# The regular expressions in the config file are critical, there is no warning in case they are modified.
+# They need to be compatible to perl regexp, but the config is also used as bash source. Pipes ("|") need to be escaped ("\").
+
+# heavy
+h_CDR3_e=WG.G
+h_altCDR3_e1=.G.G
+h_altCDR3_e2=W..G
+h_altCDR3_e3=WG..
+h_Jend=VS[S\|A]
+
+# kappa
+k_CDR3_e=FG.G
+k_altCDR3_e1=.G.G
+k_altCDR3_e2=F..G
+k_altCDR3_e3=FG..
+k_Jend=T[K\|R][L\|V][E\|D]IK
+
+# lambda
+l_CDR3_e=FG.G
+l_altCDR3_e1=.G.G
+l_altCDR3_e2=F..G
+l_altCDR3_e3=FG..
+l_Jend=[T\|I][V\|I\|A]L
+
+# configuration of the database access
+library=library_test
+
+# configuration of pipeline
+IGDATA=/project/b-cell-seq/igdata
+blast_path=/project/evogen-computing/ncbi-c++/25112013/bin/
+#BLASTDB=/project/b-cell-seq/igdata/database/
+RazerSpath=/project/b-cell-seq/bin
+

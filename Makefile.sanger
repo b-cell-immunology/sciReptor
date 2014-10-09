@@ -1,0 +1,75 @@
+
+
+
+project_root=..
+
+# pipeline output, separated by sequencing run
+dir=$(project_root)/pipeline_output/$(run)
+# raw data, separated by sequencing run
+raw_data=$(project_root)/raw_data/$(run)
+# folder for quality control
+quality_control=$(project_root)/quality_control/$(run)
+
+all: $(dir)/todb_constant.done $(dir)/todb_CDR_FWR.done $(dir)/todb_igblast_align.done $(dir)/mutations.done
+
+# when igblast alignments uploaded, calculate mutations on all output files
+$(dir)/mutations.done: $(dir)/todb_igblast_align.done mutation_matrix.txt
+	./todb_mutations_from_align.pl -dir $(dir)
+	touch $@
+
+# create the mutation matrix
+mutation_matrix.txt:
+	./mutation_matrix.pl
+
+# upload igblast alignments and write aln files to dir
+$(dir)/todb_igblast_align.done: $(dir)/allsanger.igout $(dir)/todb_VDJ.done
+	./todb_igblast_align.pl -io $(dir)/allsanger.igout -dir $(dir)
+	touch $@
+
+# upload CDR_FWR
+$(dir)/todb_CDR_FWR.done: $(dir)/allsanger.igout $(dir)/todb_VDJ.done
+	./todb_CDR_FWR.pl -io $(dir)/allsanger.igout
+	touch $@
+
+# upload VDJ segments
+$(dir)/todb_VDJ.done: $(dir)/allsanger.igout
+	./todb_VDJ.pl -t VDJ_segments -io $< -ut sequences
+	touch $@
+
+# upload constant segments
+$(dir)/todb_constant.done: $(dir)/allsanger.blout
+	./todb_constant.pl -bo $< -t constant_segments
+	touch $@
+
+# perform blast
+$(dir)/allsanger.blout: $(dir)/allsanger.rfasta
+	./perform_blast.sh $< $@.x
+	mv $@.x $@
+
+# perform igblast
+$(dir)/allsanger.igout: $(dir)/allsanger.rfasta
+	./perform_igblast.sh $< $@.x
+	mv $@.x $@
+
+# get fasta from database
+$(dir)/allsanger.rfasta: $(dir)/todb_sequences_sanger.done
+	./fromdb_fasta.pl -s sequences -t VDJ_segments -f $(dir)/1_0.rfasta
+	mv $(dir)/1_0.rfasta $@
+
+# write metainfo to database
+$(dir)/todb_sampleinfo_sanger.done: $(dir)/todb_sequences_sanger.done
+	./todb_sampleinfo_sanger.pl -m $(raw_data)/sanger_metainfo.csv
+
+# write sequences to database
+$(dir)/todb_sequences_sanger.done: init-env
+	./todb_sequences_sanger.pl -f $(fasta_infile) -q $(qual_infile) -m $(raw_data)/sanger_metainfo.csv
+	touch $@
+
+init-env: 
+ifndef run
+	@echo "specify run using project=<matrixname_runname>"
+	exit 1
+endif
+	mkdir -p $(raw_data)
+	mkdir -p $(quality_control)
+	mkdir -p $(dir)
