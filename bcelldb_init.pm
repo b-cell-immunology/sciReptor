@@ -90,7 +90,7 @@ sub stop_log
 		my $dbh = get_dbh();
 		close(LOG);
 		select STDOUT;
-		my $ra=$dbh->do("UPDATE log_table SET output=\"$log_buffer\" where log_id=$log_id");
+		my $ra=$dbh->do("UPDATE log_table SET output='$log_buffer' where log_id=$log_id");
 		$dbh->disconnect;
 	}else{
 		close(LOG);
@@ -110,7 +110,7 @@ sub get_dbh
 	my $msg;
 
 	my $mycnf		=($conf{dbmycnf} ? $conf{dbmycnf}: "$ENV{HOME}/.my.cnf" );
-	my $mysql_group	=($conf{dbmysql_group} ? $conf{dbmysql_group}:  "mysql_bcelldb");
+	my $mysql_group	=($conf{dbmysql_group} ? $conf{dbmysql_group}:  'mysql_igdb');
 
 	if (-f $mycnf){
 		$dsn="DBI:mysql:$database;mysql_read_default_file=$mycnf"
@@ -123,7 +123,7 @@ sub get_dbh
 	}
 	unless ($dbh){
 		#print STDERR "trying ...\n";
-		my $host	=($conf{dbhost} ? $conf{dbhost}:  "bcelldb.molgen.mpg.de");
+		my $host	=($conf{dbhost} ? $conf{dbhost}:  'curry-d130');
 		my $user	=($conf{dbuser} ? $conf{dbuser}:  $ENV{USER});
 		my $password=($conf{dbpass} ? $conf{dbpass}:  "");
 		my $port	=($conf{dbport} ? $conf{dbport}:  3306);

@@ -145,7 +145,7 @@ sub correct_tags {
 	our $new_col_tag_main;
 	our $new_row_tag_main;
 
-	if ($conf{tag_correction} eq "tag_batch"}) {
+	if ($conf{tag_correction} eq "tag_batch") {
 		$new_row_tag_main = correct_tags_240_256_1($row_tag_main, $locus_main);
 		$new_col_tag_main = $col_tag_main;
 	}

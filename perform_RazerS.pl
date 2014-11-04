@@ -94,7 +94,7 @@ my $pf = 1;                # way to present positions in string, 1 => first posi
 
 #chdir $razers_path or die "$!";
 my $system_string = join(' ', 
-	"$conf{RazerSpath}/razers3",  
+	"razers3",  
 	"-a",
 	"-m", $m, 
 	"-s", $s,

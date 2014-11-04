@@ -7,9 +7,7 @@
 # run BLASTN on a set of fasta sequences against the human or mouse constant Ig segment database (NCBI)
 #
 # LOGGED INFORMATION
-# - query file
-# - outfile
-# - species
+# - none (bcelldb_logger removed Oct 2014 to reduce nb of entries in log table)
 #
 # AUTHOR
 # Katharina Imkeller - imkeller@mpiib-berlin.mpg.de
@@ -37,7 +35,7 @@ else
 	echo "species must be human or mouse";
 fi
 
-$blast_path/blastn \
+blastn \
     -db $database \
     -query $query_file \
 	-out $out_file \
@@ -46,7 +44,7 @@ $blast_path/blastn \
     ;
 
 # log the process to db
-perl bcelldb_logger.pl "run BLAST.sh with\n \
-infile: $query_file\n \
-outfile: $out_file\n \
-Organism is $organism.\n";
+#perl bcelldb_logger.pl "run BLAST.sh with\n \
+#infile: $query_file\n \
+#outfile: $out_file\n \
+#Organism is $organism.\n";

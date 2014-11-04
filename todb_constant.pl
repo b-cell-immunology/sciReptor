@@ -89,13 +89,13 @@ my $ins_query = $dbh->prepare($ins_statem);
 
 open(my $blast, "<$blastoutput") or die 'BLAST output $blastoutput not found';
 # logging
-print "$blastoutput was used as blast output file.\n";
+print "\n---------\n$blastoutput was used as blast output file.\n---------\n";
 
 
 ### 3. Parse information
 
 # logging
-print "following seq_id got an entry in $targettable table\n";
+print "\n---------\nfollowing seq_id got an entry in $targettable table\n---------\n";
 # count inserted seq_ids
 my $count_ins = 0;
 # count total number of seq_id in blastoutput
@@ -143,11 +143,11 @@ while (<$blast>){
 		#print "seq_id inserted";
 	}
 	else {
-		print "seq_id $seq_id constant was not inserted because it already is in the table!\n" unless $ins_bool;
+		print "\nseq_id $seq_id constant was not inserted because it already is in the table!\n" unless $ins_bool;
 	}
 }
 
-print "total $count_total sequences processed\n";
-print "$count_ins inserted\n";
+print "\n---------\ntotal $count_total sequences processed\n";
+print "$count_ins inserted\n---------\n\n";
 
 close($blast);

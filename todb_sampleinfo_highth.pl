@@ -8,15 +8,16 @@ todb_sampleinfo_highth
 
 =head1 SYNOPSIS
 
-todb_sampleinfo_highth <-p> plateinput <-m> metainfo [-h]
+todb_sampleinfo_highth <-p> plateinput <-m> metainfo <-pb> plate_barcodes [-h]
 
 =head1 DESCRIPTION
 
 Complete the donor, sample, sort and event tables for high-throughput experiments. To each scenario of donor, sample, etc... you assign a numerical identifier and can then specify the corresponding wells in the matrix.
 
 Two necessary input files:
-	-m	Metainfo.csv file, tab delimited (use template 48_48_ or 240_256_metainfo.xls->worksheet2 and store as csv with tabs). The first column is the numerical identifier that will be used in the plate layout. When parsing, rows with regexp "metainfomration" and "identifier_col" are ignored.
-	-p	plate_layout.csv file (use template 48_48_ or 240_256_metainfo.xls->worksheet1 and store as csv with tabs). When parsing, first row and column are ignored, they contain row and col numbers. The other 48*48 or 240*256 cells contain the identifier that already appeared in metainfo.csv to specify which well contains what.
+	-m	<experiment_id>_metainfo.csv file, tab delimited (use template 48_48_ or 240_256_metainfo.xls->worksheet2 and store as csv with tabs). The first column is the numerical identifier that will be used in the plate layout. When parsing, rows with regexp "metainfomration" and "identifier_col" are ignored.
+	-p	<experiment_id>_plate.csv file (use template 48_48_ or 240_256_metainfo.xls->worksheet1 and store as csv with tabs). When parsing, first row and column are ignored, they contain row and col numbers. The other 48*48 or 240*256 cells contain the identifier that already appeared in metainfo.csv to specify which well contains what.
+	-pb	<experiment_id>_platebarcodes.csv file with the plate barcode corresponding to each plate number.
 
 1. Get information on matrix (48_48 e.g.) and plate layout (384 well plates, nrows, ncols e.g.)
 
@@ -24,7 +25,7 @@ Two necessary input files:
 
 3. Open the input files.
 
-4. From the plate_layout.csv for each identifier, remember in a hash of arrays the corresponding wells (identified by row-col position). This allows you afterwards to find all wells and corresponding sequences with a certain sample, sort, donor... scenario. The event_id can then easily be updated in the sequences table. Only sequences that do not yet have an assigned event_id are updated (prevents problems when several matrices are stored in one database).
+4. From the plate_layout.csv for each identifier, remember in a hash of arrays the corresponding wells (identified by row-col position). This allows you afterwards to find all wells and corresponding sequences with a certain sample, sort, donor... scenario. The event_id can then easily be updated in the sequences table. Only sequences that do not yet have an assigned event_id are updated (prevents problems when several matrices are stored in one database). From platebarcodes store platenr-barcode relations into hash.
 
 5. Go through the metainfo.csv and try to consecutively insert donor, sample, sort. On the event level, go through all corresponding wells, insert into event table and then update all correspnding sequences without event_id.
 
@@ -55,10 +56,12 @@ use correct_tagconfusion;
 my $help=0;
 my $plate_input="";
 my $metainfo_input="";
+my $plate_barcodes="";
 
 &GetOptions("h!" => \$help,
 	"p=s" => \$plate_input,
 	"m=s" => \$metainfo_input,
+	"pb=s" => \$plate_barcodes,
 );
 
 $help=1 unless $plate_input;
@@ -97,7 +100,7 @@ my $ins_sort = $dbh->prepare("INSERT INTO $conf{database}.sort
 
 # event
 my $ins_event = $dbh->prepare("INSERT INTO $conf{database}.event 
-  (well, plate, row, col, sort_id, plate_layout_id) VALUES (?,?,?,?,?,?) 
+  (well, plate, row, col, sort_id, plate_layout_id, plate_barcode) VALUES (?,?,?,?,?,?,?) 
   ON DUPLICATE KEY UPDATE event_id=LAST_INSERT_ID(event_id)");
 
 # select sequence id where event_id will be inserted
@@ -113,6 +116,7 @@ my $update_event = $dbh->prepare("UPDATE $conf{database}.sequences SET event_id=
 
 open(my $plate, $plate_input) or die "could not open $plate_input";
 open(my $meta, $metainfo_input) or die "could not open $metainfo_input";
+open(my $barcodes, $plate_barcodes) or die "could not open $plate_barcodes";
 
 
 ### 4. Extract id for each well from PLATE
@@ -141,6 +145,20 @@ while (<$plate>) {
 close($plate);
 
 
+### Extract plate barcode
+my %plate_barcode_hash;
+
+my $count;
+while (<$barcodes>) {
+    $count_line++;
+    chomp $_;
+    unless ($count_line <= 1) {
+	(my $plate_nr, my $plate_barcode) = split("\t", $_);
+	$plate_barcode_hash{$plate_nr} = $plate_barcode;
+    }
+}
+
+
 ### 5. Extract sample information for each id from META
 
 my $count_line = 0;
@@ -158,19 +176,20 @@ while (<$meta>) {
 		$ins_donor->execute($donor_identifier, $background_treatment, $project, $strain, $add_donor_info, $conf{species});
 		my $donor_id = $dbh->{mysql_insertid};
 		# log donor
-		print "Donor: $ins_donor->{Statement}\n";
+		print "-----------\n----------\n\n";
+		print "Donor: $ins_donor->{Statement}\nWith values $donor_identifier, $background_treatment, $project, $strain, $add_donor_info, $conf{species}.\n\n";
 
 		# insert sample
 		$ins_sample->execute($tissue, $sampling_date, $add_sample_info, $donor_id);
 		my $sample_id = $dbh->{mysql_insertid};
 		# log sample
-		print "Sample: $ins_sample->{Statement}\n";
+		print "Sample: $ins_sample->{Statement}\nWith values $tissue, $sampling_date, $add_sample_info, $donor_id.\n\n";
 
 		# insert sort
 		$ins_sort->execute($antigen, $population, $sorting_date, $add_sort_info, $sample_id);
 		my $sort_id = $dbh->{mysql_insertid};
 		# log sort
-		print "Sort: $ins_sort->{Statement}\n";
+		print "Sort: $ins_sort->{Statement}\nWith values: $antigen, $population, $sorting_date, $add_sort_info, $sample_id.\n\n";
 		
 		# count events and sequences for that donor-sample-sort combi
 		my $count_events = 0;
@@ -194,7 +213,7 @@ while (<$meta>) {
 			my $new_col = $col -1;
 			my $well = ($new_col %= $n_col_per_plate) + (($new_row %= $n_row_per_plate)) * $n_col_per_plate +1;
  			
-			$ins_event->execute($well, $plate, $row, $col, $sort_id, $conf{plate_layout});
+			$ins_event->execute($well, $plate, $row, $col, $sort_id, $conf{plate_layout}, $plate_barcode_hash{$plate});
 			my $event_id = $dbh->{mysql_insertid};
 			$count_events++;
 
@@ -205,10 +224,10 @@ while (<$meta>) {
 				my ($corr_col_tag, $corr_row_tag) = correct_tagconfusion::correct_tags($col_tag, $row_tag, $locus);
 				
 				# log the tag correction
-				if (($corr_col_tag != $col_tag) || ($corr_row_tag != $row_tag)) {
+				if (!($corr_col_tag eq $col_tag) && !($corr_row_tag eq $row_tag)) {
 					print "Tag correction took place for the event $event_id on $locus locus:\n";
 					print "Old tags $col_tag, $row_tag\nNew tags $corr_col_tag, $corr_row_tag\n";
-			
+				}
 				# get the corresponding sequence id
 				$sel_seq_id->execute($corr_row_tag, $corr_col_tag, $locus);
 				while (my @row = $sel_seq_id->fetchrow_array) {

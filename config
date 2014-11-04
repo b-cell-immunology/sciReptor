@@ -2,6 +2,11 @@
 # example: malaria, hiv, ....
 database=
 
+# database authentification
+db_group_auth=mysql_igdb
+db_host=curry-d130
+db_port=3306
+
 # human or mouse
 species=
 
@@ -10,7 +15,9 @@ matrix=
 nrows=
 ncols=
 
-# Hs_IGH_G_001 or Ms_IGH_G_001 
+# tag batch (species_isotypes_number):
+# human Hs_G_001 or Hs_AEGM_001
+# mouse Mm_AGM_001 or Mm_ADGM_001
 tag_batch=
 tag_landing_zone=300
 
@@ -68,11 +75,9 @@ l_altCDR3_e3=FG..
 l_Jend=[T\|I][V\|I\|A]L
 
 # configuration of the database access
-library=library_test
+library=igdb_library
 
 # configuration of pipeline
-IGDATA=/project/b-cell-seq/igdata
-blast_path=/project/evogen-computing/ncbi-c++/25112013/bin/
+IGDATA=/home/imkeller/dkfzprojekte/analysis_pipeline/igdata/
 #BLASTDB=/project/b-cell-seq/igdata/database/
-RazerSpath=/project/b-cell-seq/bin
 

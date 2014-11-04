@@ -103,16 +103,14 @@ PHASE1:
 #####
 
 $(dir)/qualitycheck.done: $(dir)/allsigout.done
-	R --slave --args pipeline_QA.R $(run)
+	Rscript pipeline_QA.R $(run)
 
 
 # upload metainformation
 # DONT FORGET to put the plate and metainfo to the raw_data directory
 $(dir)/metainfotodb.done: $(dir)/mutations.done
 	./todb_sampleinfo_highth.pl -p $(raw_data)/*_plate.csv -m $(raw_data)/*_metainfo.csv
-	#
-	# FLOW MODULE
-	#
+	Rscript todb_flow.R
 	touch $@
 
 # when igblast alignments uploaded, calculate mutations on all output files
@@ -188,22 +186,37 @@ $(dir)/allaligntodb.done: $(dir)/consensusfasta.done   $(caln_files)
 
 # get all the consensus fasta from the database
 # only here cfasta and caln variables can be updated
-$(dir)/consensusfasta.done: $(dir)/todb_consensus_tags.done
+$(dir)/consensusfasta.done: $(dir)/todb_consensus_tags_H.done $(dir)/todb_consensus_tags_K.done $(dir)/todb_consensus_tags_L.done
 	./fromdb_consensus_fasta.pl -p $(dir)
 	touch $@
 	$(eval cfasta_files:=$(wildcard $(dir)/cons_*_seqs.cfasta))
 	$(eval caln_files:=$(patsubst %.cfasta, %.caln, $(cfasta_files)))
 
-# distribute consensus ids for this matrix
-$(dir)/todb_consensus_tags.done: $(dir)/allrigout.done $(dir)/allrblout.done $(dir)/allrazers.done
+# distribute consensus ids for this matrix HEAVY
+$(dir)/todb_consensus_tags_H.done: $(dir)/allrigout.done $(dir)/allrblout.done $(dir)/allrazers.done
 ifndef experiment_id
 	@echo "specify the name of the experiment/matrix using experiment_id=<experiment_id>"
 	exit 1
 endif	
-	./todb_consensus_tags.pl -m $(experiment_id) -l H &
-	./todb_consensus_tags.pl -m $(experiment_id) -l K &
-	./todb_consensus_tags.pl -m $(experiment_id) -l L &
-	wait
+	./todb_consensus_tags.pl -m $(experiment_id) -l H
+	touch $@
+	
+# distribute consensus ids for this matrix KAPPA
+$(dir)/todb_consensus_tags_K.done: $(dir)/allrigout.done $(dir)/allrblout.done $(dir)/allrazers.done
+ifndef experiment_id
+	@echo "specify the name of the experiment/matrix using experiment_id=<experiment_id>"
+	exit 1
+endif	
+	./todb_consensus_tags.pl -m $(experiment_id) -l K
+	touch $@
+	
+# distribute consensus ids for this matrix LAMBDA
+$(dir)/todb_consensus_tags_L.done: $(dir)/allrigout.done $(dir)/allrblout.done $(dir)/allrazers.done
+ifndef experiment_id
+	@echo "specify the name of the experiment/matrix using experiment_id=<experiment_id>"
+	exit 1
+endif	
+	./todb_consensus_tags.pl -m $(experiment_id) -l L
 	touch $@
 
 # upload reads VDJ

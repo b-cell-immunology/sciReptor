@@ -8,8 +8,7 @@
 # Special outpout options including alignments
 #
 # LOGGED INFORMATION
-# - query file
-# - outfile
+# - none (bcelldb_logger removed Oct 2014, in order to reduce number of entries in log table)
 #
 # AUTHOR
 # Katharina Imkeller - imkeller@mpiib-berlin.mpg.de
@@ -43,7 +42,7 @@ else
 echo "species must be human or mouse";
 fi
 
-$blast_path/igblastn \
+igblastn \
 	-germline_db_V $IGDATA/$database_V \
 	-germline_db_D $IGDATA/$database_D \
 	-germline_db_J $IGDATA/$database_J \
@@ -57,5 +56,5 @@ $blast_path/igblastn \
 	> $out_file;
 
 # log the process to db
-perl bcelldb_logger.pl "run IgBLAST.sh with\ninfile: $query_file\noutfile: $out_file":
+# perl bcelldb_logger.pl "run IgBLAST.sh with\ninfile: $query_file\noutfile: $out_file":
 

@@ -206,13 +206,13 @@ while(<IN_IgBLAST>) {
 	    	$type = $type[0];
 		}
 		# write the positions and sequences for regions until CDR2 into output
-		my @simple_regions = ("FWR1", "CDR1", "FWR2", "CDR2");
+		my @simple_regions = ("FR1", "CDR1", "FR2", "CDR2");
 		if (grep { $_ eq $type } @simple_regions) {
 			unless ($start eq "N/A") { 
 				get_regions($type, $start, $end, $query_id);
 			}
 		}
-		if ($type eq "FWR3") {
+		if ($type eq "FR3") {
 			# store the positions of FWR3
 			# since looking for CDR3 is more difficult, it will be done separately
 			# and using the information about FWR3
@@ -315,7 +315,7 @@ while(<IN_IgBLAST>) {
 		    	}	
 			# write regions for FWR3 into output 
 			# this is done here, due to optional reseting, after CDR3 was localized
-			get_regions("FWR3", $FWR3_start, $FWR3_end, $query_id); 
+			get_regions("FR3", $FWR3_start, $FWR3_end, $query_id); 
 			if (($rest_J_protstart ne "N/A") && ($rest_J_protend ne "N/A")) {
 				my $rest_J_start = $critregion_start + 3*$rest_J_protstart;
 				my $rest_J_end = $critregion_start + 3*($rest_J_protend+1) -1;

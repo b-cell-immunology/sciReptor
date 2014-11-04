@@ -123,6 +123,6 @@ while (<$razer>) {
 	}
 }
 
-print "A total number of $count_tags tags were inserted.\n";
+print "\n\nA total number of $count_tags tags were inserted.\n\n";
 
 close($razer);

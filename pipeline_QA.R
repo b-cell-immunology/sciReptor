@@ -7,7 +7,9 @@
 # Requires:		lib_pipeline_common, lib_pipeline_QA, lib_authentication_common, RMySQL
 # Notes:		Running QA on a DB with 500 kReads requires: 1 CPU core for 1 hour, 1 GB / 250 MB
 #				network traffic (Rx/Tx), 250 MB / 3.5 GB RAM (ave. / peak), around 80 min. wall clock time
-#
+# Modifications		KI Oct 2014: PDFs are now stored in the quality output directory.
+# Bugs: Program crashes when there are not enough sequences from one locus...
+
 library(RMySQL)
 source("lib/lib_pipeline_common.R")
 source("lib/lib_pipeline_QA.R")
@@ -15,13 +17,17 @@ source("lib/lib_authentication_common.R")
 
 # Read the config file of the which contains database name and several filter criteria
 #
-list.config.global <- func.read.config("./config")
+list.config.global <- func.read.config("../config")
 
 # The following settings are only required for testing purposes. Within the pipeline they will be handed over from 'make'
 #
 # config.name.run <- "W4_run4"
 args <- commandArgs(TRUE)
 config.name.run <- args[1]
+
+# Set up the output directory
+#
+output_dir = paste( "../quality_control/", config.name.run, "/", sep="")
 
 # The following lists define loci and directions. The list.config.loci determines which loci will be included in the DB queries. Both lists
 # determine which loci or directions will be included in the print-outs.
@@ -101,7 +107,7 @@ names(list.tag.stats) <- sapply(list.tag.stats, function(x){x$locus})
 # of the *tag* and therefore correspond to proximal and distal position.
 #
 #
-pdf(file="QA_out_tag_stats.pdf", paper="A4r", width=11.7, height=8.27)
+pdf(file= paste(output_dir,"QA_out_tag_stats.pdf",sep=""), paper="A4r", width=11.7, height=8.27)
 par(mfrow = c(3, length(list.tag.stats)),oma=c(1, 0, 1.25, 0))
 
 lapply(
@@ -216,7 +222,7 @@ dev.off()
 
 # === QA Step 2 - Tag position aggregation ===
 #
-pdf(file="QA_out_tag_positions.pdf", paper="A4r", width=11.7, height=8.27)
+pdf(file= paste(output_dir,"QA_out_tag_positions.pdf",sep=""), paper="A4r", width=11.7, height=8.27)
 par(mfcol=c(2, 3),oma=c(1, 0, 1.25, 0))
 
 config.tag.aggregation.range <- 700
@@ -330,7 +336,7 @@ dev.off()
 
 # === QA Step 3 - Reads per well ===
 #
-pdf(file="QA_out_reads_per_well.pdf", paper="A4r", width=11.7, height=8.27)
+pdf(file=paste(output_dir,"QA_out_reads_per_well.pdf",sep=""), paper="A4r", width=11.7, height=8.27)
 par(mfcol=c(2, 3), oma=c(1, 0, 1.25, 0))
 
 lapply(

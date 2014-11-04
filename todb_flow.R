@@ -14,11 +14,11 @@ source("lib/lib_flowcyt_sorting_indexed.R")
 
 # Load the run config file
 #
-list.config.global <- func.read.config("config")
+list.config.global <- func.read.config("../config")
 
 # Set the direction which contain the FCS files
 #
-config.dir.fcs <- "Flow Data - W4 Spl1 Sort"
+config.dir.fcs <- "../raw_data/runname"
 
 # Load all flow cytometry data
 #
