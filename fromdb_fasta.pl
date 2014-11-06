@@ -97,7 +97,7 @@ if ($mod>1){
 }
 
 # log the select statement
-print "select statement: $statement";
+print "\n\nselect statement: $statement\n\n";
 
 
 # get sequences
@@ -116,7 +116,7 @@ while ( my @row = $sth->fetchrow_array ) {
 }
 close($fasta);
 
-print "got $seq_count sequences\n";
+print "\n\nGot $seq_count sequences\n\n";
 
 
 

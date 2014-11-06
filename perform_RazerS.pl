@@ -70,7 +70,7 @@ my $get_tag = $dbh->prepare($get_tag_statement);
 $get_tag->execute;
 
 # log select
-print "Tag select statement: $get_tag_statement\n";
+print "\nTag select statement: $get_tag_statement\n\n";
 
 my $tag_count = 0;
 open(my $tags,">$seqfasta.tags.fa") or die "failed opening tag file for writing";
@@ -80,7 +80,7 @@ while ( my @row = $get_tag->fetchrow_array ) {
 	print $tags ">$tag_id\n$sequence\n";
 }
 
-print "got $tag_count tags for the matrix $conf{matrix}\n";
+print "\n\ngot $tag_count tags for the matrix $conf{matrix}\n\n";
 
 
 # perform razers
@@ -105,8 +105,8 @@ my $system_string = join(' ',
 	"$seqfasta.tags.fa"
 );
 
-print "*** razers start *** \n";
+print "\n\n*** razers start *** \n";
 system $system_string;
-print "*** done *** \n";
+print "\n\n*** done *** \n";
 
 

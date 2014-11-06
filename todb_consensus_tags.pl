@@ -35,11 +35,9 @@ write the identifying tags to consensus stats and the corresponding to the reads
 
 =head1 LOGGED INFORMATION
 
-- select statement for reads without consensus
 - number of reads that will be processed
 - reads where F/R tag mapping and orientation do not match
 - reads without a correct orientation
-- select statement for well ids
 - count of well_ids that were processed
 - count of sequence ids that resulted (it can be 2 sequences in one well, corresponding to 1. and 2. consensus)
 
@@ -103,8 +101,6 @@ my $sel_reads1_sth = $dbh->prepare("SELECT reads.seq_id, orient, locus FROM $con
 	AND orient IS NOT NULL
 	AND count_tags.cnt >=2;");
 $sel_reads1_sth->execute;
-# log select statement
-print "Select reads statement: $sel_reads1_sth\n";
 
 # store all ids in a list
 # store orientation in a hash
@@ -118,12 +114,10 @@ while ( my @seq_id = $sel_reads1_sth->fetchrow_array ) {
 	$count_seqs++;
 }
 # log how many sequences were found
-print "$count_seqs reads will be processed.\n";
+print "\n\n$count_seqs reads will be processed.\n\n";
 
-# status update to STDOUT
-print STDOUT "Selected $count_seqs reads for assignment of well id....\n";
-
-
+# print to STDOUT
+print STDOUT "\nLocus $locus. Selected $count_seqs reads for being processed.....\n";
 
 
 ### 2. Prepare database query: for a certain seq_id get the right identifying tags from the database
@@ -186,7 +180,7 @@ foreach my $seq_id (@seq_id_list) {
 			# if forward is R and reverse is C, read orientation should be reverse
 			if ($seqid_orient_hash{$seq_id} eq "F") {
 				# log: tags and orientation do not match
-				print "read $seq_id has a Ftag $Ftag_name and a Rtag $Rtag_name, but an orientation $seqid_orient_hash{$seq_id}\n";
+				print "\nread $seq_id has a Ftag $Ftag_name and a Rtag $Rtag_name, but an orientation $seqid_orient_hash{$seq_id}\n";
 			}
 			elsif ($seqid_orient_hash{$seq_id} eq "R") {
 				# tags and orientation fit
@@ -194,20 +188,20 @@ foreach my $seq_id (@seq_id_list) {
 				$rowtag = substr $Ftag_name, 1, (length $Ftag_name) -1;
 				$coltag = substr $Rtag_name, 1, (length $Rtag_name) -1;
 			}
-			else {print "read $seq_id has no correct orientation\n";}	# log: no assigned orientation
+			else {print "\nread $seq_id has no correct orientation\n";}	# log: no assigned orientation
 		}
 		elsif (($Ftag_name =~ m/C/) && ($Rtag_name =~ m/R/)) {
 			# if forw is C and rev is R, read orientation should be forward
 			if ($seqid_orient_hash{$seq_id} eq "R") {
 				# log: tags and orientation do not match
-				print "read $seq_id has a Ftag $Ftag_name and a Rtag $Rtag_name, but an orientation $seqid_orient_hash{$seq_id}\n";
+				print "\nread $seq_id has a Ftag $Ftag_name and a Rtag $Rtag_name, but an orientation $seqid_orient_hash{$seq_id}\n";
 	
 			}
 			elsif ($seqid_orient_hash{$seq_id} eq "F") {
 				$rowtag = substr $Rtag_name, 1, (length $Ftag_name) -1;
 				$coltag = substr $Ftag_name, 1, (length $Rtag_name) -1;
 			}
-			else {print "read $seq_id has no correct orientation\n"}	# log: no assigned orientation
+			else {print "\nread $seq_id has no correct orientation\n"}	# log: no assigned orientation
 		}
 		
 		unless ($rowtag eq "" || $coltag eq "") {
@@ -226,9 +220,6 @@ print STDOUT "Assigned well ids....\n";
 
 my $sel_wellid = $dbh->prepare("SELECT well_id FROM $conf{database}.reads WHERE consensus_id IS NULL AND well_id is NOT NULL GROUP BY well_id;");
 $sel_wellid->execute;
-
-# log selection of well id
-print "Select well id: $sel_wellid\n";
 
 ### 6. Prepare database: for a certain well_id, select the most common and 2nd most common V-J combination
 
@@ -282,7 +273,6 @@ while (my @wellid_row = $sel_wellid->fetchrow_array) {
 	
 	$count_wellids++;
 	my $well_id = $wellid_row[0];
-	print STDOUT "wellid @wellid_row and $well_id\n";
 	
 	# convert well_id back to locus, row and col
 	my %num_locus_hash = ('1' => 'H', '2' => 'K', '3' => 'L');
@@ -290,7 +280,7 @@ while (my @wellid_row = $sel_wellid->fetchrow_array) {
 	my $coltag = "C".(substr $well_id,0,3);
 	my $rowtag = "R".(substr $well_id,3,3);
 
-	print STDOUT "here $locus $coltag $rowtag\n";
+	print "Processing $locus $coltag $rowtag\n";
 
 	# get most occuring V_J combinations
 	$sel_VJs->execute($well_id);
@@ -300,12 +290,12 @@ while (my @wellid_row = $sel_wellid->fetchrow_array) {
 		# insert new consensus
 		$ins_consensus->execute($locus, $coltag, $rowtag, $Vsegm_id, $Jsegm_id, $experiment_id);
 		my $consensus_id = $dbh->{mysql_insertid};
-
+		$count_seq_ids++;
 		#select the corresponding seq_ids
 		$sel_seqids->execute($well_id, $Vsegm_id, $Jsegm_id);
 		
 		my $n_seq = $sel_seqids->rows;
-		print STDOUT "$consensus_id nseq $n_seq\n";
+		print "Consensus $consensus_id has nseq $n_seq\n";
 		# update the number of sequences in the consensus
 		$update_nseqs->execute($n_seq, $consensus_id);
 
@@ -313,7 +303,6 @@ while (my @wellid_row = $sel_wellid->fetchrow_array) {
 			my $sel_seqid = $seqid_row[0]; 
 			# update the reads table with consensus_id
 			$update_consensus->execute($consensus_id, $sel_seqid);
-			print STDOUT "$consensus_id for Vsegm $Vsegm_id, Jsegm $Jsegm_id in wells $well_id\n";
 		}
 	}
 }

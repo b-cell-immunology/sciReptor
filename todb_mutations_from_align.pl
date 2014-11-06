@@ -162,6 +162,9 @@ foreach my $input (@files) {
 	$input =~ m/(\d+)\.igblast\.aln/;
 	my $seq_id = $1;
 	
+	# print seq_id into log table
+	print "\n\n--------\nSequence id: $seq_id.\n\n";
+	
 	
 	###
 	### 4. For every codon look for mutations and stopcodons

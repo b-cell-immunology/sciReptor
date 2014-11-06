@@ -140,8 +140,8 @@ for (my $i=0; $i < $cons_length; $i++) {
 		my $max_value_perc = int(100*$max_value/$aln->num_sequences);
 		$consensus_quality .= "$max_value_perc ";
 		if ($max_value < 0.5*$aln->num_sequences) {
-			print "Consensus_id $cons_id: sequence ambiguity at position $i. $sorted_keys[0] has only $max_value in ".$aln->num_sequences."\n";
-			print "keys: @keys\nvalues: @values\n";
+			print "\nConsensus_id $cons_id: sequence ambiguity at position $i. $sorted_keys[0] has only $max_value in ".$aln->num_sequences."\n";
+			print "keys: @keys\nvalues: @values\n\n";
 		}
 	}
 }
@@ -159,7 +159,7 @@ while (my @cons_details = $sel_details->fetchrow_array) {
 
 $sel_all->execute($row, $col, $experiment_id, $locus);
 # log statement
-print "Select all consensi statement: $sel_all->{Statement}\n";
+print "\nSelect all consensi statement: $sel_all->{Statement}\n With values ($row, $col, $experiment_id, $locus).\n\n";
 
 while (my @possible_consensus = $sel_all->fetchrow_array) {
 	my ($poss_cons_id, $poss_nseq) = @possible_consensus;
@@ -171,10 +171,10 @@ while (my @possible_consensus = $sel_all->fetchrow_array) {
 
 $ins_seq->execute($consensus,length $consensus, $consensus_quality, $cons_id, $consensus_rank, $consensus,length $consensus, $consensus_quality, $cons_id, $consensus_rank);
 # log insert statement
-print "Insert sequence statement: $ins_seq->{Statement}\n";
+print "\nInsert sequence statement: $ins_seq->{Statement}\n With values ($consensus,length $consensus, $consensus_quality, $cons_id, $consensus_rank, $consensus,length $consensus, $consensus_quality, $cons_id, $consensus_rank).\n\n";
 
 my $seq_id = $dbh->{mysql_insertid};
 $update_consensus->execute($seq_id, $cons_id);
 # log update statement
-print "Update seq_id statement: $update_consensus->{Statement}\n";
+print "\nUpdate seq_id statement: $update_consensus->{Statement}\n With values ($seq_id, $cons_id).\n\n";
 

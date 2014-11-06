@@ -411,7 +411,7 @@ dev.off()
 
 # === QA Step 4 - Raw readlength and quality values ===
 #
-pdf(file="QA_out_along_bp.pdf", paper="A4r", width=11.7, height=8.27)
+pdf(file=paste(output_dir,"QA_out_along_bp.pdf",sep=""), paper="A4r", width=11.7, height=8.27)
 par(mfrow=c(2, 3),oma=c(1, 0, 1.25, 0), mar=c(5, 4, 4, 4) + 0.1)
 
 lapply(

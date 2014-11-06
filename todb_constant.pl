@@ -26,7 +26,6 @@ The identifiers in the BLAST output need to be the same as the seq_id in reads o
 =head1 LOGGED INFORMATION
 
 - blast output file (source)
-- seq_ids that got an entry
 - total count of sequences
 - nb of inserted constant segments
 
@@ -95,7 +94,7 @@ print "\n---------\n$blastoutput was used as blast output file.\n---------\n";
 ### 3. Parse information
 
 # logging
-print "\n---------\nfollowing seq_id got an entry in $targettable table\n---------\n";
+#print "\n---------\nfollowing seq_id got an entry in $targettable table\n---------\n";
 # count inserted seq_ids
 my $count_ins = 0;
 # count total number of seq_id in blastoutput
@@ -140,7 +139,7 @@ while (<$blast>){
 	# log sequences that were not inserted
 	#print "$seq_id bool $ins_bool\n";
 	if ($ins_bool eq 1) {
-		#print "seq_id inserted";
+		#print "$seq_id\n";
 	}
 	else {
 		print "\nseq_id $seq_id constant was not inserted because it already is in the table!\n" unless $ins_bool;

@@ -25,7 +25,6 @@ For each consensus, that does not yet have a sequence assigned:
 3. Logging counts
 
 =head1 LOGGED INFORMATION
-- select consensus_id statement
 - total number of consensus_ids that where initially selected
 - number of consensus_ids that had more then threshold number of reads
 
@@ -71,7 +70,7 @@ sub revcomp {
 
 ### 0. Logging and database init
 #cannot write to log file because to much text for db log
-#select LOG;
+select LOG;
 my $dbh = get_dbh($conf{database});
 
 ### 1. Prepare select statements
@@ -81,8 +80,6 @@ my $sel_consensus_sth = $dbh->prepare("SELECT consensus_id \
   WHERE sequences_seq_id IS NULL");
 $sel_consensus_sth->execute;
 
-# log select
-print "select statement: $sel_consensus_sth\n";
 
 # Prepare statement: get all the reads for this consensus_id
 my $sel_reads_sth = $dbh->prepare("SELECT seq_id, orient, seq \
