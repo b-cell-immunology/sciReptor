@@ -12,7 +12,7 @@ install : check-env
 	mkdir -p $(project)/pipeline_output
 	mkdir -p $(project)/quality_control
 	# copy scripts (overwrite)
-	cp -f *.pm *.pl *.sh *.R Makefile Makefile.sanger $(pbin)
+	cp -f *.pm *.pl *.sh *.R Makefile Makefile.sanger *.py $(pbin)
 	# copy metainfo and lib (overwrite)
 	cp -f metainfo/* $(pbin)
 	cp -f lib/* $(pbin)/lib/
