@@ -443,8 +443,8 @@ lapply(
 			border=NA
 		)
 
-		ylim.quality.max <- (trunc(max(df.length.quality$quality)/10)+1)*10
-		ylim.quality.scaling <- max(df.length.quality$length) / ylim.quality.max
+		ylim.quality.max <- (trunc(max(df.length.quality$quality, na.rm = TRUE)/10)+1)*10
+		ylim.quality.scaling <- max(df.length.quality$length, na.rm = TRUE) / ylim.quality.max
 
 		lines(df.length.quality$quality * ylim.quality.scaling)
 		axis(

@@ -117,7 +117,7 @@ while ( my @seq_id = $sel_reads1_sth->fetchrow_array ) {
 print "\n\n$count_seqs reads will be processed.\n\n";
 
 # print to STDOUT
-print STDOUT "\nLocus $locus. Selected $count_seqs reads for being processed.....\n";
+print STDOUT "\nLocus $fixed_locus. Selected $count_seqs reads for being processed.....\n";
 
 
 ### 2. Prepare database query: for a certain seq_id get the right identifying tags from the database
