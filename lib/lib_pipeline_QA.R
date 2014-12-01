@@ -204,18 +204,19 @@ func.tag.position.aggregate <- function(connection.mysql, name.database, name.ru
 			"INNER JOIN ", name.database, ".sequencing_run ",
 			"ON (reads.sequencing_run_id = sequencing_run.sequencing_run_id ",
 				"AND sequencing_run.name = '", name.run, "') ",
+			"WHERE locus IS NOT NULL ",
 			"GROUP BY posstart, locus",
 			sep=""
 		)
 	)
 
-	matrix.tag.positons.binned <- sapply(
+	matrix.tag.positions.binned <- sapply(
 		X=sort(unique(df.tag.positions.binned[,"locus"])),
 		FUN=func.matrix.aggregate,
 		positions=df.tag.positions.binned
 	)
 
-	return(matrix.tag.positons.binned)
+	return(matrix.tag.positions.binned)
 
 }
 

@@ -61,7 +61,7 @@ for i, locus in zip(np.arange(0,len(loci),1), loci):
 	query_statement = "SELECT n_seq, row_tag, col_tag \
 			FROM %s.consensus_stats \
 			JOIN %s.sequences ON consensus_stats.sequences_seq_id = sequences.seq_id \
-			WHERE consensus_stats.locus = '%s' AND n_seq > %d AND sequences.consensus_rank = 1 \
+			WHERE consensus_stats.locus = '%s' AND n_seq >= %d AND sequences.consensus_rank = 1 \
 			AND experiment_id='%s';" % (project, project, locus, int(conf['n_consensus']), experiment_id)
 
 	cursor.execute(query_statement)
