@@ -110,7 +110,7 @@ $(dir)/qualitycheck.done: $(dir)/allsigout.done
 # DONT FORGET to put the plate and metainfo to the raw_data directory
 $(dir)/metainfotodb.done: $(dir)/mutations.done
 	./todb_sampleinfo_highth.pl -p $(raw_data)/*_plate.csv -m $(raw_data)/*_metainfo.csv -pb $(raw_data)/*_platebarcode.csv
-	Rscript todb_flow.R
+	Rscript todb_flow.R $(run)
 	./create_spatials.py $(experiment_id) $(run)
 	touch $@
 

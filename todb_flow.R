@@ -18,7 +18,10 @@ list.config.global <- func.read.config("../config")
 
 # Set the direction which contain the FCS files
 #
-config.dir.fcs <- "../raw_data/runname"
+# get runname from STDIN
+args <- commandArgs(TRUE)
+config.name.run <- args[1]
+config.dir.fcs <- paste( "../raw_data/", config.name.run, sep="")
 
 # Load all flow cytometry data
 #
