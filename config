@@ -78,6 +78,6 @@ l_Jend=[T\|I][V\|I\|A]L
 library=igdb_library
 
 # configuration of pipeline
-IGDATA=/home/imkeller/dkfzprojekte/analysis_pipeline/igdata/
+IGDATA=../../igdata/
 #BLASTDB=/project/b-cell-seq/igdata/database/
 
