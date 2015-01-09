@@ -107,7 +107,7 @@ while (<$igout>) {
 			$germline_start = $first_hit[9];
 			$query_seq = $first_hit[12];
 			$germline_seq = $first_hit[13];
-			print "$query_id\n";
+			#print "$query_id\n";
 
 			# insert into database
 			$ins_aln->execute($query_id, $query_start, $germline_start, $query_seq, $germline_seq);

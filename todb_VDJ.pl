@@ -176,14 +176,14 @@ while(<$in_igblast>) {
                 $count_D++;
 				my $VDJ_id = 0;
 				$sel_libr_sth->execute($VDJ_name);
-				my ($VDJ_id, $VDJ_locus) = $sel_libr_sth->fetchrow_array;
+				($VDJ_id, my $VDJ_locus) = $sel_libr_sth->fetchrow_array;
 				$ins_VDJ_sth->execute($query_id, $VDJ_type, $VDJ_locus, $count_D, $VDJ_name, $evalue, $score, $VDJ_id); 
             }
             elsif ($VDJ_type eq "J" && $count_J <= 1){
                 $count_J++;	
 				my $VDJ_id = 0;
 				$sel_libr_sth->execute($VDJ_name);
-				my ($VDJ_id, $VDJ_locus) = $sel_libr_sth->fetchrow_array;
+				($VDJ_id, my $VDJ_locus) = $sel_libr_sth->fetchrow_array;
 				$ins_VDJ_sth->execute($query_id, $VDJ_type, $VDJ_locus, $count_J, $VDJ_name, $evalue, $score, $VDJ_id); 
         	}
     	}

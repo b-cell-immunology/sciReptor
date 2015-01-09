@@ -33,9 +33,9 @@ organism="human";
 aux_file="optional_file/human_gl.aux";
 elif [ "$species" = "mouse" ]
 then
-database_V="database/Ig-V_segments_position_corrected.fasta";
-database_D="database/Ig-D_segments_position_corrected.fasta";
-database_J="database/Ig-J_segments_position_corrected.fasta";
+database_V="database/mouse_V-segment_NCBIm38";
+database_D="database/mouse_D-segment_NCBIm38";
+database_J="database/mouse_J-segment_NCBIm38";
 organism="mouse";
 aux_file="optional_file/mouse_gl.aux";
 else

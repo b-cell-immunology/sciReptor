@@ -66,8 +66,8 @@ my $ins_sample = $dbh->prepare("INSERT INTO $conf{database}.sample
   VALUES (?,?,?,?) ON DUPLICATE KEY UPDATE sample_id=LAST_INSERT_ID(sample_id)");
 
 my $ins_sort = $dbh->prepare("INSERT INTO $conf{database}.sort 
-  (antigen, sorting_date, add_sort_info, sample_id) 
-  VALUES (?,?,?,?) ON DUPLICATE KEY UPDATE sort_id=LAST_INSERT_ID(sort_id)");
+  (antigen, population, sorting_date, add_sort_info, sample_id) 
+  VALUES (?,?,?,?,?) ON DUPLICATE KEY UPDATE sort_id=LAST_INSERT_ID(sort_id)");
 
 my $ins_event = $dbh->prepare("INSERT INTO $conf{database}.event 
   (well, plate, sort_id) VALUES (?,?,?) ON DUPLICATE KEY UPDATE event_id=LAST_INSERT_ID(event_id)");
@@ -84,7 +84,7 @@ while (<$meta>) {
 	$count_line++;
 	chomp $_;
 	if ($count_line > 2) {
-		my ($id, $name, $well, $plate, $seq_run_date, $add_event_info, $antigen, $sorting_date, $add_sort_info, $tissue, $sampling_date, $add_sample_info, $donor_id, $background_treatment, $project, $strain, $add_donor_info, $species) = split("\t", $_);
+		my ($id, $name, $well, $plate, $seq_run_date, $add_event_info, $antigen, $population, $sorting_date, $add_sort_info, $tissue, $sampling_date, $add_sample_info, $donor_identifier, $background_treatment, $project, $strain, $add_donor_info, $species) = split("\t", $_);
 
 		# check if species id correct
 		unless ($species eq $conf{species}) {
@@ -92,7 +92,7 @@ while (<$meta>) {
 		}
 
 		# insert donor
-		$ins_donor->execute($donor_id, $background_treatment, $project, $strain, $add_donor_info, $species);
+		$ins_donor->execute($donor_identifier, $background_treatment, $project, $strain, $add_donor_info, $species);
 		my $donor_id = $dbh->{mysql_insertid};
 		# log donor
 		print "Donor: $ins_donor->{Statement}\n";
@@ -103,7 +103,7 @@ while (<$meta>) {
 		print "Sample: $ins_sample->{Statement}\n";
 
 		# insert sort
-		$ins_sort->execute($antigen, $sorting_date, $add_sort_info, $donor_id);
+		$ins_sort->execute($antigen, $population, $sorting_date, $add_sort_info, $sample_id);
 		my $sort_id = $dbh->{mysql_insertid};
 		print "Sort: $ins_sort->{Statement}\n";
 

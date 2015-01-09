@@ -52,16 +52,24 @@ quality_control=$(project_root)/quality_control/$(run)
 ##### Defining files that will be generated during processing
 #####
 
-# split the data into N fatsa, igout, blout,.... files
-N = 68
-n = $(filter-out $(N),$(shell seq 0 1 $(N)))
+# split the data into <num_segments> fasta, igout, blout,.... files
+num_segments = 96
+n = $(filter-out $(num_segments),$(shell seq 0 1 $(num_segments)))
+
+# File definitions for sffinfo extraction of sequence and qual data
+# Note that some of these might be overlapping with other definitions
+#
+sff_files   = $(wildcard $(raw_data)/*.sff)
+fasta_files = $(patsubst %.sff, %.fasta, $(sff_files))
+qual_files  = $(patsubst %.sff, %.fasta.qual, $(sff_files))
 
 # raw data INFILES
-raw_files = $(wildcard $(raw_data)/*.fasta)
-todb_reads_files = $(patsubst %.fasta,%.todb_reads_done,$(raw_files))
+#raw_files = $(wildcard $(raw_data)/*.fasta)
+todb_reads_files = $(addprefix $(dir)/, $(notdir $(patsubst %.fasta,%.todb_reads_done,$(wildcard $(raw_data)/*.fasta))))
+
 
 # files for READS
-rfasta_files =  $(foreach k,$(n),$(dir)/$(N)_$(k).rfasta)
+rfasta_files =  $(foreach k,$(n),$(dir)/$(num_segments)_$(k).rfasta)
 rigout_files = $(patsubst %.rfasta,%.rigout,$(rfasta_files))
 rblout_files = $(patsubst %.rfasta,%.rblout,$(rfasta_files))
 razers_files = $(patsubst %.rfasta,%.rrzout,$(rfasta_files))
@@ -71,7 +79,7 @@ cfasta_files = $(wildcard $(dir)/cons_*_seqs.cfasta)
 caln_files = $(patsubst %.cfasta, %.caln, $(cfasta_files))
 
 # files for SEQUENCES
-sfasta_files =  $(foreach k,$(n),$(dir)/$(N)_$(k).sfasta)
+sfasta_files =  $(foreach k,$(n),$(dir)/$(num_segments)_$(k).sfasta)
 sigout_files = $(patsubst %.sfasta,%.sigout,$(sfasta_files))
 sblout_files = $(patsubst %.sfasta,%.sblout,$(sfasta_files))
 
@@ -84,11 +92,11 @@ sblout_files = $(patsubst %.sfasta,%.sblout,$(sfasta_files))
 ##### PHASE1 ends with redefining sfasta and related files.
 #####
 
-all: PHASE2
+all: $(dir)/PHASE2
 
 # PHASE 2 starts, after the fasta files for alignment have been generated
 # otherwise, make does not know which files belong to *.cfasta and *.caln
-PHASE2: PHASE1
+$(dir)/PHASE2: PHASE1
 	$(MAKE) $(dir)/consensusfasta.done $(dir)/metainfotodb.done $(dir)/cdrfwrtodb.done $(dir)/allsigout.done $(dir)/allsblout.done $(dir)/igblastalignments.done $(dir)/mutations.done $(dir)/qualitycheck.done
 	touch $@
 	
@@ -169,7 +177,7 @@ $(dir)/allsblout.done: $(sblout_files) $(sfasta_files)
 
 
 #####
-##### PHASE2 targets
+##### PHASE1 targets
 #####
 
 # tell that all alignments are in the database
@@ -189,9 +197,9 @@ $(dir)/allaligntodb.done: $(dir)/consensusfasta.done   $(caln_files)
 # only here cfasta and caln variables can be updated
 $(dir)/consensusfasta.done: $(dir)/todb_consensus_tags_H.done $(dir)/todb_consensus_tags_K.done $(dir)/todb_consensus_tags_L.done
 	./fromdb_consensus_fasta.pl -p $(dir)
-	touch $@
 	$(eval cfasta_files:=$(wildcard $(dir)/cons_*_seqs.cfasta))
 	$(eval caln_files:=$(patsubst %.cfasta, %.caln, $(cfasta_files)))
+	touch $@
 
 # distribute consensus ids for this matrix HEAVY
 $(dir)/todb_consensus_tags_H.done: $(dir)/allrigout.done $(dir)/allrblout.done $(dir)/allrazers.done
@@ -253,9 +261,9 @@ $(dir)/allrazers.done: $(dir)/alltodb.done $(razers_files)
 	mv $@.x $@
 
 $(dir)/alltodb.done: $(todb_reads_files)
-	cat $? >$@
+	touch $@
 
-%.todb_reads_done: %.fasta
+$(dir)/$(notdir %.todb_reads_done ): $(raw_data)/$(notdir %.fasta)
 	./todb_reads.pl -f $< -q $<.qual -ri $<.info -m $(experiment_id)
 	touch $@
 
@@ -265,7 +273,7 @@ $(dir)/alltodb.done: $(todb_reads_files)
 ##### targets to initialize or clean up
 #####
 
-init-env:
+init-env: 
 ifndef run
 	@echo "specify run using run=<runname>, i.e. subdirectory where raw data is stored"
 	exit 1
@@ -275,10 +283,27 @@ endif
 	mkdir -p $(dir)
 
 	   
-clean-data: init-env
-	rm -f $(dir)/*
-	rm -f $(raw_data)/*_done
+clean: 
+ifndef run
+	@echo "specify run using run=<runname>, i.e. subdirectory where raw data is stored"
+	exit 1
+endif
+	find $(raw_data) -name *todb_reads_done | xargs -r rm
+	find $(dir) -type f | xargs -r rm
+	find $(quality_control) -type f | xargs -r rm
 
+convert-sff: convert-sff-seq convert-sff-qual
+
+convert-sff-seq: $(fasta_files)
+
+convert-sff-qual: $(qual_files)
+
+%.fasta: %.sff
+	sffinfo -seq -notrim $< > $@
+	cp ./seqrun_info.txt $@.info
+
+%.fasta.qual: %.sff
+	sffinfo -qual -notrim $< > $@
 
 
 

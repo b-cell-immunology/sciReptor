@@ -1,5 +1,5 @@
 # Name:			pipeline_QA.R
-# Verson:		0.1.1 (2014-06-03)
+# Verson:		0.1.4 (2014-12-31)
 # Authors:		Christian Busse, Katharina Imkeller
 # Maintainer:	Christian Busse (busse@mpiib-berlin.mpg.de)
 # Licence:		AGPL3
@@ -7,8 +7,9 @@
 # Requires:		lib_pipeline_common, lib_pipeline_QA, lib_authentication_common, RMySQL
 # Notes:		Running QA on a DB with 500 kReads requires: 1 CPU core for 1 hour, 1 GB / 250 MB
 #				network traffic (Rx/Tx), 250 MB / 3.5 GB RAM (ave. / peak), around 80 min. wall clock time
-# Modifications		KI Oct 2014: PDFs are now stored in the quality output directory.
-# Bugs: Program crashes when there are not enough sequences from one locus...
+# Modifications:	KI Oct 2014: PDFs are now stored in the quality output directory.
+#			CB Dec 2014: Handles lacking sequence data for individual loci gracefully, less noisy output
+#
 
 library(RMySQL)
 source("lib/lib_pipeline_common.R")
@@ -54,7 +55,11 @@ list.config.colors.locus <- list(
 	L = "#3F3FFF"
 )
 
-# Get a DB connection, using the preferred authentication mechanism (defined in $HOME/.my.authencation, defaults to usage of .my.cnf)
+# Currently the debug level is still set here, will move to config at some point.
+#
+config.debug.level <- 3
+
+# Get a DB connection, using the preferred authentication mechanism (defined in $HOME/.my.authentication, defaults to usage of .my.cnf)
 #
 connection.mysql <- switch(config.authentication.method,
 	cnf_file = dbConnect(
@@ -80,6 +85,8 @@ connection.mysql <- switch(config.authentication.method,
 # is not covered by the loci given in list.config.loci. Currently locus identification is derived from the identified V segment
 # and as long as the default E-value threshold of 10 is used it is very unlikely that locus identification should fail.
 #
+if (config.debug.level >= 3) cat("[QA      ][INFO    ] Entering step 1\n");
+
 df.locus.counts <- func.locus.count(
 	connection.mysql = connection.mysql,
 	name.database = list.config.global$database,
@@ -88,7 +95,7 @@ df.locus.counts <- func.locus.count(
 
 
 # Do the actual database request. This can take a long time (hours), for further information see comment in library_QA.R.
-# Parallization has not yet been tested, however one potential problem is the simultaious use of the same DB connection.
+# Parallization has not yet been tested, however one potential problem is the simultanious use of the same DB connection.
 #
 list.tag.stats <- lapply(
 	X = names(list.config.loci),
@@ -97,7 +104,7 @@ list.tag.stats <- lapply(
 	name.database = list.config.global$database,
 	name.run = config.name.run,
 	tag.landing.zone = list.config.global$tag_landing_zone,
-	debug.level = 3
+	debug.level = config.debug.level
 )
 names(list.tag.stats) <- sapply(list.tag.stats, function(x){x$locus})
 
@@ -138,46 +145,69 @@ lapply(
 				if(! is.null(list.tag.stats[[locus.current]][[direction.current]])) {
 					mutation.strings.all <- names(list.tag.stats[[locus.current]][[direction.current]])
 					mutation.strings.mutated <- sort(mutation.strings.all[mutation.strings.all != "no_mutation"])
+					if (length(mutation.strings.mutated) > 0) {
+						table.mutations <- aggregate(
+							list.tag.stats[[locus.current]][[direction.current]][mutation.strings.mutated],
+							FUN=sum,
+							by=list(nchar(mutation.strings.mutated))
+						)
+						colnames(table.mutations) <- c("nmutations","nreads")
 
-					table.mutations <- aggregate(
-						list.tag.stats[[locus.current]][[direction.current]][mutation.strings.mutated],
-						FUN=sum,
-						by=list(nchar(mutation.strings.mutated))
-					)
-					colnames(table.mutations) <- c("nmutations","nreads")
+						nreads.mapped.total <- sum(list.tag.stats[[locus.current]][[direction.current]])
+						nreads.mapped.ok <- nreads.mapped.total - sum(table.mutations[,"nreads"])
 
-					nreads.mapped.total <- sum(list.tag.stats[[locus.current]][[direction.current]])
-					nreads.mapped.ok <- nreads.mapped.total - sum(table.mutations[,"nreads"])
+						matrix.barplot <- matrix(
+							c(
+								nreads.mapped.ok / nreads.mapped.total,
+								table.mutations[,"nreads"] / nreads.mapped.total,
+								rep(0, length(mutation.strings.mutated)),
+								rep(0, length(table.mutations[,"nreads"])+1),
+								list.tag.stats[[locus.current]][[direction.current]][mutation.strings.mutated] / sum(table.mutations[,"nreads"])
+							), 
+							ncol = 2
+						)
 
-					matrix.barplot <- matrix(
-						c(
-							nreads.mapped.ok / nreads.mapped.total,
-							table.mutations[,"nreads"] / nreads.mapped.total,
-							rep(0, length(mutation.strings.mutated)),
-							rep(0, length(table.mutations[,"nreads"])+1),
-							list.tag.stats[[locus.current]][[direction.current]][mutation.strings.mutated] / sum(table.mutations[,"nreads"])
-						), 
-						ncol = 2
-					)
-
-					barplot(
-						matrix.barplot,
-						width=c(1,1),
-						space=c(0.1,0.2),
-						xlim=c(0,3),
-						main=paste(
-							list.config.loci[[locus.current]], " ",
-							list.config.directions[[direction.current]], "\n",
-							"(n=", prettyNum(nreads.mapped.total, big.mark=",", big.interval=3L), "  -  ",
-							round(nreads.mapped.total*100/nreads.all.total,1),"% of total)",
-							sep=""),
-						names.arg = c("all", "mutated"),
-						legend.text = c("0", table.mutations[,"nmutations"], toupper(mutation.strings.mutated)),
-						args.legend=list(x="topright"),
-						ylab="[%]",
-						axes=FALSE
-					)
-					axis(2, seq(from=0, to=1, by=0.2), seq(from=0, to=100, by=20))
+						barplot(
+							matrix.barplot,
+							width=c(1,1),
+							space=c(0.1,0.2),
+							xlim=c(0,3),
+							main=paste(
+								list.config.loci[[locus.current]], " ",
+								list.config.directions[[direction.current]], "\n",
+								"(n=", prettyNum(nreads.mapped.total, big.mark=",", big.interval=3L), "  -  ",
+								round(nreads.mapped.total*100/nreads.all.total,1),"% of total)",
+								sep=""),
+							names.arg = c("all", "mutated"),
+							legend.text = c("0", table.mutations[,"nmutations"], toupper(mutation.strings.mutated)),
+							args.legend=list(x="topright"),
+							ylab="[%]",
+							axes=FALSE
+						)
+						axis(2, seq(from=0, to=1, by=0.2), seq(from=0, to=100, by=20))
+					} else {
+						nreads.mapped.total <- sum(list.tag.stats[[locus.current]][[direction.current]])
+						matrix.barplot <- matrix(c(1,0), ncol = 2)
+						barplot(
+							matrix.barplot,
+							width=c(1,1),
+							space=c(0.1,0.2),
+							xlim=c(0,3),
+							main=paste(
+								list.config.loci[[locus.current]], " ",
+								list.config.directions[[direction.current]], "\n",
+								"(n=", prettyNum(nreads.mapped.total, big.mark=",", big.interval=3L), "  -  ",
+								round(nreads.mapped.total*100/nreads.all.total,1),"% of total)",
+								sep=""),
+							names.arg = c("all", "mutated"),
+							legend.text = c("0", "-"),
+							args.legend=list(x="topright"),
+							ylab="[%]",
+							axes=FALSE
+						)
+						axis(2, seq(from=0, to=1, by=0.2), seq(from=0, to=100, by=20))
+						text(1.8, 0.5, labels=c("No data\navailable"), adj=c(0.5,0.5))
+					}
 				} else {
 					plot.new()
 					box()
@@ -185,9 +215,9 @@ lapply(
 					text(0.5, 0.5, labels=c("No data available"), adj=c(0.5,0.5))
 				}
 			}
-		)
+		) -> temp.null
 	}
-)
+) -> temp.null
 
 mtext(
 	paste(
@@ -217,11 +247,16 @@ mtext(
 	side=1
 )
 
-dev.off()
+dev.off() -> temp.null
+
+if (config.debug.level >= 3) cat("[QA      ][INFO    ] Leaving step 1\n");
 
 
 # === QA Step 2 - Tag position aggregation ===
 #
+
+if (config.debug.level >= 3) cat("[QA      ][INFO    ] Entering step 2\n");
+
 pdf(file= paste(output_dir,"QA_out_tag_positions.pdf",sep=""), paper="A4r", width=11.7, height=8.27)
 par(mfcol=c(2, 3),oma=c(1, 0, 1.25, 0))
 
@@ -290,6 +325,7 @@ func.plot.tag.aggregate <- function(direction, aggregate.array, text.main){
 	axis(2, seq(from=0, to=ylim.max.log), 10^seq(from=0, to=ylim.max.log))
 	abline(v=list.config.global$tag_landing_zone/config.tag.bin.size)
 	box()
+
 }
 
 list.tag.positions <- lapply(
@@ -310,16 +346,19 @@ if(length(list.tag.positions) > 1) {
 		dimnames=list(NULL,colnames(list.tag.positions[[1]]))
 	)
 	for(temp.direction in names(list.tag.positions)){
-		temp.array <- temp.array + list.tag.positions[[temp.direction]]
+		temp.col.exist <- colnames(temp.array)[colnames(temp.array) %in% colnames(list.tag.positions[[temp.direction]])]
+		temp.array[,temp.col.exist] <- temp.array[,temp.col.exist] + list.tag.positions[[temp.direction]]
 	}
 	func.plot.tag.aggregate(direction="A", aggregate.array=list(A=temp.array), text.main="all")
 	rm(temp.array, temp.direction)
 }
+
+
 lapply(
 	names(list.tag.positions),
 	FUN=func.plot.tag.aggregate,
 	aggregate.array=list.tag.positions
-)
+) -> temp.null
 
 mtext(
 	paste(
@@ -331,18 +370,22 @@ mtext(
 	font=2
 )
 
-dev.off()
+dev.off() -> temp.null
+
+if (config.debug.level >= 3) cat("[QA      ][INFO    ] Leaving step 2\n");
 
 
 # === QA Step 3 - Reads per well ===
 #
+
+if (config.debug.level >= 3) cat("[QA      ][INFO    ] Entering step 3\n");
+
 pdf(file=paste(output_dir,"QA_out_reads_per_well.pdf",sep=""), paper="A4r", width=11.7, height=8.27)
 par(mfcol=c(2, 3), oma=c(1, 0, 1.25, 0))
 
 lapply(
 	names(list.config.loci),
 	FUN=function(locus.current) {
-
 		reads.well.all <- func.reads.well(
 			connection.mysql = connection.mysql,
 			name.database = list.config.global$database,
@@ -365,36 +408,57 @@ lapply(
 			locus = locus.current,
 			consensus.rank = 2
 		)
+
+		if (length(reads.well.all) > 0) {
 		
-		config.histbreaks <- seq(
-			from = -1,
-			to = max(reads.well.all) + list.config.global$n_consensus - 1,
-			by = list.config.global$n_consensus
-		)
+			config.histbreaks <- seq(
+				from = -1,
+				to = max(reads.well.all) + list.config.global$n_consensus - 1,
+				by = list.config.global$n_consensus
+			)
 
-		hist.reads.well.all <- hist(reads.well.all, breaks=config.histbreaks, main=list.config.loci[[locus.current]], xlab="reads/wells", ylab="wells")
+			hist.reads.well.all <- hist(reads.well.all, breaks=config.histbreaks, main=list.config.loci[[locus.current]], xlab="reads/wells", ylab="wells")
 
-		hist.reads.well.consensus.1 <- hist(reads.well.consensus.1, breaks=config.histbreaks, plot=FALSE)
-		lines(hist.reads.well.consensus.1$mids[-1], hist.reads.well.consensus.1$counts[-1], col='red')
+			if (length(reads.well.consensus.1) > 0) {
+				hist.reads.well.consensus.1 <- hist(reads.well.consensus.1, breaks=config.histbreaks, plot=FALSE)
+				lines(hist.reads.well.consensus.1$mids[-1], hist.reads.well.consensus.1$counts[-1], col='red')
+			} else {
+				abline(h=0,col='red')
+			}
 
-		hist.reads.well.consensus.2 <- hist(reads.well.consensus.2, breaks=config.histbreaks, plot=FALSE)
-		lines(hist.reads.well.consensus.2$mids[-1], hist.reads.well.consensus.2$counts[-1], col='blue')
+			if (length(reads.well.consensus.2) > 0) {
+				hist.reads.well.consensus.2 <- hist(reads.well.consensus.2, breaks=config.histbreaks, plot=FALSE)
+				lines(hist.reads.well.consensus.2$mids[-1], hist.reads.well.consensus.2$counts[-1], col='blue')
+			} else {
+				abline(h=0,col='blue')
+			}
 
-		legend("topright", c("1st consensus", "2nd consensus"), fill=c('red', 'blue'))
+			legend("topright", c("1st consensus", "2nd consensus"), fill=c('red', 'blue'))
 		
-		plot(
-			hist.reads.well.all$mids - hist.reads.well.all$mids[1],
-			cumsum(hist.reads.well.all$counts)/sum(hist.reads.well.all$counts),
-			type = 'l',
-			yaxs='i',
-			xaxs='i',
-			ylim=c(0,1),
-			ylab="cumulated wells",
-			xlab="reads/well"
-		)
-		abline(v=list.config.global$n_consensus)
+			plot(
+				hist.reads.well.all$mids - hist.reads.well.all$mids[1],
+				cumsum(hist.reads.well.all$counts)/sum(hist.reads.well.all$counts),
+				type = 'l',
+				yaxs='i',
+				xaxs='i',
+				ylim=c(0,1),
+				ylab="cumulated wells",
+				xlab="reads/well"
+			)
+			abline(v=list.config.global$n_consensus)
+		} else {
+			plot.new()
+			box()
+                        title(main=list.config.loci[[locus.current]])
+                        text(0.5, 0.5, labels=c("No data available"), adj=c(0.5,0.5))
+
+			plot.new()
+			box()
+                        title(main=list.config.loci[[locus.current]])
+                        text(0.5, 0.5, labels=c("No data available"), adj=c(0.5,0.5))
+		}
 	}
-)
+) -> temp.null
 
 mtext(
 	paste(
@@ -406,11 +470,16 @@ mtext(
 	font=2
 )
 
-dev.off()
+dev.off() -> temp.null
+
+if (config.debug.level >= 3) cat("[QA      ][INFO    ] Leaving step 3\n");
 
 
 # === QA Step 4 - Raw readlength and quality values ===
 #
+
+if (config.debug.level >= 3) cat("[QA      ][INFO    ] Entering step 4\n");
+
 pdf(file=paste(output_dir,"QA_out_along_bp.pdf",sep=""), paper="A4r", width=11.7, height=8.27)
 par(mfrow=c(2, 3),oma=c(1, 0, 1.25, 0), mar=c(5, 4, 4, 4) + 0.1)
 
@@ -424,38 +493,45 @@ lapply(
 			locus = locus.current
 		)
 
-		plot(
-			c(1:length(df.length.quality$length)),
-			df.length.quality$length,
-			type='l',
-			xlab="position [bp]",
-			ylab="reads",
-			main=paste(
-				list.config.loci[[locus.current]], " ",
-				"(n=", prettyNum(sum(df.length.quality$length), big.mark=",", big.interval=3L), ")",
-				sep=""
+		if (length(df.length.quality) > 0) {
+			plot(
+				c(1:length(df.length.quality$length)),
+				df.length.quality$length,
+				type='l',
+				xlab="position [bp]",
+				ylab="reads",
+				main=paste(
+					list.config.loci[[locus.current]], " ",
+					"(n=", prettyNum(sum(df.length.quality$length), big.mark=",", big.interval=3L), ")",
+					sep=""
+				)
 			)
-		)
-		polygon(
-			c(1:length(df.length.quality$length)),
-			df.length.quality$length,
-			col=unlist(list.config.colors.locus[locus.current]),
-			border=NA
-		)
+			polygon(
+				c(1:length(df.length.quality$length)),
+				df.length.quality$length,
+				col=unlist(list.config.colors.locus[locus.current]),
+				border=NA
+			)
 
-		ylim.quality.max <- (trunc(max(df.length.quality$quality, na.rm = TRUE)/10)+1)*10
-		ylim.quality.scaling <- max(df.length.quality$length, na.rm = TRUE) / ylim.quality.max
+			ylim.quality.max <- (trunc(max(df.length.quality$quality, na.rm = TRUE)/10)+1)*10
+			ylim.quality.scaling <- max(df.length.quality$length, na.rm = TRUE) / ylim.quality.max
 
-		lines(df.length.quality$quality * ylim.quality.scaling)
-		axis(
-			4,
-			seq(from=0 ,to=ylim.quality.max, length.out=5) * ylim.quality.scaling,
-			seq(from=0 ,to=ylim.quality.max, length.out=5)
-		)
-		mtext("mean quality", side=4, line=2, cex=0.67)
-		box()
+			lines(df.length.quality$quality * ylim.quality.scaling)
+			axis(
+				4,
+				seq(from=0 ,to=ylim.quality.max, length.out=5) * ylim.quality.scaling,
+				seq(from=0 ,to=ylim.quality.max, length.out=5)
+			)
+			mtext("mean quality", side=4, line=2, cex=0.67)
+			box()
+		} else {
+			plot.new()
+			box()
+                        title(main=paste(list.config.loci[[locus.current]]," (n=0)",sep=""))
+                        text(0.5, 0.5, labels=c("No data available"), adj=c(0.5,0.5))
+		}
 	}
-)
+) -> temp.null
 
 mtext(
 	paste(
@@ -467,7 +543,12 @@ mtext(
 	font=2
 )
 
-dev.off()
+dev.off() -> temp.null
 
+if (config.debug.level >= 3) cat("[QA      ][INFO    ] Leaving step 4\n");
+
+
+# Clean-up and exit
+#
 
 dbDisconnect(connection.mysql)

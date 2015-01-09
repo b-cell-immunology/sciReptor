@@ -30,7 +30,7 @@ then
 	database="database/hIGH-K-L_constant_exon1.fasta";
 elif [ "$species" = "mouse" ] 
 then
-	database="database/mIgXc.fa";
+	database="database/mouse_C-segment_NCBIm38";
 else
 	echo "species must be human or mouse";
 fi

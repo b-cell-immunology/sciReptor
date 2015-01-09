@@ -10,7 +10,7 @@ raw_data=$(project_root)/raw_data/$(run)
 # folder for quality control
 quality_control=$(project_root)/quality_control/$(run)
 
-all: $(dir)/todb_constant.done $(dir)/todb_CDR_FWR.done $(dir)/todb_igblast_align.done $(dir)/mutations.done
+all: $(dir)/todb_constant.done $(dir)/todb_CDR_FWR.done $(dir)/todb_igblast_align.done $(dir)/mutations.done $(dir)/todb_sampleinfo_sanger.done
 
 # when igblast alignments uploaded, calculate mutations on all output files
 $(dir)/mutations.done: $(dir)/todb_igblast_align.done mutation_matrix.txt

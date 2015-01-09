@@ -66,8 +66,8 @@ my $inputdir="";
 $help=1 unless $inputdir;
 exec('perldoc',$0) if $help;
 
-# logging
-select LOG;
+## logging currently turned of due database time-outs
+# select LOG;
 
 ###
 ### 1. Get all files from input directory

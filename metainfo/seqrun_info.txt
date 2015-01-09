@@ -1,17 +1,17 @@
 # no # in the non-comment lines
-# no spaces before and after '='
+# no spaces directly before and after '='
 
-# name of the run, needed to be able to later on identify where reads come from
+# name of the run, required to identify the origin of the reads later on
 runname=
 
 # needs to be YYYY-MM-DD
 rundate=
 
 # who did the sequencing, e.g. Dahlem Corefacility
-processed_by=Dahlem Corefacility
+processed_by=
 
 # platelayout id as according to library DB (384 well -> 1)
 platelayout_id=1
 
-# optional information, which is actually not optional, but needed to differentiate between different sequencing runs
+# additional information (only one line!!!) CAVE: This information is NOT optional, it will be used to distinguish datasets with otherwise identical parameters!
 optional=

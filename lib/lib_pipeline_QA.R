@@ -1,5 +1,5 @@
 # Name:			lib_pipeline_QA.R
-# Verson:		0.1 (2014-04-26)
+# Version:		0.1.4 (2014-12-31)
 # Authors:		Christian Busse, Katharina Imkeller
 # Maintainer:	Christian Busse (busse@mpiib-berlin.mpg.de)
 # Licence:		AGPL3
@@ -58,78 +58,81 @@ func.tag.stats <- function(connection.mysql, name.database, name.run, tag.landin
 			sep=""
 		)
 	)
-	
-	for (current.seq_id in selected.seq_ids[,"seq_id"]) {
 
-		if(debug.level >= 3) cat(paste("[QA]       INFO:   " ,"Locus: ", locus," seq_id: ", current.seq_id, "\n", sep=""));
+	if (length(selected.seq_ids) > 0) {
+		for (current.seq_id in selected.seq_ids[,"seq_id"]) {
 
-		temp.forward <- dbGetQuery(connection.mysql,
-			paste(
-				"SELECT insertion, deletion, replacement ",
-				"FROM ", name.database, ".reads_tags ",
-				"WHERE seq_id = ", current.seq_id, " ",
-				"AND direction = 'F' ",
-				"ORDER BY percid DESC, start ASC ",
-				"LIMIT 1;",
-				sep=""
-			)
-		)
+			if(debug.level >= 3) cat(paste("[QA      ][INFO    ] " ,"Locus: ", locus," seq_id: ", current.seq_id, "\n", sep=""));
 
-		temp.reverse <- dbGetQuery(connection.mysql,
-			paste(
-				"SELECT insertion, deletion, replacement ",
-				"FROM ", name.database, ".reads_tags ",
-				"WHERE seq_id = ", current.seq_id, " ",
-				"AND direction = 'R' ",
-				"AND start >= ", tag.landing.zone ," ",
-				"ORDER BY percid DESC, start DESC ",
-				"LIMIT 1;",
-				sep=""
-			)
-		)
-
-		temp.status <- dim(temp.forward)[1] * 2 + dim(temp.reverse)[1]
-
-		list.output[["status"]][temp.status + 1] <- list.output[["status"]][temp.status + 1] + 1
-
-		func.mutation.string <- function(mutation.count) {
-			temp.string <- ""
-			for (mutation.class in c("deletion", "insertion", "replacement")) {
-				temp.string <- paste(
-					temp.string,
-					paste(
-						rep(
-							substr(mutation.class,1,1),
-							mutation.count[mutation.class]
-						),
-						collapse=""
-					),			
+			temp.forward <- dbGetQuery(connection.mysql,
+				paste(
+					"SELECT insertion, deletion, replacement ",
+					"FROM ", name.database, ".reads_tags ",
+					"WHERE seq_id = ", current.seq_id, " ",
+					"AND direction = 'F' ",
+					"ORDER BY percid DESC, start ASC ",
+					"LIMIT 1;",
 					sep=""
 				)
+			)
+
+			temp.reverse <- dbGetQuery(connection.mysql,
+				paste(
+					"SELECT insertion, deletion, replacement ",
+					"FROM ", name.database, ".reads_tags ",
+					"WHERE seq_id = ", current.seq_id, " ",
+					"AND direction = 'R' ",
+					"AND start >= ", tag.landing.zone ," ",
+					"ORDER BY percid DESC, start DESC ",
+					"LIMIT 1;",
+					sep=""
+				)
+			)
+
+			temp.status <- dim(temp.forward)[1] * 2 + dim(temp.reverse)[1]
+
+			list.output[["status"]][temp.status + 1] <- list.output[["status"]][temp.status + 1] + 1
+
+			func.mutation.string <- function(mutation.count) {
+				temp.string <- ""
+				for (mutation.class in c("deletion", "insertion", "replacement")) {
+					temp.string <- paste(
+						temp.string,
+						paste(
+							rep(
+								substr(mutation.class,1,1),
+								mutation.count[mutation.class]
+							),
+							collapse=""
+						),			
+						sep=""
+					)
+				}
+
+				if (nchar(temp.string) == 0) {temp.string <- "no_mutation"}
+				return(temp.string)
 			}
 
-			if (nchar(temp.string) == 0) {temp.string <- "no_mutation"}
-			return(temp.string)
-		}
-
-		if(bitwAnd(temp.status, 2) == 2) {
-			string.mutations <- func.mutation.string(temp.forward)
-			if(string.mutations %in% names(list.output[["F"]])) {
-				list.output[["F"]][[string.mutations]] <- list.output[["F"]][[string.mutations]] + 1
-			} else {
-				list.output[["F"]][[string.mutations]] <- 1
+			if(bitwAnd(temp.status, 2) == 2) {
+				string.mutations <- func.mutation.string(temp.forward)
+				if(string.mutations %in% names(list.output[["F"]])) {
+					list.output[["F"]][[string.mutations]] <- list.output[["F"]][[string.mutations]] + 1
+				} else {
+					list.output[["F"]][[string.mutations]] <- 1
+				}
 			}
-		}
 
-		if(bitwAnd(temp.status, 1) == 1) {
-			string.mutations <- func.mutation.string(temp.reverse)
-			if(string.mutations %in% names(list.output[["R"]])) {
-				list.output[["R"]][[string.mutations]] <- list.output[["R"]][[string.mutations]] + 1
-			} else {
-				list.output[["R"]][[string.mutations]] <- 1
+			if(bitwAnd(temp.status, 1) == 1) {
+				string.mutations <- func.mutation.string(temp.reverse)
+				if(string.mutations %in% names(list.output[["R"]])) {
+					list.output[["R"]][[string.mutations]] <- list.output[["R"]][[string.mutations]] + 1
+				} else {
+					list.output[["R"]][[string.mutations]] <- 1
+				}
 			}
 		}
 	}
+
 	return(list.output)
 }
 
@@ -168,7 +171,7 @@ func.locus.count <- function(connection.mysql, name.database, name.run){
 #				<db_name>:			name of the DB scheme
 #				name.run:			name of the sequencing run
 #				direction:			orientation of the tags
-#				aggregation.range	number of bp over which to aggregate (700 should be a good default)
+#				aggregation.range	(maximum tag start position [bp] to be included + 1) (700 should be a good default)
 #				bin.size			size of bins in bp
 # Returns:		A matrix containing the aggregated position counts for each locus
 # Description:	This function aggregates tag counts versus position and locus. The position binning is done with a width of <bin.size> bp
@@ -183,14 +186,40 @@ func.tag.position.aggregate <- function(connection.mysql, name.database, name.ru
 	)
 
 	func.matrix.aggregate <- function(positions, locus.current) {
-			vector.locus.select <- positions[,"locus"]==locus.current
-			vector.output <- rep(0,aggregation.bins)
-			vector.output[
-				seq(from=0, by=bin.size, length.out=aggregation.bins)
-				%in%
-				positions[vector.locus.select, "posstart"]
-			] <- positions[vector.locus.select, "counts"]
-			return(vector.output)
+		vector.locus.select <- positions[,"locus"]==locus.current
+		vector.locus.range <- positions[,"posstart"] < aggregation.range
+		if (any(vector.locus.select & ! vector.locus.range)) {
+			cat(paste(
+				"[QA      ][INFO    ] Tag position aggregation yielded positions out of specificed range for locus ",
+				locus.current,
+				" and direction ",
+				direction,
+				". A total of ",
+				sum(positions[(vector.locus.select & ! vector.locus.range),"counts"]),
+				" tags were clipped.\n",
+				sep=""
+			))
+			vector.locus.select <- vector.locus.select & vector.locus.range
+		}
+
+		vector.output <- rep(0,aggregation.bins)
+		vector.output.select <- ( 
+			seq(from=0, by=bin.size, length.out=aggregation.bins)
+			%in%
+			positions[vector.locus.select, "posstart"]
+		)
+		if (sum(vector.output.select) != sum(vector.locus.select)) {
+			print("[QA      ][DEBUG   ][START   ] Mismatched selection vector length")
+			print(positions)
+			print(sum(vector.output.select))
+			print(sum(vector.locus.select))
+			print(vector.output.select)
+			print(vector.locus.select)
+			print("[QA      ][DEBUG   ][STOP    ] Mismatched selection vector length")
+		}
+		vector.output[vector.output.select] <- positions[vector.locus.select, "counts"]
+
+		return(vector.output)
 	}
 
 	df.tag.positions.binned <- dbGetQuery(
@@ -310,30 +339,36 @@ func.qual.length <- function(connection.mysql, name.database, name.run, locus) {
 		)
 	)
 
-	length.max <- max(query.result$length)
-	length.aggregated <- hist(query.result$length, breaks=c(0:length.max), plot=FALSE)$counts
+	if (length(query.result) > 0) {
+		length.max <- max(query.result$length)
+		length.aggregated <- hist(query.result$length, breaks=c(0:length.max), plot=FALSE)$counts
 
-	# Split the quality string, convert it to integers and fill the ragged right ends with NAs so that it can be converted to an array
-	#
-	quality.array <- sapply(
-		query.result$quality,
-		FUN=function(quality.string.current) {
-			quality.integer <- as.integer(unlist(strsplit(quality.string.current, " ")))
-			return(
-				c(
-					quality.integer, 
-					rep(NA, length.max - length(quality.integer))
+		# Split the quality string, convert it to integers and fill the ragged right ends with NAs so that it can be converted to an array
+		#
+		quality.array <- sapply(
+			query.result$quality,
+			FUN=function(quality.string.current) {
+				quality.integer <- as.integer(unlist(strsplit(quality.string.current, " ")))
+				return(
+					c(
+						quality.integer, 
+						rep(NA, length.max - length(quality.integer))
+					)
 				)
-			)
-		},
-		USE.NAMES=FALSE
-	)
-	quality.means <- colMeans(t(quality.array), na.rm=TRUE)
+			},
+			USE.NAMES=FALSE
+		)
+		quality.means <- colMeans(t(quality.array), na.rm=TRUE)
 
-	# Make the function a little bit more considerate in terms of memory usage, run garbage collection explicitly
-	#
-	rm(query.result, quality.array)
-	gc()
+		# Make the function a little bit more considerate in terms of memory usage, run garbage collection explicitly
+		#
+		rm(query.result, quality.array)
+		gc()
+
+	} else {
+		length.aggregated <- NULL
+		quality.means <- NULL
+	}
 
 	return(
 		data.frame(

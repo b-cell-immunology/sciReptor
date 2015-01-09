@@ -15,7 +15,7 @@ todb_sampleinfo_highth <-p> plateinput <-m> metainfo <-pb> plate_barcodes [-h]
 Complete the donor, sample, sort and event tables for high-throughput experiments. To each scenario of donor, sample, etc... you assign a numerical identifier and can then specify the corresponding wells in the matrix.
 
 Two necessary input files:
-	-m	<experiment_id>_metainfo.csv file, tab delimited (use template 48_48_ or 240_256_metainfo.xls->worksheet2 and store as csv with tabs). The first column is the numerical identifier that will be used in the plate layout. When parsing, rows with regexp "metainfomration" and "identifier_col" are ignored.
+	-m	<experiment_id>_metainfo.csv file, tab delimited (use template 48_48_ or 240_256_metainfo.xls->worksheet2 and store as csv with tabs). The first column is the numerical identifier that will be used in the plate layout. The first two rows of the CSV will be ignored, since they contain the headers in the current spreadsheet.
 	-p	<experiment_id>_plate.csv file (use template 48_48_ or 240_256_metainfo.xls->worksheet1 and store as csv with tabs). When parsing, first row and column are ignored, they contain row and col numbers. The other 48*48 or 240*256 cells contain the identifier that already appeared in metainfo.csv to specify which well contains what.
 	-pb	<experiment_id>_platebarcodes.csv file with the plate barcode corresponding to each plate number.
 

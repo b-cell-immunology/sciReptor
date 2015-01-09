@@ -286,7 +286,7 @@ while(<IN_IgBLAST>) {
 		    		$rest_J_protstart = $CDR3protend+1;
 				$CDR3_end_motif = 1;
 			}
-			if (($critprot =~ m/$alt_CDR3_end_motif{$seq_id_locus{$query_id}}{1}/g) || ($critprot =~ m/$alt_CDR3_end_motif{$seq_id_locus{$query_id}}{2}/g) || ($critprot =~ m/$alt_CDR3_end_motif{$seq_id_locus{$query_id}}{3}/g)) {
+			elsif (($critprot =~ m/$alt_CDR3_end_motif{$seq_id_locus{$query_id}}{1}/g) || ($critprot =~ m/$alt_CDR3_end_motif{$seq_id_locus{$query_id}}{2}/g) || ($critprot =~ m/$alt_CDR3_end_motif{$seq_id_locus{$query_id}}{3}/g)) {
 			    		$CDR3protend = pos $critprot;
 			    		$CDR3protend = $CDR3protend - 5;
 			    		$rest_J_protstart = $CDR3protend+1;

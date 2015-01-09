@@ -113,7 +113,6 @@ my $qual_in = Bio::SeqIO->new(-file => $input_qual, -format => 'qual') or die "c
 ### 4. For each identifier get sequence and quality (stored in hashes). 
 ### Store all identifiers that occured in the fasta file in a list.
 
-my $seq_id;
 # hash for sequences
 my %id_seq_hash;
 # hash for qualities
@@ -163,7 +162,7 @@ foreach (@identifiers) {
 		$id_seq_hash{$_},
 		$id_qual_hash{$_},
 	);
-	my $last_insert_id = $dbh->{'mysql_insertid'};
+	$last_insert_id = $dbh->{'mysql_insertid'};
 	unless ($last_insert_id eq 0) {print "$_\t$last_insert_id\n";}
 	else {print "There seems to be a non-unique identifier $_\t$last_insert_id\n";}
 }

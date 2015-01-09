@@ -79,7 +79,7 @@ my $dbh = get_dbh($conf{database});
 
 
 if ($outfile) {
-	($mod, $rest) = $outfile =~ m/\/(\d+)_(\d+)\./
+	($mod, $rest) = $outfile =~ m/.*\/(\d+)_(\d+)\./
 }
 
 

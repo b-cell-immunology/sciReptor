@@ -10,18 +10,22 @@ db_port=3306
 # human or mouse
 species=
 
-# 48_48 or 240_256
+# Matrix size [<columns>_<rows>]
+#
+# valid sizes: 48_48 and 240_256
 matrix=
 nrows=
 ncols=
 
-# tag batch (species_isotypes_number):
-# human Hs_G_001 or Hs_AEGM_001
-# mouse Mm_AGM_001 or Mm_ADGM_001
+# tag batch [<species>_<isotypes>_<number>]
+#
+# valid batches as of 2015-01-01 (dimensions in parenthesis are only for information, DO NOT COPY THEM BELOW)
+# human: Hs_G_001 (48x48), Hs_AEGM_001 (48x48)
+# mouse: Mm_AGM_001 (48x48), Mm_AGM_002 (240x256) or Mm_ADGM_001 (48x48)
 tag_batch=
 tag_landing_zone=300
 
-# none or D01_plateposition
+# none or D01_plateposition or tag_batch
 tag_correction=none
 
 plate_layout=1
@@ -78,6 +82,5 @@ l_Jend=[T\|I][V\|I\|A]L
 library=igdb_library
 
 # configuration of pipeline
-IGDATA=../../igdata/
-#BLASTDB=/project/b-cell-seq/igdata/database/
-
+IGDATA=$HOME/analysis_pipeline/igdata
+#BLASTDB=
