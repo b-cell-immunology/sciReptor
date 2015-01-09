@@ -34,7 +34,7 @@ runname = sys.argv[2]
 conf = bcelldb.get_config()
 
 # connect to database via ~/.my.conf settings
-db = mysql.connect(db="igdb_test",read_default_file="~/.my.cnf", read_default_group='mysql_igdb')
+db = mysql.connect(db=conf['database'],read_default_file="~/.my.cnf", read_default_group='mysql_igdb')
 cursor = db.cursor()
 
 # defining common variables

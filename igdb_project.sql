@@ -161,7 +161,7 @@ CREATE TABLE IF NOT EXISTS `CDR_FWR` (
   `dna_seq` VARCHAR(300) NOT NULL,
   `prot_seq` VARCHAR(100) NOT NULL,
   `prot_length` INT UNSIGNED NOT NULL,
-  `stop_codon` CHAR(1) NOT NULL,
+  `stop_codon` TINYINT NOT NULL,
   INDEX `fk_CDR_FWR_sequences1_idx` (`seq_id` ASC),
   UNIQUE INDEX `unique_id` (`seq_id` ASC, `region` ASC, `start` ASC),
   PRIMARY KEY (`CDR_FWR_id`))
@@ -195,8 +195,8 @@ CREATE TABLE IF NOT EXISTS `consensus_stats` (
   `sequences_seq_id` INT UNSIGNED NULL,
   `locus` CHAR NOT NULL,
   `n_seq` INT NULL DEFAULT 0,
-  `best_V` VARCHAR(45) NULL,
-  `best_J` VARCHAR(45) NULL,
+  `best_V` INT NULL,
+  `best_J` INT NULL,
   `col_tag` VARCHAR(45) NOT NULL,
   `row_tag` VARCHAR(45) NOT NULL,
   `experiment_id` VARCHAR(10) NOT NULL COMMENT 'Required to distinguish reads that map to the same well but come from different sequencing runs. Reads with the same experiment_id will be assembled into one consensus, irrespective of the run origin Typical scenario for this is the re-sequencing of an am /* comment truncated */ /*plicon pool.

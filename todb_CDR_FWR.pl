@@ -123,9 +123,9 @@ sub get_regions {
 	my $prot_length = length $prot_seq;
  	my $stop_codon;
 	if (index($prot_seq, "*") != -1) {
-		$stop_codon = "T";
+		$stop_codon = 1;
 	}
-	else { $stop_codon = "F"; }
+	else { $stop_codon = 0; }
 
 	$ins_regions->execute($seq_id,
 		$type,

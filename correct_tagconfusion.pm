@@ -22,6 +22,8 @@ Correct for plate swapping in D01 experiment from Gopal. (Feb 2014).
 	
 	< D01_plateposition >
 
+	Kappa chain Row1-16:Col25-48 is exchanged by Row17-32:Col1:24 and vice versa
+
 =head1 AUTHOR
 
 Katharina Imkeller - imkeller@mpiib-berlin.mpg.de
@@ -105,33 +107,37 @@ sub correct_tags_D01_2 {
 	my $new_row_tag_num;
 
 
-	unless ($locus_2 eq "K") { # only kappa
+	if ($locus_2 ne "K") { # confusion only kappa
 		return ($old_col_tag_2, $old_row_tag_2);
-		last;
-	}
-
-	$old_col_tag_num = substr $old_col_tag_2, 1, 3;
-	$old_col_tag_num = int($old_col_tag_num);	
-	$old_row_tag_num = substr $old_row_tag_2, 1, 3;
-	$old_row_tag_num = int($old_row_tag_num);
-
-
-	if ($old_row_tag_num >= 0 && $old_row_tag_num <= 16 && $old_col_tag_num >= 25 && $old_col_tag_num >= 48) {
-		$new_row_tag_num = $old_row_tag_num + 16;
-		$new_col_tag_num = $old_col_tag_num - 24;
-
 	}
 	
-	if ($old_row_tag_num >= 17 && $old_row_tag_num <= 32 && $old_col_tag_num >= 1 && $old_col_tag_num >= 24) {
-		$new_row_tag_num = $old_row_tag_num - 16;
-		$new_col_tag_num = $old_col_tag_num + 24;
-	}
+	else {
+		$old_col_tag_num = substr $old_col_tag_2, 1, 3;
+		$old_col_tag_num = int($old_col_tag_num);	
+		$old_row_tag_num = substr $old_row_tag_2, 1, 3;
+		$old_row_tag_num = int($old_row_tag_num);
+
+
+		if ($old_row_tag_num >= 0 && $old_row_tag_num <= 16 && $old_col_tag_num >= 25 && $old_col_tag_num >= 48) {
+			$new_row_tag_num = $old_row_tag_num + 16;
+			$new_col_tag_num = $old_col_tag_num - 24;
+		}
 	
-	$new_col_tag_2 = "C".sprintf("%03d", $new_col_tag_num);
-	$new_row_tag_2 = "R".sprintf("%03d", $new_row_tag_num);
+		elsif ($old_row_tag_num >= 17 && $old_row_tag_num <= 32 && $old_col_tag_num >= 1 && $old_col_tag_num >= 24) {
+			$new_row_tag_num = $old_row_tag_num - 16;
+			$new_col_tag_num = $old_col_tag_num + 24;
+		}
 
-	return ($new_col_tag_2, $new_row_tag_2); 
+		else {
+			$new_row_tag_num = $old_row_tag_num;
+			$new_col_tag_num = $old_col_tag_num;
+		}
+	
+		$new_col_tag_2 = "C".sprintf("%03d", $new_col_tag_num);
+		$new_row_tag_2 = "R".sprintf("%03d", $new_row_tag_num);
 
+		return ($new_col_tag_2, $new_row_tag_2); 
+	}
 }
 
 #####
