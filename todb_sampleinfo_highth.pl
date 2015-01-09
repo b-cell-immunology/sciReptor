@@ -148,7 +148,7 @@ close($plate);
 ### Extract plate barcode
 my %plate_barcode_hash;
 
-my $count;
+$count_line = 0;
 while (<$barcodes>) {
     $count_line++;
     chomp $_;
@@ -161,7 +161,7 @@ while (<$barcodes>) {
 
 ### 5. Extract sample information for each id from META
 
-my $count_line = 0;
+$count_line = 0;
 while (<$meta>) {
 	$count_line++;
 	chomp $_;
