@@ -105,9 +105,12 @@ sub correct_tags_D01_2 {
 	my $new_col_tag_num;	
 	my $old_row_tag_num;
 	my $new_row_tag_num;
+	
+	print STDOUT "old_col_tag_2: $old_col_tag_2\nold_row_tag_2: $old_row_tag_2\nlocus_2: $locus_2\n";
 
 
-	if ($locus_2 ne "K") { # confusion only kappa
+	if ($locus_2 ne 'K') { # confusion only kappa
+		print STDOUT "locus not K\n\n";
 		return ($old_col_tag_2, $old_row_tag_2);
 	}
 	
@@ -117,13 +120,16 @@ sub correct_tags_D01_2 {
 		$old_row_tag_num = substr $old_row_tag_2, 1, 3;
 		$old_row_tag_num = int($old_row_tag_num);
 
-
+		# plate 3
 		if ($old_row_tag_num >= 0 && $old_row_tag_num <= 16 && $old_col_tag_num >= 25 && $old_col_tag_num >= 48) {
+			# move up right to plate 2
 			$new_row_tag_num = $old_row_tag_num + 16;
 			$new_col_tag_num = $old_col_tag_num - 24;
 		}
 	
+		# plate 2
 		elsif ($old_row_tag_num >= 17 && $old_row_tag_num <= 32 && $old_col_tag_num >= 1 && $old_col_tag_num >= 24) {
+			# move left down to plate 3
 			$new_row_tag_num = $old_row_tag_num - 16;
 			$new_col_tag_num = $old_col_tag_num + 24;
 		}
@@ -136,8 +142,10 @@ sub correct_tags_D01_2 {
 		$new_col_tag_2 = "C".sprintf("%03d", $new_col_tag_num);
 		$new_row_tag_2 = "R".sprintf("%03d", $new_row_tag_num);
 
-		return ($new_col_tag_2, $new_row_tag_2); 
+		print STDOUT "ELSE returning $new_col_tag_2, $new_row_tag_2\n\n";
+		return ($new_col_tag_2, $new_row_tag_2);
 	}
+	
 }
 
 #####
@@ -157,7 +165,7 @@ sub correct_tags {
 	}
 
 	elsif ($conf{tag_correction} eq "D01_plateposition") {
-		($new_col_tag_main, $new_row_tag_main) = correct_tags_D01_2($row_tag_main, $col_tag_main, $locus_main);
+		($new_col_tag_main, $new_row_tag_main) = correct_tags_D01_2($col_tag_main, $row_tag_main, $locus_main);
 	}
 
 	else {
