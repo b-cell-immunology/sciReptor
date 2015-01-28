@@ -121,14 +121,14 @@ sub correct_tags_D01_2 {
 		$old_row_tag_num = int($old_row_tag_num);
 
 		# plate 3
-		if ($old_row_tag_num >= 0 && $old_row_tag_num <= 16 && $old_col_tag_num >= 25 && $old_col_tag_num >= 48) {
+		if ($old_row_tag_num >= 0 && $old_row_tag_num <= 16 && $old_col_tag_num >= 25 && $old_col_tag_num <= 48) {
 			# move up right to plate 2
 			$new_row_tag_num = $old_row_tag_num + 16;
 			$new_col_tag_num = $old_col_tag_num - 24;
 		}
 	
 		# plate 2
-		elsif ($old_row_tag_num >= 17 && $old_row_tag_num <= 32 && $old_col_tag_num >= 1 && $old_col_tag_num >= 24) {
+		elsif ($old_row_tag_num >= 17 && $old_row_tag_num <= 32 && $old_col_tag_num >= 1 && $old_col_tag_num <= 24) {
 			# move left down to plate 3
 			$new_row_tag_num = $old_row_tag_num - 16;
 			$new_col_tag_num = $old_col_tag_num + 24;
