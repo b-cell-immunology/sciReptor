@@ -24,14 +24,14 @@ my $log_id=0;
 our %conf;
 our $dry_run=0;
 
-
+my $regexp_key_value = qr /^\s*([_A-Za-z][_0-9A-Za-z]+)=(.*?)\s*;?\s*$/;
 
 sub start_log
 {
 	open(LOG,'>',\$log_buffer);
 
 	# log some basics
-
+	#
 	print LOG "date:    ",`date`;
 	print LOG "hostname:",`hostname`;
 	print LOG "pwd:     ",`pwd`;
@@ -40,43 +40,70 @@ sub start_log
 	print LOG "$command_line\n";
 	print LOG "-"x60 ,"\n";
 
-	# search for a config file
-
+	# search and open config file
+	#
 	my $config_file="config";
 	unless (-f $config_file){
-		$config_file="../$config_file";
+			$config_file="../$config_file";
 	}
-	&GetOptions("config=s" => \$config_file); 
+	&GetOptions("config=s" => \$config_file);
 
-	# parse config file 
+	my $fh_config;
+	open($fh_config,"<$config_file") || die "ERROR:  no config file \"$config_file\"";
 
-	my $CONF;
-	open($CONF,"<$config_file") || die "no config file \"$config_file\"";
-	while (<$CONF>){
-		if ( (m/^\s*#/) || ( ! m/=/ )){
-			print LOG $_;   	# write comments to the log
-			next;					# but do nor parse them
+	# Parse the config file:
+	# - comment lines (starting with "#") go to log, but are not processed
+	# - lines which are empty or only contain white space characters are ignored
+	# - <key>=<value> lines are parsed, including variable expansion
+	# - all other lines will trigger a warning and will subsequently be ignored
+	#
+	while (<$fh_config>){
+		chomp;
+		if ( /^\s*#/ ) {
+			print LOG $_ ."\n";
+			next;
+		} elsif ( /^\s*$/ ) {
+			next;
+		} elsif ( $regexp_key_value ) {
+			my ($key,$value) = $_ =~ $regexp_key_value;
+			
+			# Expand BASH variables ("${VARIABLE}"). Give precedence to values from config file itself,
+			# then look in the global environment.
+			#
+			while ($value =~ /\$\{([_A-Za-z][_0-9A-Za-z]+)\}/g) {
+				my $env_name = $1;
+				my $expanded_variable="";
+				if (exists($conf{$env_name})){
+					$expanded_variable=$conf{$env_name};
+				} elsif (exists($ENV{$env_name})) {
+					$expanded_variable=$ENV{$env_name};
+				}
+				$value =~ s/\$\{$env_name\}/$expanded_variable/;
+			}
+			$conf{$key} = $value;
+
+			# Do not show the database password in log file
+			#
+			if ($key eq "dbpass"){
+				s/=.*/= ***/;   
+			}
+
+			print LOG "Parsed: " . $key . "=" . $value . "\n"
+
+		} else {
+			print LOG "WARNING : Ignoring invalid config line: " . $_ . "\n";
 		}
-		my ($key,$value) = $_ =~ m/^\s*(\S+)\s*=\s*(.*?)\s*$/;
-		$conf{$key}=$value;
-		if ($key eq "dbpass"){
-			s/=.*/= ***/;   # let the password disappear
-		}
-		print LOG $_;
 	}
-	close($CONF);	
+	close($fh_config);
 	print LOG "-"x60 ,"\n";
 
-	# check for dry_run
-
-	&GetOptions("dry_run!" => \$dry_run); 
-
-	# open a connection to the db and insert logging info into log_table
-	
+	# check for dry_run, if not open a connection to the db and insert logging info into log_table
+	#
+	&GetOptions("dry_run!" => \$dry_run);
 	if (!$dry_run){
 		my $dbh = get_dbh();
-		my $ra=$dbh->do("INSERT INTO log_table 
-			values(0,NOW(),\"$conf{version}\",\"$ENV{USER}\",user(),\"$command_line\",\"\")");
+		my $ra=$dbh->do("INSERT INTO log_table
+				values(0,NOW(),\"$conf{version}\",\"$ENV{USER}\",user(),\"$command_line\",\"\")");
 		die "no insert possible" unless $ra==1;
 		$log_id=$dbh->last_insert_id("","","","");
 		$dbh->disconnect;

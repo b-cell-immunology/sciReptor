@@ -1,3 +1,20 @@
+# === Analysis Pipeline General Config File ===
+#
+# In general, this file contains <key>=<value> pairs that have to be compatible with bash. Therefore:
+# - <key> has to be a valid BASH variable name, i.e. contain only alphanumeric characters and underscores, 
+#   and must not begin with a number.
+# - NO white space characters directly before or after the "=" of the <key>=<value> pair
+# - Trailing semi-colons and white space characters will be removed from <value>
+# - Lines starting with "#" will be considered comments
+# - Enviroment variables and variables previously (!) defined in the config file will be expanded (SEE BELOW)
+#
+# However, this file is also parsed by other (non-bash) scripts, which results in the following limitations:
+# - Usage of commands other than <key>=<value> pairs and comments IS NOT SUPPORTED
+# - variable expansion requires variables to be written in "curly style" (e.g. ${HOME}). The "normal style" 
+#   (e.g. $HOME) will not be expanded by the scripts, but might or might not by other programs, leading to
+#   potentially unpredictable results.
+#
+
 # name of the project, will be used for repository structure and database scheme
 # example: malaria, hiv, ....
 database=
@@ -34,21 +51,21 @@ ncols_per_plate=24
 
 # IgBLAST settings
 
-num_V=3;
-num_D=3;
-num_J=3;
-num_align_igblast=10;
-out_format_igblast=7;
+num_V=3
+num_D=3
+num_J=3
+num_align_igblast=10
+out_format_igblast=7
 
 # BLAST settings
 # not used ?
-#mismatch_penalty=-1; # default = 3
-#e_value=10;  # default = 10
-#word_size=7; # default = 11
-#gap_open_cost=2; # default = 5
-#gap_extension_cost=1; # default = 2  
-out_format_blast=6;
-num_align_blast=1;
+#mismatch_penalty=-1   # default = 3
+#e_value=10            # default = 10
+#word_size=7           # default = 11
+#gap_open_cost=        # default = 5
+#gap_extension_cost=1  # default = 2  
+out_format_blast=6 
+num_align_blast=1 
 
 # consensus settings
 n_consensus=5
@@ -81,6 +98,27 @@ l_Jend=[T\|I][V\|I\|A]L
 # configuration of the database access
 library=igdb_library
 
-# configuration of pipeline
+# Configuration of databases used by the pipeline. Note that $IGDATA should point to the folder containing the
+# "database", "internal_data" and "optional_file" folders, NOT to the "database" folder itself. The paths
+# specified as "blastdb_segments_X" are relative to $IGDATA
+#
 IGDATA=$HOME/analysis_pipeline/igdata
-#BLASTDB=
+
+# default settings for IGBLAST stock installation, automatic switch between species
+blastdb_segments_V=database/${species}_gl_V
+blastdb_segments_D=database/${species}_gl_D
+blastdb_segments_J=database/${species}_gl_J
+blastdb_segments_C=database/${species}_gl_C
+
+## internal default settings for human
+# blastdb_segments_V=database/human_gl_V
+# blastdb_segments_D=database/human_gl_D
+# blastdb_segments_J=database/human_gl_J
+# blastdb_segments_C=database/hIGH-K-L_constant_exon1.fasta
+
+## internal default settings for mouse
+# blastdb_segments_V=database/mouse_V-segment_NCBIm38
+# blastdb_segments_D=database/mouse_V-segment_NCBIm38
+# blastdb_segments_J=database/mouse_V-segment_NCBIm38
+# blastdb_segments_C=database/mouse_C-segment_NCBIm38
+

@@ -14,29 +14,18 @@
 #
 # HISTORY
 # Written Jan 2014
-
-
-source ../config
-
-# path needed for BLAST to find database
-# this is strange, but necessary
-export BLASTDB=$IGDATA
+# Modified to have DB files configurable via ./config file. January 2015 - CEB
 
 query_file=$1;
 out_file=$2;
 
-if [ "$species" = "human" ] 
-then
-	database="database/hIGH-K-L_constant_exon1.fasta";
-elif [ "$species" = "mouse" ] 
-then
-	database="database/mouse_C-segment_NCBIm38";
-else
-	echo "species must be human or mouse";
-fi
+# read config and set general path to database folder
+#
+source ../config
+export BLASTDB=$IGDATA
 
 blastn \
-    -db $database \
+    -db $blastdb_segment_C \
     -query $query_file \
 	-out $out_file \
     -outfmt $out_format_blast \
