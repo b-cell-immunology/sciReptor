@@ -62,7 +62,7 @@ func.tag.stats <- function(connection.mysql, name.database, name.run, tag.landin
 	if (length(selected.seq_ids) > 0) {
 		for (current.seq_id in selected.seq_ids[,"seq_id"]) {
 
-			if(debug.level >= 3) cat(paste("[QA      ][INFO    ] " ,"Locus: ", locus," seq_id: ", current.seq_id, "\n", sep=""));
+			if(debug.level >= 4) cat(paste("[QA      ][DEBUG   ] " ,"Locus: ", locus," seq_id: ", current.seq_id, "\n", sep=""));
 
 			temp.forward <- dbGetQuery(connection.mysql,
 				paste(

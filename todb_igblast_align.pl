@@ -95,8 +95,8 @@ while (<$igout>) {
 			unless ($fields[0] =~ m/query id/ &&
 				$fields[6] =~ m/q. start/ &&
 				$fields[8] =~ m/s. start/ &&
-				$fields[11] =~ m/query seq/ &&
-				$fields[12] =~ m/subject seq/) {
+				$fields[12] =~ m/query seq/ &&
+				$fields[13] =~ m/subject seq/) {
 				die "Fields in the hit table of IgBLAST output changed? Cannot parse.";
 			}
 		}
@@ -105,8 +105,8 @@ while (<$igout>) {
 			$query_id = $first_hit[1];
 			$query_start = $first_hit[7];
 			$germline_start = $first_hit[9];
-			$query_seq = $first_hit[12];
-			$germline_seq = $first_hit[13];
+			$query_seq = $first_hit[13];
+			$germline_seq = $first_hit[14];
 			#print "$query_id\n";
 
 			# insert into database

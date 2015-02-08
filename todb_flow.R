@@ -1,32 +1,69 @@
 # Name:			flow_to_db.R
-# Verson:		0.1.1 (2014-06-07)
+# Verson:		0.1.2 (2015-02-07)
 # Authors:		Christian Busse
 # Maintainer:	Christian Busse (busse@mpiib-berlin.mpg.de)
 # Licence:		AGPL3
 # Provides:		This script imports flow cytometric data into the DB 
 # Requires:		lib_pipeline_common, lib_authentication_common, lib_flowcyt_sorting_indexed, RMySQL
 # Comments:		This script inserts the information for FCS files into the database
+# Changes:		CB Feb 2015: config file and FCS file selection now configurable via command line, log levels
+#
 #
 library(RMySQL)
 source("lib/lib_pipeline_common.R")
 source("lib/lib_authentication_common.R")
 source("lib/lib_flowcyt_sorting_indexed.R")
 
-# Load the run config file
+# Set default parameters
 #
-list.config.global <- func.read.config("../config")
+file.config <- "../config"				# config file
+search.fcs.dir <- "."					# directory containing the FCS files
+search.fcs.regexp <- ".*\\.fcs$"		# RegExp pattern to select FCS files (default: all)
 
-# Set the direction which contain the FCS files
+# Get command line parameters and split at "=", then do parsing. Probably not the 'R'-way to do things, but works
+# 
+vector.cmd.line <- unlist(strsplit(commandArgs(TRUE),"="))
+if(length(vector.cmd.line) > 0) {
+	cnt.cmd.line <- 1
+	while(cnt.cmd.line < length(vector.cmd.line)){
+		if(vector.cmd.line[cnt.cmd.line] == "--config"){
+			file.config <- vector.cmd.line[cnt.cmd.line + 1]
+			cnt.cmd.line <- cnt.cmd.line + 2
+			next;
+		}
+		if(vector.cmd.line[cnt.cmd.line] == "--path"){
+			search.fcs.dir <- vector.cmd.line[cnt.cmd.line + 1]
+			cnt.cmd.line <- cnt.cmd.line + 2
+			next;
+		}
+		if(vector.cmd.line[cnt.cmd.line] == "--regexp"){
+			search.fcs.regexp <- vector.cmd.line[cnt.cmd.line + 1]
+			cnt.cmd.line <- cnt.cmd.line + 2
+			next;
+		}
+		stop(paste("ERROR: flow_to_db.R: Unknown option:",vector.cmd.line[cnt.cmd.line]))
+	}
+	if(cnt.cmd.line == length(vector.cmd.line)) {
+		warning(paste("WARNING: flow_to_db.R: Did not parse command line option",vector.cmd.line[cnt.cmd.line]))
+	}
+}
+
+# Load parameters from config file
 #
-# get runname from STDIN
-args <- commandArgs(TRUE)
-config.name.run <- args[1]
-config.dir.fcs <- paste( "../raw_data/", config.name.run, sep="")
+list.config.global <- func.read.config(file.config)
 
-# Load all flow cytometry data
+# Set the log level as specified in config file, if not set there default to 3 (INFO)
+#
+if(! is.null(list.config.global[["log_level"]])) {
+	config.debug.level <- list.config.global[["log_level"]]
+} else {
+	config.debug.level <- 3
+}
+
+# Load flow cytometry files
 #
 list.fcs.all.indexed <- lapply(
-	file.path(config.dir.fcs, list.files(path=config.dir.fcs , pattern=".*fcs$")),
+	file.path(search.fcs.dir, list.files(path=search.fcs.dir , pattern=search.fcs.regexp)),
 	FUN=func.read.indexed.FCS  
 )
 

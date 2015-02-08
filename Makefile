@@ -44,7 +44,8 @@ project_root=..
 dir=$(project_root)/pipeline_output/$(run)
 # raw data, separated by sequencing run
 raw_data=$(project_root)/raw_data/$(run)
-# folder for quality control
+# locations for quality control data
+quality_base_dir=$(project_root)/quality_control
 quality_control=$(project_root)/quality_control/$(run)
 
 
@@ -111,14 +112,13 @@ PHASE1:
 #####
 
 $(dir)/qualitycheck.done: $(dir)/allsigout.done
-	Rscript pipeline_QA.R $(run)
-
+	Rscript pipeline_QA.R --run $(run) --qadir $(quality_base_dir)
 
 # upload metainformation
 # DONT FORGET to put the plate and metainfo to the raw_data directory
 $(dir)/metainfotodb.done: $(dir)/mutations.done
 	./todb_sampleinfo_highth.pl -p $(raw_data)/*_plate.csv -m $(raw_data)/*_metainfo.csv -pb $(raw_data)/*_platebarcode.csv
-	Rscript todb_flow.R $(run)
+	Rscript todb_flow.R --path $(raw_data)
 	./create_spatials.py $(experiment_id) $(run)
 	touch $@
 

@@ -1,5 +1,5 @@
 # Name:			pipeline_QA.R
-# Verson:		0.1.4 (2014-12-31)
+# Verson:		0.1.5 (2015-02-08)
 # Authors:		Christian Busse, Katharina Imkeller
 # Maintainer:	Christian Busse (busse@mpiib-berlin.mpg.de)
 # Licence:		AGPL3
@@ -7,28 +7,65 @@
 # Requires:		lib_pipeline_common, lib_pipeline_QA, lib_authentication_common, RMySQL
 # Notes:		Running QA on a DB with 500 kReads requires: 1 CPU core for 1 hour, 1 GB / 250 MB
 #				network traffic (Rx/Tx), 250 MB / 3.5 GB RAM (ave. / peak), around 80 min. wall clock time
-# Modifications:	KI Oct 2014: PDFs are now stored in the quality output directory.
-#			CB Dec 2014: Handles lacking sequence data for individual loci gracefully, less noisy output
+# Changes:		KI Oct 2014: PDFs are now stored in the quality output directory.
+#				CB Dec 2014: Handles lacking sequence data for individual loci gracefully, less noisy output
+#				CB Feb 2015: config file and output dirs via command line, log levels
 #
-
+#
 library(RMySQL)
 source("lib/lib_pipeline_common.R")
 source("lib/lib_pipeline_QA.R")
 source("lib/lib_authentication_common.R")
 
-# Read the config file of the which contains database name and several filter criteria
+# Set default parameters
 #
-list.config.global <- func.read.config("../config")
+file.config <- "../config"				# config file
+dir.output <- ".."						# base directory for QA output
+config.name.run <- NULL					# name of the run to be processed
 
-# The following settings are only required for testing purposes. Within the pipeline they will be handed over from 'make'
-#
-# config.name.run <- "W4_run4"
-args <- commandArgs(TRUE)
-config.name.run <- args[1]
+# Get command line parameters and split at "=", then do parsing. Probably not the 'R'-way to do things, but works
+# 
+vector.cmd.line <- unlist(strsplit(commandArgs(TRUE),"="))
+if(length(vector.cmd.line) > 0) {
+	cnt.cmd.line <- 1
+	while(cnt.cmd.line < length(vector.cmd.line)){
+		if(vector.cmd.line[cnt.cmd.line] == "--config"){
+			file.config <- vector.cmd.line[cnt.cmd.line + 1]
+			cnt.cmd.line <- cnt.cmd.line + 2
+			next;
+		}
+		if(vector.cmd.line[cnt.cmd.line] == "--qadir"){
+			dir.output <- vector.cmd.line[cnt.cmd.line + 1]
+			cnt.cmd.line <- cnt.cmd.line + 2
+			next;
+		}
+		if(vector.cmd.line[cnt.cmd.line] == "--run"){
+			config.name.run <- vector.cmd.line[cnt.cmd.line + 1]
+			cnt.cmd.line <- cnt.cmd.line + 2
+			next;
+		}
+		stop(paste("ERROR: pipeline_QA.R: Unknown option:",vector.cmd.line[cnt.cmd.line]))
+	}
+	if(cnt.cmd.line == length(vector.cmd.line)) {
+		warning(paste("WARNING: pipeline_QA.R: Did not parse command line option",vector.cmd.line[cnt.cmd.line]))
+	}
+}
 
-# Set up the output directory
+if(is.null(config.name.run)) {
+	stop("ERROR: pipeline_QA.R: run name not specified")
+}
+
+# Load parameters from config file
 #
-output_dir = paste( "../quality_control/", config.name.run, "/", sep="")
+list.config.global <- func.read.config(file.config)
+
+# Set the log level as specified in config file, if not set there default to 3 (INFO)
+#
+if(! is.null(list.config.global[["log_level"]])) {
+	config.debug.level <- list.config.global[["log_level"]]
+} else {
+	config.debug.level <- 3
+}
 
 # The following lists define loci and directions. The list.config.loci determines which loci will be included in the DB queries. Both lists
 # determine which loci or directions will be included in the print-outs.
@@ -44,7 +81,7 @@ list.config.directions <- list(
 	R = "distal"
 )
 
-# The following list configure certain aspects of the output, but will not influence the content itself 
+# The following lists configure certain aspects of the output, but will not influence the content itself 
 #
 
 # Which colors used to mark-up loci in mixed plots
@@ -54,10 +91,6 @@ list.config.colors.locus <- list(
 	K = "#009F00",
 	L = "#3F3FFF"
 )
-
-# Currently the debug level is still set here, will move to config at some point.
-#
-config.debug.level <- 3
 
 # Get a DB connection, using the preferred authentication mechanism (defined in $HOME/.my.authentication, defaults to usage of .my.cnf)
 #
@@ -114,7 +147,7 @@ names(list.tag.stats) <- sapply(list.tag.stats, function(x){x$locus})
 # of the *tag* and therefore correspond to proximal and distal position.
 #
 #
-pdf(file= paste(output_dir,"QA_out_tag_stats.pdf",sep=""), paper="A4r", width=11.7, height=8.27)
+pdf(file=file.path(dir.output, config.name.run, "QA_out_tag_stats.pdf"), paper="A4r", width=11.7, height=8.27)
 par(mfrow = c(3, length(list.tag.stats)),oma=c(1, 0, 1.25, 0))
 
 lapply(
@@ -257,7 +290,7 @@ if (config.debug.level >= 3) cat("[QA      ][INFO    ] Leaving step 1\n");
 
 if (config.debug.level >= 3) cat("[QA      ][INFO    ] Entering step 2\n");
 
-pdf(file= paste(output_dir,"QA_out_tag_positions.pdf",sep=""), paper="A4r", width=11.7, height=8.27)
+pdf(file=file.path(dir.output, config.name.run, "QA_out_tag_positions.pdf"), paper="A4r", width=11.7, height=8.27)
 par(mfcol=c(2, 3),oma=c(1, 0, 1.25, 0))
 
 config.tag.aggregation.range <- 700
@@ -380,7 +413,7 @@ if (config.debug.level >= 3) cat("[QA      ][INFO    ] Leaving step 2\n");
 
 if (config.debug.level >= 3) cat("[QA      ][INFO    ] Entering step 3\n");
 
-pdf(file=paste(output_dir,"QA_out_reads_per_well.pdf",sep=""), paper="A4r", width=11.7, height=8.27)
+pdf(file=file.path(dir.output, config.name.run, "QA_out_reads_per_well.pdf"), paper="A4r", width=11.7, height=8.27)
 par(mfcol=c(2, 3), oma=c(1, 0, 1.25, 0))
 
 lapply(
@@ -480,7 +513,7 @@ if (config.debug.level >= 3) cat("[QA      ][INFO    ] Leaving step 3\n");
 
 if (config.debug.level >= 3) cat("[QA      ][INFO    ] Entering step 4\n");
 
-pdf(file=paste(output_dir,"QA_out_along_bp.pdf",sep=""), paper="A4r", width=11.7, height=8.27)
+pdf(file=file.path(dir.output, config.name.run, "QA_out_along_bp.pdf"), paper="A4r", width=11.7, height=8.27)
 par(mfrow=c(2, 3),oma=c(1, 0, 1.25, 0), mar=c(5, 4, 4, 4) + 0.1)
 
 lapply(
