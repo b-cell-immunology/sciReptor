@@ -105,9 +105,8 @@ $sel_reads1_sth->execute;
 # store all ids in a list
 # store orientation in a hash
 my $count_seqs = 0;
-while ( my @seq_id = $sel_reads1_sth->fetchrow_array ) {
-	my ($seq_id, $orient, $locus) = @seq_id;
-	if $conf{log_level} >= 4 {
+while ( my ($seq_id, $orient, $locus) = $sel_reads1_sth->fetchrow_array ) {
+	if ($conf{log_level} >= 4) {
 		print STDOUT "[todb_consensus_tags][debug] seq_id: $seq_id ori: $orient locus: $locus\n";
 	}
 	$seqid_orient_hash{$seq_id} = $orient;
