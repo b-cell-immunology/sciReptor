@@ -99,6 +99,7 @@ all: $(dir)/PHASE2
 # otherwise, make does not know which files belong to *.cfasta and *.caln
 $(dir)/PHASE2: PHASE1
 	$(MAKE) $(dir)/consensusfasta.done $(dir)/metainfotodb.done $(dir)/cdrfwrtodb.done $(dir)/allsigout.done $(dir)/allsblout.done $(dir)/igblastalignments.done $(dir)/mutations.done $(dir)/qualitycheck.done
+	@echo "Finished without errors on `date --utc +%Y-%m-%d\ %H:%M:%S\ %Z`"
 	touch $@
 	
 # PHASE 1 does everything up to generating the *.caln files to db	
@@ -288,7 +289,6 @@ ifndef run
 	@echo "specify run using run=<runname>, i.e. subdirectory where raw data is stored"
 	exit 1
 endif
-	find $(raw_data) -name *todb_reads_done | xargs -r rm
 	find $(dir) -type f | xargs -r rm
 	find $(quality_control) -type f | xargs -r rm
 

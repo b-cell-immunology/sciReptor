@@ -34,8 +34,6 @@ species=
 #
 # valid sizes: 48_48 and 240_256
 matrix=
-nrows=
-ncols=
 
 # tag batch [<species>_<isotypes>_<number>]
 #
@@ -45,7 +43,7 @@ ncols=
 tag_batch=
 tag_landing_zone=300
 
-# none or D01_plateposition or tag_batch
+# routines to use for correction of tag positions: "none" (default), "D01_plateposition", "tag_batch" (required for Mm_AGM_002)
 tag_correction=none
 
 plate_layout=1
@@ -112,16 +110,18 @@ blastdb_segments_V=database/${species}_gl_V
 blastdb_segments_D=database/${species}_gl_D
 blastdb_segments_J=database/${species}_gl_J
 blastdb_segments_C=database/${species}_gl_C
+blastdb_auxiliary=optional_file/${species}_gl.aux
 
 ## internal default settings for human
 # blastdb_segments_V=database/human_gl_V
 # blastdb_segments_D=database/human_gl_D
 # blastdb_segments_J=database/human_gl_J
 # blastdb_segments_C=database/hIGH-K-L_constant_exon1.fasta
+# blastdb_auxiliary=optional_file/human_gl.aux
 
 ## internal default settings for mouse
 # blastdb_segments_V=database/mouse_V-segment_NCBIm38
-# blastdb_segments_D=database/mouse_V-segment_NCBIm38
-# blastdb_segments_J=database/mouse_V-segment_NCBIm38
+# blastdb_segments_D=database/mouse_D-segment_NCBIm38
+# blastdb_segments_J=database/mouse_J-segment_NCBIm38
 # blastdb_segments_C=database/mouse_C-segment_NCBIm38
-
+# blastdb_auxiliary=optional_file/mouse_NCBIm38.aux

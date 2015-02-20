@@ -40,8 +40,7 @@ cursor = db.cursor()
 # defining common variables
 project = conf['database']
 
-nrows = int(conf['nrows'])
-ncols = int(conf['ncols'])
+ncols, nrows = map(int, conf['matrix'].split('_'))
 nrows_per_plate = int(conf['nrows_per_plate'])
 ncols_per_plate = int(conf['ncols_per_plate'])
 loci = ['H','K','L']

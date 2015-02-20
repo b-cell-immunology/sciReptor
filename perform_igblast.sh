@@ -32,7 +32,7 @@ igblastn \
 	-germline_db_D $blastdb_segments_D \
 	-germline_db_J $blastdb_segments_J \
 	-organism $species \
-	-auxiliary_data optional_file/${species}_gl.aux \
+	-auxiliary_data $blastdb_auxiliary \
 	-query $query_file \
 	-outfmt '7 qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore qseq sseq frames qframe' \
 	-num_alignments_V $num_V -num_alignments_D $num_D -num_alignments_J  $num_J \

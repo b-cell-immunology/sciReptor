@@ -150,7 +150,7 @@ sub get_dbh
 	}
 	unless ($dbh){
 		#print STDERR "trying ...\n";
-		my $host	=($conf{dbhost} ? $conf{dbhost}:  'curry-d130');
+		my $host	=($conf{dbhost} ? $conf{dbhost}:  'localhost');
 		my $user	=($conf{dbuser} ? $conf{dbuser}:  $ENV{USER});
 		my $password=($conf{dbpass} ? $conf{dbpass}:  "");
 		my $port	=($conf{dbport} ? $conf{dbport}:  3306);

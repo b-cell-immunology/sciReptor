@@ -9,7 +9,7 @@ import re
 def get_config():
 	"""
 	Look for config file in . and than ../
-	Return config key value pairs in dictionnary conf[].
+	Return config key value pairs in dictionary conf[].
 	"""
 	
 	# try to open config file in .
@@ -23,7 +23,7 @@ def get_config():
 		except IOError:
 			print "no config file found"
 
-	# global dicctionary conf that will be exported
+	# global dictionary conf that will be exported
 	conf = dict()
 	
 	# read lines of config

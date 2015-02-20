@@ -60,10 +60,19 @@ if(! is.null(list.config.global[["log_level"]])) {
 	config.debug.level <- 3
 }
 
-# Load flow cytometry files
+
+# Get the list of FCS files and load them, exit with warning if no files are found
 #
+vector.file.names.full <- list.files(path=search.fcs.dir, pattern=search.fcs.regexp, full.names=TRUE)
+if (length(vector.file.names.full) == 0) {
+	if (config.debug.level >= 2) {
+		cat(paste("[flow_to_db.R][WARNING] No files matching pattern \"", search.fcs.regexp, "\" were found in path \"",search.fcs.dir,"\". No flow data was imported.\n",sep=""))
+	}
+	quit(save="no", status=0)
+}
+
 list.fcs.all.indexed <- lapply(
-	file.path(search.fcs.dir, list.files(path=search.fcs.dir , pattern=search.fcs.regexp)),
+	vector.file.names.full,
 	FUN=func.read.indexed.FCS  
 )
 
