@@ -8,21 +8,22 @@ correct_tagconfusion
 
 =head1 DESCRIPTION
 
-This module is called by todb_sampleinfo_highth.pl in order to correctly assign the event_id, even when plates got mixed up, or tags are in the wrong positions.
+This module is called by todb_sampleinfo_highth.pl in order to correctly assign the event_id, even when when tags are in the wrong positions (problems
+in the primer matrix) or plates got mixed up during processing.
 
-Correct for the wrong tags in 240_256 matrix with tag batch Mg_IGH_G_001. (Jan 2014)
+Use correct_tags($tag_column, $tag_row, $locus)) with $tag_(column|row) =~ [RC][0-9][0-9][0-9] and $locus =~ [HKL] to return correct tag name. The
+information which of the following correction to apply is set via the "tag_correction" key in the config file:
 
-	< tag_batch >	
+B< none >	(implemented Jan 2014): No correction (default).
 
-	For the first 12 plates, column (0,2,4,6....) are actually on the next plate when on uneven plate numbers and on the previous plate when on even plate numbers. 
-	Use correct_tags($oldtag) with $oldtag =~ [RC][0-9][0-9][0-9] to return correct tag name.
-	Kappa chain Row1-16:Col25-48 is exchanged by Row17-32:Col1:24 and vice versa.
+B< tag_batch >	(implemented Jan 2014):	Correct for a switch of lambda tags in the tag batch Mm_AGM_002 240x256 matrix. This switch occurred during
+primer manufacturing and is already	present	in the primer master plate:
+For plate rows 1-12 (physical rows 1-192), lambda reads located in the even physical rows and odd plate rows appear to be located one plate row 
+(16 physical rows) below, while those located in even physical rows and even plate rows appear to be located one plate row above. Reads in odd physical
+rows appear at the correct position.
 
-Correct for plate swapping in D01 experiment from Gopal. (Feb 2014). 
-	
-	< D01_plateposition >
-
-	Kappa chain Row1-16:Col25-48 is exchanged by Row17-32:Col1:24 and vice versa
+B< D01_plateposition >	(implemented Feb 2014):	Correct for plate swapping in D01 experiment:
+Kappa chain Row1-16:Col25-48 is exchanged by Row17-32:Col1-24 and vice versa.
 
 =head1 AUTHOR
 
