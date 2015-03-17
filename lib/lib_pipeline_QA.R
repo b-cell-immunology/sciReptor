@@ -62,7 +62,7 @@ func.tag.stats <- function(connection.mysql, name.database, name.run, tag.landin
 	if (length(selected.seq_ids) > 0) {
 		for (current.seq_id in selected.seq_ids[,"seq_id"]) {
 
-			if(debug.level >= 4) cat(paste("[QA      ][DEBUG   ] " ,"Locus: ", locus," seq_id: ", current.seq_id, "\n", sep=""));
+			if(debug.level >= 4) cat(paste("[pipeline_QA.R][DEBUG] Selecting reads with seq_id ", current.seq_id, " and locus ", locus, "\n", sep=""));
 
 			temp.forward <- dbGetQuery(connection.mysql,
 				paste(
@@ -190,7 +190,7 @@ func.tag.position.aggregate <- function(connection.mysql, name.database, name.ru
 		vector.locus.range <- positions[,"posstart"] < aggregation.range
 		if (any(vector.locus.select & ! vector.locus.range)) {
 			cat(paste(
-				"[QA      ][INFO    ] Tag position aggregation yielded positions out of specificed range for locus ",
+				"[pipeline_QA.R][INFO] Tag position aggregation yielded positions out of specificed range for locus ",
 				locus.current,
 				" and direction ",
 				direction,
@@ -209,13 +209,13 @@ func.tag.position.aggregate <- function(connection.mysql, name.database, name.ru
 			positions[vector.locus.select, "posstart"]
 		)
 		if (sum(vector.output.select) != sum(vector.locus.select)) {
-			print("[QA      ][DEBUG   ][START   ] Mismatched selection vector length")
+			print("[pipeline_QA.R][DEBUG][START   ] Mismatched selection vector length")
 			print(positions)
 			print(sum(vector.output.select))
 			print(sum(vector.locus.select))
 			print(vector.output.select)
 			print(vector.locus.select)
-			print("[QA      ][DEBUG   ][STOP    ] Mismatched selection vector length")
+			print("[pipeline_QA.R][DEBUG][STOP    ] Mismatched selection vector length")
 		}
 		vector.output[vector.output.select] <- positions[vector.locus.select, "counts"]
 

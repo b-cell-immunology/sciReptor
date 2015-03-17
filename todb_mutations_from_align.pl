@@ -237,7 +237,7 @@ foreach my $input (@files) {
 			#print "$consecutive_in_del_status\n";
 	
 			# insert into mutations table of database
-			$insert_mutation->execute(
+			my $temp_insert_return = $insert_mutation->execute(
 				$seq_id, 
 				$position_codon_on_seq, 
 				$mutation_table_hash{$query_codon}{$subject_codon}{'n_repl'}, 
@@ -249,6 +249,11 @@ foreach my $input (@files) {
 				$stop_codon_germline,
 				$stop_codon_sequence
 			);
+			if (! $temp_insert_return) {
+				print("[todb_mutations_from_align.pl][ERROR] Could not insert into table. $insert_mutation->errstr \n") if ($conf{log_level} >= 1);
+			} else {
+				print("[todb_mutations_from_align.pl][DEBUG] Inserted $temp_insert_return lines into table.\n") if ($conf{log_level} >= 4);
+			}
 		}
 	
 	}

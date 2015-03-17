@@ -118,7 +118,7 @@ connection.mysql <- switch(config.authentication.method,
 # is not covered by the loci given in list.config.loci. Currently locus identification is derived from the identified V segment
 # and as long as the default E-value threshold of 10 is used it is very unlikely that locus identification should fail.
 #
-if (config.debug.level >= 3) cat("[QA      ][INFO    ] Entering step 1\n");
+if (config.debug.level >= 3) cat("[pipeline_QA.R][INFO] Entering step 1\n");
 
 df.locus.counts <- func.locus.count(
 	connection.mysql = connection.mysql,
@@ -282,13 +282,13 @@ mtext(
 
 dev.off() -> temp.null
 
-if (config.debug.level >= 3) cat("[QA      ][INFO    ] Leaving step 1\n");
+if (config.debug.level >= 3) cat("[pipeline_QA.R][INFO] Leaving step 1\n");
 
 
 # === QA Step 2 - Tag position aggregation ===
 #
 
-if (config.debug.level >= 3) cat("[QA      ][INFO    ] Entering step 2\n");
+if (config.debug.level >= 3) cat("[pipeline_QA.R][INFO] Entering step 2\n");
 
 pdf(file=file.path(dir.output, config.name.run, "QA_out_tag_positions.pdf"), paper="A4r", width=11.7, height=8.27)
 par(mfcol=c(2, 3),oma=c(1, 0, 1.25, 0))
@@ -405,13 +405,13 @@ mtext(
 
 dev.off() -> temp.null
 
-if (config.debug.level >= 3) cat("[QA      ][INFO    ] Leaving step 2\n");
+if (config.debug.level >= 3) cat("[pipeline_QA.R][INFO] Leaving step 2\n");
 
 
 # === QA Step 3 - Reads per well ===
 #
 
-if (config.debug.level >= 3) cat("[QA      ][INFO    ] Entering step 3\n");
+if (config.debug.level >= 3) cat("[pipeline_QA.R][INFO] Entering step 3\n");
 
 pdf(file=file.path(dir.output, config.name.run, "QA_out_reads_per_well.pdf"), paper="A4r", width=11.7, height=8.27)
 par(mfcol=c(2, 3), oma=c(1, 0, 1.25, 0))
@@ -505,13 +505,13 @@ mtext(
 
 dev.off() -> temp.null
 
-if (config.debug.level >= 3) cat("[QA      ][INFO    ] Leaving step 3\n");
+if (config.debug.level >= 3) cat("[pipeline_QA.R][INFO] Leaving step 3\n");
 
 
 # === QA Step 4 - Raw readlength and quality values ===
 #
 
-if (config.debug.level >= 3) cat("[QA      ][INFO    ] Entering step 4\n");
+if (config.debug.level >= 3) cat("[pipeline_QA.R][INFO] Entering step 4\n");
 
 pdf(file=file.path(dir.output, config.name.run, "QA_out_along_bp.pdf"), paper="A4r", width=11.7, height=8.27)
 par(mfrow=c(2, 3),oma=c(1, 0, 1.25, 0), mar=c(5, 4, 4, 4) + 0.1)
@@ -578,7 +578,7 @@ mtext(
 
 dev.off() -> temp.null
 
-if (config.debug.level >= 3) cat("[QA      ][INFO    ] Leaving step 4\n");
+if (config.debug.level >= 3) cat("[pipeline_QA.R][INFO] Leaving step 4\n");
 
 
 # Clean-up and exit

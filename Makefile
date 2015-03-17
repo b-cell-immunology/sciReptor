@@ -257,6 +257,8 @@ $(dir)/allrazers.done: $(dir)/alltodb.done $(razers_files)
 	./perform_igblast.sh $< $@.x
 	mv $@.x $@
 
+.PRECIOUS: %.rfasta
+
 %.rfasta: $(dir)/alltodb.done
 	./fromdb_fasta.pl -s reads -t reads_VDJ_segments -f $@.x
 	mv $@.x $@
@@ -300,7 +302,7 @@ convert-sff-qual: $(qual_files)
 
 %.fasta: %.sff
 	sffinfo -seq -notrim $< > $@
-	cp ./seqrun_info.txt $@.info
+	cp -n ./seqrun_info.txt $@.info
 
 %.fasta.qual: %.sff
 	sffinfo -qual -notrim $< > $@

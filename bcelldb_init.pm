@@ -113,13 +113,22 @@ sub start_log
 
 sub stop_log
 {
+#	(my $caller_package, my $caller_filename, my $caller_line) = caller;
+#	print "[bcelldb_init.pm][DEBUG+] caller stop_log: package: $caller_package, filename: $caller_filename, line: $caller_line\n";
 	if (!$dry_run){
 		my $dbh = get_dbh();
 		close(LOG);
 		select STDOUT;
-		my $ra=$dbh->do("UPDATE log_table SET output='$log_buffer' where log_id=$log_id");
+		my @array_log_buffer = split(/\n/, $log_buffer);
+		print "[bcelldb_init.pm][DEBUG] Size of log_buffer: " . length($log_buffer) . " Lines of log_buffer: " . scalar @array_log_buffer . " \n" if ($conf{log_level}>=4);
+		my $status_update = $dbh->do("UPDATE log_table SET output='$log_buffer' where log_id=$log_id");
+		if ($status_update) {
+			print "[bcelldb_init.pm][DEBUG] Number of rows updated in log_table: $status_update \n" if ($conf{log_level}>=4);
+		} else {
+			print "[bcelldb_init.pm][ERROR] Update of log_table failed: " . $dbh->errstr . "\n" if ($conf{log_level}>=1);
+		}
 		$dbh->disconnect;
-	}else{
+	} else {
 		close(LOG);
 		select STDOUT;
 		print "\nDRY_RUN\nLOG:\n$log_buffer\n\n";
@@ -129,50 +138,65 @@ sub stop_log
 
 sub get_dbh
 {
+#	(my $caller_package, my $caller_filename, my $caller_line) = caller;
+#	print "[bcelldb_init.pm][DEBUG+] caller get_dbh: package: $caller_package, filename: $caller_filename, line: $caller_line\n";
+
 	my $database=shift; 
 	$database = $conf{database} unless $database;
 
 	my $dsn;
 	my $dbh;
-	my $msg;
 
 	my $mycnf		=($conf{dbmycnf} ? $conf{dbmycnf}: "$ENV{HOME}/.my.cnf" );
 	my $mysql_group	=($conf{dbmysql_group} ? $conf{dbmysql_group}:  'mysql_igdb');
 
 	if (-f $mycnf){
-		$dsn="DBI:mysql:$database;mysql_read_default_file=$mycnf"
-    	.";mysql_read_default_group=$mysql_group;";
-		#print STDERR "$dsn\n";
+		$dsn="DBI:mysql:$database;mysql_read_default_file=$mycnf;mysql_read_default_group=$mysql_group;";
 	
 		$dbh = DBI->connect($dsn,undef,undef,{PrintError=>0});
-		#warn "unable to connect using .my.cnf configuartion:$dsn\n" unless $dbh;
-		$msg = "db connect through configuartion:$dsn\n"
+		print "[bcelldb_init.pm][DEBUG] db connect through configuartion:$dsn\n" if ($conf{log_level} >= 4);
 	}
-	unless ($dbh){
-		#print STDERR "trying ...\n";
-		my $host	=($conf{dbhost} ? $conf{dbhost}:  'localhost');
-		my $user	=($conf{dbuser} ? $conf{dbuser}:  $ENV{USER});
-		my $password=($conf{dbpass} ? $conf{dbpass}:  "");
-		my $port	=($conf{dbport} ? $conf{dbport}:  3306);
 
-		my $dsn="DBI:mysql:database=$database;host=$host;port=$port";
-		#print STDERR "$dsn\n";
-		$dbh = DBI->connect($dsn,$user,$password,{PrintError=>0}) ||
-			die "unable to connect using dsn:$dsn";
-		$msg = "db connect through user/password from config:$dsn\n";
-		$msg.= "THIS WAY TO CONNECT TO THE DB IS DEPRECATED - use a ~/.my.cnf file! \n";
+	#	# THE FOLLOWING BLOCK IS DEPRECATED AND ONLY MAINTAINED FOR LECAGY APPLICATIONS. USE PROPER AUTHENTICATION!
+	#	# In case there is no DB connection until this point, fall back to user/password authentication. 
+	#	# 
+	#	#
+	#	if (! $dbh){
+	#		my $host	=($conf{dbhost} ? $conf{dbhost}:  'localhost');
+	#		my $user	=($conf{dbuser} ? $conf{dbuser}:  $ENV{USER});
+	#		my $password=($conf{dbpass} ? $conf{dbpass}:  "");
+	#		my $port	=($conf{dbport} ? $conf{dbport}:  3306);
+	#
+	#		$dsn="DBI:mysql:database=$database;host=$host;port=$port";
+	#		$dbh = DBI->connect($dsn,$user,$password,{PrintError=>0}) ||
+	#
+	#		print "[bcelldb_init.pm][WARN] Using a deprecated method (username) for database authentication\n" if ($conf{log_level} >= 2);
+	#		print "[bcelldb_init.pm][DEBUG] db connect through username from config:$dsn\n" if ($conf{log_level} >= 4);
+	#	}
+
+	if (! $dbh) {
+		print "[bcelldb_init.pm][FATAL] Could not connect to database\n" if ($conf{log_level} >= 0);
+		die;
 	}
+
 	$dbh->{RaiseError}=1;
 	$dbh->{PrintError}=1;
-	print LOG $msg;
 	return $dbh;
 }
 
 
-INIT{ start_log(); }
+INIT{ 
+#	(my $caller_package, my $caller_filename, my $caller_line) = caller;
+#	print "[bcelldb_init.pm][DEBUG+] caller INIT: package: $caller_package, filename: $caller_filename, line: $caller_line\n";
+	start_log(); 
+}
 
 
-END{ stop_log(); } 
+END{ 
+#	(my $caller_package, my $caller_filename, my $caller_line) = caller;
+#	print "[bcelldb_init.pm][DEBUG+] caller END: package: $caller_package, filename: $caller_filename, line: $caller_line\n";
+	stop_log(); 
+} 
 
 1;
 

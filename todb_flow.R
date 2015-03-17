@@ -66,7 +66,7 @@ if(! is.null(list.config.global[["log_level"]])) {
 vector.file.names.full <- list.files(path=search.fcs.dir, pattern=search.fcs.regexp, full.names=TRUE)
 if (length(vector.file.names.full) == 0) {
 	if (config.debug.level >= 2) {
-		cat(paste("[flow_to_db.R][WARNING] No files matching pattern \"", search.fcs.regexp, "\" were found in path \"",search.fcs.dir,"\". No flow data was imported.\n",sep=""))
+		cat(paste("[todb_flow.R][WARNING] No files matching pattern \"", search.fcs.regexp, "\" were found in path \"",search.fcs.dir,"\". No flow data was imported.\n",sep=""))
 	}
 	quit(save="no", status=0)
 }
@@ -299,7 +299,14 @@ lapply(
 						)
 					)
 				} else {
-					warning(paste("Parameters already present for plate ", fcs.barcode, " sort_id ", sort.id.current, ". New parameters not inserted.", sep=""))
+				    if (config.debug.level >= 2) {
+				        cat(
+							paste(
+								"[todb_flow.R][WARN] Parameters already present for plate ", fcs.barcode, " sort_id ", sort.id.current, ". New parameters not inserted.\n",
+								sep=""
+							)
+						)
+				    }
 				}
 			}
 		)
@@ -328,13 +335,18 @@ lapply(
 						sep=""
 					)
 				)
-				print(
-					paste(
-						"Insert barcode ", fcs.barcode, " sort_id ", id.sort.current,
-						" event count ", paste(dim(sort.data.combined), collapse=":"),
-						sep=""
+
+			    if (config.debug.level >= 3) {
+			        cat(
+						paste(
+							"[todb_flow.R][INFO] Insert barcode ", fcs.barcode, " with sort_id ", id.sort.current,
+							" and (events:dimensions) ", paste(dim(sort.data.combined), collapse=":"), "\n",
+							sep=""
+						)
 					)
-				)
+			    }
+
+
 				apply(
 					sort.data.combined[vector.select.sort.id, c("event_id", df.channels[,"detector_name"])],
 					1,
@@ -376,8 +388,8 @@ lapply(
 					}
 				)
 			}
-		)
+		) -> temp.null
 	}
-)
+) -> temp.null
 
 dbDisconnect(connection.mysql);
