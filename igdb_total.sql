@@ -455,9 +455,10 @@ CREATE TABLE IF NOT EXISTS `mutations` (
   `insertion` INT NOT NULL DEFAULT 0,
   `deletion` INT NOT NULL DEFAULT 0,
   `undef_add_mutation` INT NOT NULL DEFAULT 0,
-  `consecutive_in_del_status` INT NOT NULL DEFAULT 0,
   `stop_codon_germline` INT NOT NULL DEFAULT 0,
   `stop_codon_sequence` INT NOT NULL DEFAULT 0,
+  `in_status` INT NOT NULL DEFAULT 0,
+  `del_status` INT NOT NULL DEFAULT 0,
   INDEX `fk_warnings_sequences1_idx` (`seq_id` ASC),
   PRIMARY KEY (`mutations_id`),
   UNIQUE INDEX `unique` (`seq_id` ASC, `position_codonstart_on_seq` ASC))
