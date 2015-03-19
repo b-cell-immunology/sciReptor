@@ -184,7 +184,7 @@ foreach my $obs_codon (@codons) {
 
 			}
 		}
-		print $mutation_table "$obs_codon\t$germ_codon\t$mutation\t$n_repl\t$n_silent\t$deletion\t$insertion\n";	
+		print $mutation_table "$obs_codon\t$germ_codon\t$mutation\t$n_repl\t$n_silent\t$insertion\t$deletion\n";	
 	}
 }
  

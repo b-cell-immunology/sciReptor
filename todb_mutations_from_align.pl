@@ -14,7 +14,7 @@ todb_mutations_from_align.pl [-h] -dir <input_directory>
 
 This function calculates the mutations from the query-germline alignment and writes them to the database.
 
-Take all alignments in input_directory with information on start of query and germline in reference to origin (frame 0). Take the mutation matrix and check for every codon (in frame!), where replacements, silent mutations, ins and dels occur. The variable consecutive_in_del_status tracks the relative frame shift in reference to origin.
+Take all alignments in input_directory with information on start of query and germline in reference to origin (frame 0). Take the mutation matrix and check for every codon (in frame!), where replacements, silent mutations, ins and dels occur. The variables in_status and del_status tracks the relative frame shift in reference to origin. BE CAREFULL: If the frame is shifted due to insertion/deletion, the translation of single codons is not meaningfull anymore and you have to check, whether silent/replacement assignment really correspond to what you want to see!
 
 In the alignment file it allways needs to be like that:
 ><queryid>_<querystartposition>_query
@@ -44,6 +44,7 @@ Katharina Imkeller - imkeller@mpiib-berlin.mpg.de
 =head1 HISTORY
 
 Written March 2014
+consecutive_in_del_status replaced by (in_status, del_status)	KI	20150319
 
 =cut
 
@@ -143,7 +144,9 @@ foreach my $input (@files) {
 	# consecutive_in_del_status
 	# +1 for insertions
 	# -1 for deletions
-	my $consecutive_in_del_status = 0;
+	#my $consecutive_in_del_status = 0;
+	my $in_status = 0;
+	my $del_status = 0;
 	
 	
 	#print "query\tsubject\tposi\tmut\trepl\tsilent\tins\tdel\tstatus\n";
@@ -151,9 +154,10 @@ foreach my $input (@files) {
 	# SQL statement for insertion of mutations
 	my $statement = "INSERT IGNORE INTO $conf{database}.mutations \
 		(seq_id, position_codonstart_on_seq, replacement, silent, \
-		insertion, deletion, undef_add_mutation, consecutive_in_del_status, \
-		stop_codon_germline, stop_codon_sequence) \
-		VALUES (?,?,?,?,?,?,?,?,?,?);";
+		insertion, deletion, undef_add_mutation, \
+		stop_codon_germline, stop_codon_sequence, \
+		in_status, del_status) \
+		VALUES (?,?,?,?,?,?,?,?,?,?,?);";
 	
 	my $dbh = get_dbh($conf{database});
 	my $insert_mutation = $dbh->prepare($statement);
@@ -221,8 +225,10 @@ foreach my $input (@files) {
 				$deletions = $mutation_table_hash{$query_codon}{$subject_codon}{'deletion'};
 
 
-				$consecutive_in_del_status += $insertions;
-				$consecutive_in_del_status -= $deletions;
+				#$consecutive_in_del_status += $insertions;
+				#$consecutive_in_del_status -= $deletions;
+				$in_status += $insertions;
+				$del_status += $deletions;
 			}
 
 			
@@ -245,9 +251,10 @@ foreach my $input (@files) {
 				$mutation_table_hash{$query_codon}{$subject_codon}{'insertion'}, 
 				$mutation_table_hash{$query_codon}{$subject_codon}{'deletion'}, 
 				$mutation_table_hash{$query_codon}{$subject_codon}{'mutation'}, 
-				$consecutive_in_del_status,
 				$stop_codon_germline,
-				$stop_codon_sequence
+				$stop_codon_sequence,
+				$in_status,
+				$del_status
 			);
 			if (! $temp_insert_return) {
 				print("[todb_mutations_from_align.pl][ERROR] Could not insert into table. $insert_mutation->errstr \n") if ($conf{log_level} >= 1);
