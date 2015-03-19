@@ -70,7 +70,7 @@ my $ins_sort = $dbh->prepare("INSERT INTO $conf{database}.sort
   VALUES (?,?,?,?,?) ON DUPLICATE KEY UPDATE sort_id=LAST_INSERT_ID(sort_id)");
 
 my $ins_event = $dbh->prepare("INSERT INTO $conf{database}.event 
-  (well, plate, sort_id) VALUES (?,?,?) ON DUPLICATE KEY UPDATE event_id=LAST_INSERT_ID(event_id)");
+  (well, plate, plate_barcode, sort_id) VALUES (?,?,?,?) ON DUPLICATE KEY UPDATE event_id=LAST_INSERT_ID(event_id)");
 
 my $update_sequences = $dbh->prepare("UPDATE $conf{database}.sequences SET event_id=? WHERE name=?");
 
@@ -84,7 +84,7 @@ while (<$meta>) {
 	$count_line++;
 	chomp $_;
 	if ($count_line > 2) {
-		my ($id, $name, $well, $plate, $seq_run_date, $add_event_info, $antigen, $population, $sorting_date, $add_sort_info, $tissue, $sampling_date, $add_sample_info, $donor_identifier, $background_treatment, $project, $strain, $add_donor_info, $species) = split("\t", $_);
+		my ($id, $name, $well, $plate, $plate_barcode, $seq_run_date, $add_event_info, $antigen, $population, $sorting_date, $add_sort_info, $tissue, $sampling_date, $add_sample_info, $donor_identifier, $background_treatment, $project, $strain, $add_donor_info, $species) = split("\t", $_);
 
 		# check if species id correct
 		unless ($species eq $conf{species}) {
@@ -108,7 +108,7 @@ while (<$meta>) {
 		print "Sort: $ins_sort->{Statement}\n";
 
 		# insert event
-		$ins_event->execute($well, $plate, $sort_id);
+		$ins_event->execute($well, $plate, $plate_barcode, $sort_id);
 		my $event_id = $dbh->{mysql_insertid};
 		print "Event: $ins_event->{Statement}";
 
