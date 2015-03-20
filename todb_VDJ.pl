@@ -97,7 +97,7 @@ my $ins_VDJ_sth = $dbh->prepare("INSERT IGNORE INTO $conf{database}.$targettable
 my $sel_libr_sth = $dbh->prepare("SELECT VDJ_id, locus FROM $conf{library}.VDJ_library WHERE species_id=\"$conf{species}\" AND seg_name=?");
 
 # update orientation and locus only 
-my $upd_posloc_sth = $dbh->prepare("UPDATE $conf{database}.$updatetable SET orient=?, locus=? WHERE seq_id=?");
+my $upd_posloc_sth = $dbh->prepare("UPDATE $conf{database}.$updatetable SET orient=?, locus=?, igblast_productive=? WHERE seq_id=?");
 
 
 
@@ -114,7 +114,9 @@ my $n_hits = 0;
 my ($count_V, $count_D, $count_J);
 my $VDJ_type;
 my $VDJ_locus;
-
+#default: igblast_productive = NULL
+my $igblast_productive = 'NULL';
+my $rearrangement_mark;
 
 ### 4. Go through IgBLAST output and parse.
 
@@ -131,6 +133,21 @@ while(<$in_igblast>) {
         (my $comment, my $title, $query_id) = split(/ /, $_);
     }
 
+    # remember where rearrangement part starts (later parse one line below)
+    if ($_ =~ m/rearrangement summary/) {
+    	$rearrangement_mark = $count_line;
+    } 
+    if ($count_line == $rearrangement_mark + 1 && $count_line > 9) {
+    	my @rea_fields = split(/\t/, $_);
+	if ($rea_fields[5] == 'Yes') {
+		$igblast_productive = 1;
+	}
+	elsif ($rea_fields[5] == 'No') {
+		$igblast_productive = 0;
+	}
+    } 
+
+
     # look for best VDJ hits    
     if($_ =~ m/hits found/){
         $hit_mark = $count_line;
@@ -143,12 +160,13 @@ while(<$in_igblast>) {
     for (my $i=1; $i<=$n_hits; $i++) {
         if ($count_line == $hit_mark+$i) {
             # split hit line to extract type, locus, segment, quality values
-			my @fields = split(/\t/, $_);
+	    my @fields = split(/\t/, $_);
             my $VDJ_type = $fields[0];
-			my $seq_id = $fields[1];
-			my $VDJ_name = $fields[2];
-			my $evalue = $fields[10];
-			my $score = $fields[11];
+            my $seq_id = $fields[1];
+	    my $VDJ_name = $fields[2];
+	    my $evalue = $fields[10];
+	    my $score = $fields[11];
+            
             if ($VDJ_name =~ m/:/) {  # needed for the mouse database, where chromosomal location also appears
                 ($VDJ_name, my $foo, my $bar) = split(/:/, $VDJ_name);
             }
@@ -159,32 +177,35 @@ while(<$in_igblast>) {
             # collect 2 segments of each type
             if ($VDJ_type eq "V" && $count_V <= 1){
                 $count_V++;
-				# select id and locus from library
-				$sel_libr_sth->execute($VDJ_name);
-				my ($VDJ_id, $VDJ_locus) = $sel_libr_sth->fetchrow_array;
-				# insert into VDJ table
+	        # select id and locus from library
+	        $sel_libr_sth->execute($VDJ_name);
+		my ($VDJ_id, $VDJ_locus) = $sel_libr_sth->fetchrow_array;
+	        # insert into VDJ table
                 $ins_VDJ_sth->execute($query_id, $VDJ_type, $VDJ_locus, $count_V, $VDJ_name, $evalue, $score, $VDJ_id);
 
-				# 1. V segment is used to determine locus of the sequence
-				# update
-				unless ($count_V eq 2) {
-            		$upd_posloc_sth->execute($seq_orient,$VDJ_locus,$query_id);
-				}
+		# 1. V segment is used to determine locus of the sequence
+	        # update
+		unless ($count_V eq 2) {
+            		$upd_posloc_sth->execute($seq_orient, $VDJ_locus, $igblast_productive, $query_id);
+			$igblast_productive = 0;
+		}
 
             }
-            elsif ($VDJ_type eq "D" && $count_D <= 1){
+            
+	    elsif ($VDJ_type eq "D" && $count_D <= 1){
                 $count_D++;
-				my $VDJ_id = 0;
-				$sel_libr_sth->execute($VDJ_name);
-				($VDJ_id, my $VDJ_locus) = $sel_libr_sth->fetchrow_array;
-				$ins_VDJ_sth->execute($query_id, $VDJ_type, $VDJ_locus, $count_D, $VDJ_name, $evalue, $score, $VDJ_id); 
+		my $VDJ_id = 0;
+		$sel_libr_sth->execute($VDJ_name);
+		($VDJ_id, my $VDJ_locus) = $sel_libr_sth->fetchrow_array;
+		$ins_VDJ_sth->execute($query_id, $VDJ_type, $VDJ_locus, $count_D, $VDJ_name, $evalue, $score, $VDJ_id); 
             }
-            elsif ($VDJ_type eq "J" && $count_J <= 1){
+            
+	    elsif ($VDJ_type eq "J" && $count_J <= 1){
                 $count_J++;	
-				my $VDJ_id = 0;
-				$sel_libr_sth->execute($VDJ_name);
-				($VDJ_id, my $VDJ_locus) = $sel_libr_sth->fetchrow_array;
-				$ins_VDJ_sth->execute($query_id, $VDJ_type, $VDJ_locus, $count_J, $VDJ_name, $evalue, $score, $VDJ_id); 
+		my $VDJ_id = 0;
+		$sel_libr_sth->execute($VDJ_name);
+		($VDJ_id, my $VDJ_locus) = $sel_libr_sth->fetchrow_array;
+		$ins_VDJ_sth->execute($query_id, $VDJ_type, $VDJ_locus, $count_J, $VDJ_name, $evalue, $score, $VDJ_id); 
         	}
     	}
 	}

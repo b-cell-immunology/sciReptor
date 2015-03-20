@@ -30,8 +30,10 @@ import bcelldb_init as bcelldb
 # get command line arguments
 experiment_id = sys.argv[1]
 runname = sys.argv[2]
-if sys.argv[3]:
+try:
     greyscale = sys.argv[3]
+except IndexError:
+    greyscale = ''
 
 # get configuration using bcelldb_init
 conf = bcelldb.get_config()
