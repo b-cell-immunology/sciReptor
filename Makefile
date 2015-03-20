@@ -24,8 +24,8 @@
 # 	- include a sequencing run info for every single fasta file 
 # 		<XXX>.fasta.info
 # 	- include metainformation
-# 		<experiment_id>_metainfo.csv
-# 		<experiment_id>_plate.csv
+# 		<experiment_id>_metainfo.tsv
+# 		<experiment_id>_plate.tsv
 # 	
 # Third step on command line:
 # 	> make all run=<runname> experiment_id=<experiment_id>
@@ -118,7 +118,7 @@ $(dir)/qualitycheck.done: $(dir)/allsigout.done
 # upload metainformation
 # DONT FORGET to put the plate and metainfo to the raw_data directory
 $(dir)/metainfotodb.done: $(dir)/mutations.done
-	./todb_sampleinfo_highth.pl -p $(raw_data)/*_plate.csv -m $(raw_data)/*_metainfo.csv -pb $(raw_data)/*_platebarcode.csv
+	./todb_sampleinfo_highth.pl -p $(raw_data)/*_plate.tsv -m $(raw_data)/*_metainfo.tsv -pb $(raw_data)/*_platebarcode.tsv
 	Rscript todb_flow.R --path $(raw_data)
 	./create_spatials.py $(experiment_id) $(run)
 	touch $@

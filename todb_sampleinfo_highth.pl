@@ -15,9 +15,9 @@ todb_sampleinfo_highth <-p> plateinput <-m> metainfo <-pb> plate_barcodes [-h]
 Complete the donor, sample, sort and event tables for high-throughput experiments. To each scenario of donor, sample, etc... you assign a numerical identifier and can then specify the corresponding wells in the matrix.
 
 Two necessary input files:
-	-m	<experiment_id>_metainfo.csv file, tab delimited (use template 48_48_ or 240_256_metainfo.xls->worksheet2 and store as csv with tabs). The first column is the numerical identifier that will be used in the plate layout. The first two rows of the CSV will be ignored, since they contain the headers in the current spreadsheet.
-	-p	<experiment_id>_plate.csv file (use template 48_48_ or 240_256_metainfo.xls->worksheet1 and store as csv with tabs). When parsing, first row and column are ignored, they contain row and col numbers. The other 48*48 or 240*256 cells contain the identifier that already appeared in metainfo.csv to specify which well contains what.
-	-pb	<experiment_id>_platebarcodes.csv file with the plate barcode corresponding to each plate number.
+	-m	<experiment_id>_metainfo.tsv file, tab delimited (use template 48_48_ or 240_256_metainfo.xls->worksheet2 and store as tsv with tabs). The first column is the numerical identifier that will be used in the plate layout. The first two rows of the TSV will be ignored, since they contain the headers in the current spreadsheet.
+	-p	<experiment_id>_plate.tsv file (use template 48_48_ or 240_256_metainfo.xls->worksheet1 and store as tsv with tabs). When parsing, first row and column are ignored, they contain row and col numbers. The other 48*48 or 240*256 cells contain the identifier that already appeared in metainfo.tsv to specify which well contains what.
+	-pb	<experiment_id>_platebarcodes.tsv file with the plate barcode corresponding to each plate number.
 
 1. Get information on matrix (48_48 e.g.) and plate layout (384 well plates, nrows, ncols e.g.)
 
@@ -25,9 +25,9 @@ Two necessary input files:
 
 3. Open the input files.
 
-4. From the plate_layout.csv for each identifier, remember in a hash of arrays the corresponding wells (identified by row-col position). This allows you afterwards to find all wells and corresponding sequences with a certain sample, sort, donor... scenario. The event_id can then easily be updated in the sequences table. Only sequences that do not yet have an assigned event_id are updated (prevents problems when several matrices are stored in one database). From platebarcodes store platenr-barcode relations into hash.
+4. From the plate_layout.tsv for each identifier, remember in a hash of arrays the corresponding wells (identified by row-col position). This allows you afterwards to find all wells and corresponding sequences with a certain sample, sort, donor... scenario. The event_id can then easily be updated in the sequences table. Only sequences that do not yet have an assigned event_id are updated (prevents problems when several matrices are stored in one database). From platebarcodes store platenr-barcode relations into hash.
 
-5. Go through the metainfo.csv and try to consecutively insert donor, sample, sort. On the event level, go through all corresponding wells, insert into event table and then update all correspnding sequences without event_id.
+5. Go through the metainfo.tsv and try to consecutively insert donor, sample, sort. On the event level, go through all corresponding wells, insert into event table and then update all correspnding sequences without event_id.
 
 =head1 LOGGED INFORMATION
 

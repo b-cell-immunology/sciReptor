@@ -12,11 +12,11 @@ todb_sampleinfo_sanger.pl <-m> metainfo
 
 When uploading Sanger sequences to the DB this program inserts the provided event, sort, sample and donor information.
 Necessary input file: 
-	-m 	csv table with the metainformation (use sanger_metainfo.csv as template)
+	-m 	tsv table with the metainformation (use sanger_metainfo.tsv as template)
 
 1. Prepare the database for insertion into event, sort, sample and donor tables. There are unique keys on each of these tables that prevent from overwriting or duplicating. If an entry already exists, it is not overwritten, but the corresponding id is still determined and can be inserted to the next table.
 
-2. Parse information from the csv table and insert into database. If the entry in species column does not correspond to the species identifiers "human" or "mouse", the program dies.
+2. Parse information from the tsv table and insert into database. If the entry in species column does not correspond to the species identifiers "human" or "mouse", the program dies.
 
 =head1 LOGGED INFORMATION
 

@@ -17,9 +17,9 @@ Necessary input:
 	-f	fasta file with (numerical) unique identifiers
 	-q 	qual file with (numerical) unique identifiers
 Optional input:
-	-m	csv file with information on event, sort, sample, donor of each sequence (use sanger_metainfo.csv as template)
+	-m	tsv file with information on event, sort, sample, donor of each sequence (use sanger_metainfo.tsv as template)
 
-1. If metainfo given, get the unique sequence names from the csv table. If no name is given (e.g. in case of scratchpad function of the pipeline), fasta identifier will be used as name. The sequences table uses the name column as unique key in order to prevent overwriting of sequences.
+1. If metainfo given, get the unique sequence names from the tsv table. If no name is given, fasta identifier will be used as name. The sequences table uses the name column as unique key in order to prevent overwriting of sequences.
 
 2. Prepare the database to insert into sequences table.
 

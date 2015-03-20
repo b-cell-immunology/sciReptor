@@ -58,11 +58,11 @@ $(dir)/allsanger.rfasta: $(dir)/todb_sequences_sanger.done
 
 # write metainfo to database
 $(dir)/todb_sampleinfo_sanger.done: $(dir)/todb_sequences_sanger.done
-	./todb_sampleinfo_sanger.pl -m $(raw_data)/sanger_metainfo.csv
+	./todb_sampleinfo_sanger.pl -m $(raw_data)/sanger_metainfo.tsv
 
 # write sequences to database
 $(dir)/todb_sequences_sanger.done: init-env
-	./todb_sequences_sanger.pl -f $(fasta_infile) -q $(qual_infile) -m $(raw_data)/sanger_metainfo.csv
+	./todb_sequences_sanger.pl -f $(fasta_infile) -q $(qual_infile) -m $(raw_data)/sanger_metainfo.tsv
 	touch $@
 
 init-env: 
