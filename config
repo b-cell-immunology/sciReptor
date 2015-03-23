@@ -28,7 +28,7 @@ db_host=curry-d130
 db_port=3306
 
 # human or mouse
-species=
+#species=
 
 # Matrix size [<columns>_<rows>]
 #
@@ -97,13 +97,13 @@ l_altCDR3_e3=FG..
 l_Jend=[T\|I][V\|I\|A]L
 
 # configuration of the database access
-library=igdb_library
+#library=igdb_library
 
 # Configuration of databases used by the pipeline. Note that $IGDATA should point to the folder containing the
 # "database", "internal_data" and "optional_file" folders, NOT to the "database" folder itself. The paths
 # specified as "blastdb_segments_X" are relative to $IGDATA
 #
-IGDATA=${HOME}/analysis_pipeline/igdata
+#IGDATA=${HOME}/analysis_pipeline/igdata
 
 # default settings for IGBLAST stock installation, automatic switch between species
 blastdb_segments_V=database/${species}_gl_V
