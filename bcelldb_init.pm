@@ -131,7 +131,7 @@ sub stop_log
 	} else {
 		close(LOG);
 		select STDOUT;
-		print "\nDRY_RUN\nLOG:\n$log_buffer\n\n";
+		#print "\nDRY_RUN\nLOG:\n$log_buffer\n\n";
 	}
 }
 
