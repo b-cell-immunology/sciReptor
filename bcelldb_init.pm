@@ -2,13 +2,13 @@
 # 	- logging processes to the database; every calling of the module logs the calling main method (user, machine, command line arguments, ...)
 # 	- returning database handles (with configurations in the .my.cnf file in your home directory)
 #
-# Author: Peter Arndt
+# Authors: Peter Arndt, Christian Busse
+# Maintainer: Christian Busse (bussec@dkfz-heidelberg.de)
 # Date: Dec 2013
+# Changes: Feb 2015 CB Introduced Variable expansion for config file 
 #
 
-
 package bcelldb_init;
- 
  
 use strict;
 use warnings;
@@ -80,13 +80,18 @@ sub start_log
 				}
 				$value =~ s/\$\{$env_name\}/$expanded_variable/;
 			}
+
+			if (exists($conf{$key})){
+				print LOG "WARNING : Key " . $key . " has already been defined. Old value will be discarded and most recent one used instead.\n";
+			}
 			$conf{$key} = $value;
 
-			# Do not show the database password in log file
-			#
-			if ($key eq "dbpass"){
-				s/=.*/= ***/;   
-			}
+			#	# THE FOLLOWING BLOCK IS DEPRECATED AND WILL BE REMOVED IN FUTURE RELEASES. USE PROPER AUTHENTICATION!
+			#	# Do not show the database password in log file
+			#	#
+			#	if ($key eq "dbpass"){
+			#		$value = "***";
+			#	}
 
 			print LOG "Parsed: " . $key . "=" . $value . "\n"
 
@@ -147,17 +152,17 @@ sub get_dbh
 	my $dsn;
 	my $dbh;
 
-	my $mycnf		=($conf{dbmycnf} ? $conf{dbmycnf}: "$ENV{HOME}/.my.cnf" );
-	my $mysql_group	=($conf{dbmysql_group} ? $conf{dbmysql_group}:  'mysql_igdb');
+	my $mysql_mycnf = "$ENV{HOME}/.my.cnf";
+	my $mysql_group =($conf{db_group_auth} ? $conf{db_group_auth}:  'mysql_igdb');
 
-	if (-f $mycnf){
-		$dsn="DBI:mysql:$database;mysql_read_default_file=$mycnf;mysql_read_default_group=$mysql_group;";
+	if (-f $mysql_mycnf){
+		$dsn="DBI:mysql:$database;mysql_read_default_file=$mysql_mycnf;mysql_read_default_group=$mysql_group;";
 	
 		$dbh = DBI->connect($dsn,undef,undef,{PrintError=>0});
 		print "[bcelldb_init.pm][DEBUG] db connect through configuartion:$dsn\n" if ($conf{log_level} >= 4);
 	}
 
-	#	# THE FOLLOWING BLOCK IS DEPRECATED AND ONLY MAINTAINED FOR LECAGY APPLICATIONS. USE PROPER AUTHENTICATION!
+	#	# THE FOLLOWING BLOCK IS DEPRECATED AND WILL BE REMOVED IN FUTURE RELEASES. USE PROPER AUTHENTICATION!
 	#	# In case there is no DB connection until this point, fall back to user/password authentication. 
 	#	# 
 	#	#

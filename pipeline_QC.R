@@ -1,11 +1,11 @@
-# Name:			pipeline_QA.R
+# Name:			pipeline_QC.R
 # Verson:		0.1.5 (2015-02-08)
 # Authors:		Christian Busse, Katharina Imkeller
 # Maintainer:	Christian Busse (busse@mpiib-berlin.mpg.de)
 # Licence:		AGPL3
-# Provides:		This script produces all plots required for quality assurance (QA) of a run.
-# Requires:		lib_pipeline_common, lib_pipeline_QA, lib_authentication_common, RMySQL
-# Notes:		Running QA on a DB with 500 kReads requires: 1 CPU core for 1 hour, 1 GB / 250 MB
+# Provides:		This script produces all plots required for quality control (QC) of a run.
+# Requires:		lib_pipeline_common, lib_pipeline_QC, lib_authentication_common, RMySQL
+# Notes:		Running QC on a DB with 500 kReads requires: 1 CPU core for 1 hour, 1 GB / 250 MB
 #				network traffic (Rx/Tx), 250 MB / 3.5 GB RAM (ave. / peak), around 80 min. wall clock time
 # Changes:		KI Oct 2014: PDFs are now stored in the quality output directory.
 #				CB Dec 2014: Handles lacking sequence data for individual loci gracefully, less noisy output
@@ -14,13 +14,12 @@
 #
 library(RMySQL)
 source("lib/lib_pipeline_common.R")
-source("lib/lib_pipeline_QA.R")
-source("lib/lib_authentication_common.R")
+source("lib/lib_pipeline_QC.R")
 
 # Set default parameters
 #
 file.config <- "../config"				# config file
-dir.output <- ".."						# base directory for QA output
+dir.output <- ".."						# base directory for QC output
 config.name.run <- NULL					# name of the run to be processed
 
 # Get command line parameters and split at "=", then do parsing. Probably not the 'R'-way to do things, but works
@@ -34,7 +33,7 @@ if(length(vector.cmd.line) > 0) {
 			cnt.cmd.line <- cnt.cmd.line + 2
 			next;
 		}
-		if(vector.cmd.line[cnt.cmd.line] == "--qadir"){
+		if(vector.cmd.line[cnt.cmd.line] == "--qcdir"){
 			dir.output <- vector.cmd.line[cnt.cmd.line + 1]
 			cnt.cmd.line <- cnt.cmd.line + 2
 			next;
@@ -44,15 +43,15 @@ if(length(vector.cmd.line) > 0) {
 			cnt.cmd.line <- cnt.cmd.line + 2
 			next;
 		}
-		stop(paste("ERROR: pipeline_QA.R: Unknown option:",vector.cmd.line[cnt.cmd.line]))
+		stop(paste("ERROR: pipeline_QC.R: Unknown option:",vector.cmd.line[cnt.cmd.line]))
 	}
 	if(cnt.cmd.line == length(vector.cmd.line)) {
-		warning(paste("WARNING: pipeline_QA.R: Did not parse command line option",vector.cmd.line[cnt.cmd.line]))
+		warning(paste("WARNING: pipeline_QC.R: Did not parse command line option",vector.cmd.line[cnt.cmd.line]))
 	}
 }
 
 if(is.null(config.name.run)) {
-	stop("ERROR: pipeline_QA.R: run name not specified")
+	stop("ERROR: pipeline_QC.R: run name not specified")
 }
 
 # Load parameters from config file
@@ -92,33 +91,21 @@ list.config.colors.locus <- list(
 	L = "#3F3FFF"
 )
 
-# Get a DB connection, using the preferred authentication mechanism (defined in $HOME/.my.authentication, defaults to usage of .my.cnf)
+# Get a DB connection, using ".my.cnf" group (specify alternative file using "default.file" keyword)
 #
-connection.mysql <- switch(config.authentication.method,
-	cnf_file = dbConnect(
-		MySQL(),
-		group=config.authentication.profile[["cnf_group"]]
-	),
-	kwallet = dbConnect(
-		MySQL(),
-		host = config.authentication.profile[["kwallet_host"]],
-		user = config.authentication.profile[["kwallet_user"]],
-		password = getKWalletPassword(
-			config.authentication.profile[["kwallet_wallet"]],
-			config.authentication.profile[["kwallet_folder"]],
-			generateKWalletKey(config.authentication.profile[["kwallet_host"]], config.authentication.profile[["kwallet_user"]])
-		)
-	)
+connection.mysql <- dbConnect(
+	MySQL(),
+	group=list.config.global[["db_group_auth"]]
 )
 
 
-# === QA Step 1 - Tag Stats and Locus counts ===
+# === QC Step 1 - Tag Stats and Locus counts ===
 #
 # Get total locus count for the given run. This is done to make sure that there is not a substantial population of reads that
 # is not covered by the loci given in list.config.loci. Currently locus identification is derived from the identified V segment
 # and as long as the default E-value threshold of 10 is used it is very unlikely that locus identification should fail.
 #
-if (config.debug.level >= 3) cat("[pipeline_QA.R][INFO] Entering step 1\n");
+if (config.debug.level >= 3) cat("[pipeline_QC.R][INFO] Entering step 1\n");
 
 df.locus.counts <- func.locus.count(
 	connection.mysql = connection.mysql,
@@ -127,8 +114,8 @@ df.locus.counts <- func.locus.count(
 )
 
 
-# Do the actual database request. This can take a long time (hours), for further information see comment in library_QA.R.
-# Parallization has not yet been tested, however one potential problem is the simultanious use of the same DB connection.
+# Do the actual database request. This can take a long time (hours), for further information see comment in lib_pipeline_QC.R.
+# Parallelization has not yet been tested, however one potential problem is the simultanious use of the same DB connection.
 #
 list.tag.stats <- lapply(
 	X = names(list.config.loci),
@@ -147,7 +134,7 @@ names(list.tag.stats) <- sapply(list.tag.stats, function(x){x$locus})
 # of the *tag* and therefore correspond to proximal and distal position.
 #
 #
-pdf(file=file.path(dir.output, config.name.run, "QA_out_tag_stats.pdf"), paper="A4r", width=11.7, height=8.27)
+pdf(file=file.path(dir.output, config.name.run, "QC_out_tag_stats.pdf"), paper="A4r", width=11.7, height=8.27)
 par(mfrow = c(3, length(list.tag.stats)),oma=c(1, 0, 1.25, 0))
 
 lapply(
@@ -254,7 +241,7 @@ lapply(
 
 mtext(
 	paste(
-		"Pipeline QA for run ", config.name.run, " from database ", list.config.global$database, " on ", format(Sys.time(), "%Y-%m-%d %H:%M:%S"),
+		"Pipeline QC for run ", config.name.run, " from database ", list.config.global$database, " on ", format(Sys.time(), "%Y-%m-%d %H:%M:%S"),
 		sep=""
 	),
 	outer=TRUE,
@@ -282,15 +269,15 @@ mtext(
 
 dev.off() -> temp.null
 
-if (config.debug.level >= 3) cat("[pipeline_QA.R][INFO] Leaving step 1\n");
+if (config.debug.level >= 3) cat("[pipeline_QC.R][INFO] Leaving step 1\n");
 
 
-# === QA Step 2 - Tag position aggregation ===
+# === QC Step 2 - Tag position aggregation ===
 #
 
-if (config.debug.level >= 3) cat("[pipeline_QA.R][INFO] Entering step 2\n");
+if (config.debug.level >= 3) cat("[pipeline_QC.R][INFO] Entering step 2\n");
 
-pdf(file=file.path(dir.output, config.name.run, "QA_out_tag_positions.pdf"), paper="A4r", width=11.7, height=8.27)
+pdf(file=file.path(dir.output, config.name.run, "QC_out_tag_positions.pdf"), paper="A4r", width=11.7, height=8.27)
 par(mfcol=c(2, 3),oma=c(1, 0, 1.25, 0))
 
 config.tag.aggregation.range <- 700
@@ -405,15 +392,15 @@ mtext(
 
 dev.off() -> temp.null
 
-if (config.debug.level >= 3) cat("[pipeline_QA.R][INFO] Leaving step 2\n");
+if (config.debug.level >= 3) cat("[pipeline_QC.R][INFO] Leaving step 2\n");
 
 
-# === QA Step 3 - Reads per well ===
+# === QC Step 3 - Reads per well ===
 #
 
-if (config.debug.level >= 3) cat("[pipeline_QA.R][INFO] Entering step 3\n");
+if (config.debug.level >= 3) cat("[pipeline_QC.R][INFO] Entering step 3\n");
 
-pdf(file=file.path(dir.output, config.name.run, "QA_out_reads_per_well.pdf"), paper="A4r", width=11.7, height=8.27)
+pdf(file=file.path(dir.output, config.name.run, "QC_out_reads_per_well.pdf"), paper="A4r", width=11.7, height=8.27)
 par(mfcol=c(2, 3), oma=c(1, 0, 1.25, 0))
 
 lapply(
@@ -505,15 +492,15 @@ mtext(
 
 dev.off() -> temp.null
 
-if (config.debug.level >= 3) cat("[pipeline_QA.R][INFO] Leaving step 3\n");
+if (config.debug.level >= 3) cat("[pipeline_QC.R][INFO] Leaving step 3\n");
 
 
-# === QA Step 4 - Raw readlength and quality values ===
+# === QC Step 4 - Raw readlength and quality values ===
 #
 
-if (config.debug.level >= 3) cat("[pipeline_QA.R][INFO] Entering step 4\n");
+if (config.debug.level >= 3) cat("[pipeline_QC.R][INFO] Entering step 4\n");
 
-pdf(file=file.path(dir.output, config.name.run, "QA_out_along_bp.pdf"), paper="A4r", width=11.7, height=8.27)
+pdf(file=file.path(dir.output, config.name.run, "QC_out_along_bp.pdf"), paper="A4r", width=11.7, height=8.27)
 par(mfrow=c(2, 3),oma=c(1, 0, 1.25, 0), mar=c(5, 4, 4, 4) + 0.1)
 
 lapply(
@@ -578,7 +565,7 @@ mtext(
 
 dev.off() -> temp.null
 
-if (config.debug.level >= 3) cat("[pipeline_QA.R][INFO] Leaving step 4\n");
+if (config.debug.level >= 3) cat("[pipeline_QC.R][INFO] Leaving step 4\n");
 
 
 # Clean-up and exit
