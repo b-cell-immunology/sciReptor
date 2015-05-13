@@ -8,7 +8,7 @@ todb_reads.pl - upload raw 454 sequencing data to bcelldb
 
 =head1 SYNOPSIS
 
-todb_reads.pl [-h <help>] -f <fastafile> -q <qualfile> -ri <seqrun_info> 
+todb_reads.pl [-h <help>] -f <fastafile> -q <qualfile> -ri <seqrun_info> -m <matrix> 
 
 =head1 ARGUMENTS 
 
@@ -17,6 +17,8 @@ todb_reads.pl [-h <help>] -f <fastafile> -q <qualfile> -ri <seqrun_info>
 -f, -q	Fasta file and quality file. Need same identifiers in both files.
 
 -ri	Text file with information concerning the sequencing run.
+
+-m	Experiment ID (formerly called matrix).
 
 =head1 DESCRIPTION
 

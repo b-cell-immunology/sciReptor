@@ -116,7 +116,7 @@ my $VDJ_type;
 my $VDJ_locus;
 #default: igblast_productive = NULL
 my $igblast_productive = 'NULL';
-my $rearrangement_mark;
+my $rearrangement_mark = 0;
 
 ### 4. Go through IgBLAST output and parse.
 
@@ -139,10 +139,10 @@ while(<$in_igblast>) {
     } 
     if ($count_line == $rearrangement_mark + 1 && $count_line > 9) {
     	my @rea_fields = split(/\t/, $_);
-	if ($rea_fields[5] == 'Yes') {
+	if ($rea_fields[-2] eq 'Yes') {
 		$igblast_productive = 1;
 	}
-	elsif ($rea_fields[5] == 'No') {
+	elsif ($rea_fields[-2] eq 'No') {
 		$igblast_productive = 0;
 	}
     } 
