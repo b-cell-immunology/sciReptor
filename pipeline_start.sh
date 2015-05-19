@@ -42,7 +42,7 @@ else
 	SHOW_HELP=1
 fi;
 
-if [[ $SHOW_HELP == 1 ]];
+if [[ $SHOW_HELP == 1 ]] || [[ ! $PIPELINE_CORES ]] || [[ ! $PIPELINE_RUN ]] || [[ ! $PIPELINE_EXPERIMENT_ID ]];
 then
 	echo "Usage: $0 --cores=<CPU cores> --run=<run_id> --experiment_id=<experiment_id>"
 	echo "All parameters are mandatory."

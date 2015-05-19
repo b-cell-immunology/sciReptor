@@ -34,8 +34,7 @@ CREATE TABLE IF NOT EXISTS `donor` (
   INDEX `fk_donor_species_library1` (`species_id` ASC),
   UNIQUE INDEX `donor_id_UNIQUE` (`donor_id` ASC),
   UNIQUE INDEX `unique_id` (`donor_identifier` ASC, `project` ASC))
-ENGINE = MyISAM
-COMMENT = '\n';
+ENGINE = MyISAM;
 
 SHOW WARNINGS;
 
@@ -512,6 +511,7 @@ CREATE TABLE IF NOT EXISTS `flow` (
   `value` FLOAT NULL,
   `channel_id` INT NOT NULL,
   PRIMARY KEY (`flow_id`),
+  UNIQUE KEY `idx_flow_event_id_channel_id` (`event_id`,`channel_id`),
   INDEX `fk_flow_event1_idx` (`event_id` ASC),
   INDEX `fk_flow_flow_meta1_idx` (`channel_id` ASC))
 ENGINE = MyISAM;

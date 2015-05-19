@@ -1,7 +1,7 @@
 # Name:			lib_pipeline_common.R
-# Verson:		0.2.1 (2015-02-07)
+# Verson:		0.2.2 (2015-04-26)
 # Authors:		Christian Busse, Katharina Imkeller
-# Maintainer:	Christian Busse (busse@mpiib-berlin.mpg.de)
+# Maintainer:	Christian Busse (bussec@dkfz-heidelberg.de)
 # Licence:		AGPL3
 # Provides:		This library provides general functions for the evaluation pipeline.
 # Requires:		nothing
@@ -37,22 +37,29 @@ func.read.config <- function(file.name) {
 		table.key.value[,"key"] <- sub("^[[:space:]]*", "", table.key.value[,"key"])
 		table.key.value[,"value"] <- sub("[[:space:]]*;$", "", table.key.value[,"value"])
 
+		# Warn in case any keys do not comply to the Bash naming sheme. Defined default handling of this case: Warn, then remove the line.
+		#
 		index.keys.valid <- grepl("^[_A-Za-z][_0-9A-Za-z]+$", table.key.value[,"key"])
 		if (! all(index.keys.valid)) {
-			stop(paste(
+			warning(paste(
 					"Invalid key(s) found in config file:",
 					table.key.value[(! index.keys.valid),]
 			))
-			return(NA)
+			table.key.value <- table.key.value[index.keys.valid,]
 		}
 
-		index.keys.duplicated <- duplicated(table.key.value[,"key"])
+		# Warn in case any keys are duplicated. Defined default handling of this case: Warn, then take the last occurrence of the key
+		# and discard all previous ones. Since R's named list elements can have the same name multiple times within the same list, the
+		# duplicated have to be removed before. Finally, since the "duplicated" function marks all elements AFTER the first occurrence
+		# the vector has to be inverted to implement the desired behavior.
+		#
+		index.keys.duplicated <- rev(duplicated(rev(table.key.value[,"key"])))
 		if (any(index.keys.duplicated)) {
-			stop(paste(
-					"Duplicated key(s) found in config file:",
+			warning(paste(
+					"Duplicated key(s) were found in config file, the following were discarded:",
 					table.key.value[(index.keys.duplicated),]
 			))
-			return(NA)
+			table.key.value <- table.key.value[! index.keys.duplicated,]
 		}
 
 		# Perform variable expansion for "curly style" variables as described above. Note that the expansion of locally defined 

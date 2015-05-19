@@ -11,7 +11,6 @@
 #
 library(RMySQL)
 source("lib/lib_pipeline_common.R")
-source("lib/lib_authentication_common.R")
 source("lib/lib_flowcyt_sorting_indexed.R")
 
 # Set default parameters
@@ -76,24 +75,14 @@ list.fcs.all.indexed <- lapply(
 	FUN=func.read.indexed.FCS  
 )
 
-# Get a DB connection, using the preferred authentication mechanism (defined in $HOME/.my.authencation, defaults to usage of .my.cnf)
+# Get a DB connection, using ".my.cnf" group (specify alternative file using "default.file" keyword)
 #
-connection.mysql <- switch(config.authentication.method,
-	cnf_file = dbConnect(
-		MySQL(),
-		group=config.authentication.profile[["cnf_group"]]
-	),
-	kwallet = dbConnect(
-		MySQL(),
-		host = config.authentication.profile[["kwallet_host"]],
-		user = config.authentication.profile[["kwallet_user"]],
-		password = getKWalletPassword(
-			config.authentication.profile[["kwallet_wallet"]],
-			config.authentication.profile[["kwallet_folder"]],
-			generateKWalletKey(config.authentication.profile[["kwallet_host"]], config.authentication.profile[["kwallet_user"]])
-		)
-	)
+connection.mysql <- dbConnect(
+	MySQL(),
+	group=list.config.global[["db_group_auth"]]
 )
+
+
 
 lapply(
 	list.fcs.all.indexed, 
@@ -155,18 +144,23 @@ lapply(
 		fcs.timestep <- as.numeric(fcs.current$description[["$TIMESTEP"]])
 		if(xor(is.null(index.col.time), is.null(fcs.timestep))) {
 			if(is.null(index.col.time)) {
-				warning(paste("'Time' parameter is missing although $TIMESTEP keyword is specified in file ", fcs.current$file, ".", sep=""))
+				if (config.debug.level >= 2) {
+					cat(paste("[todb_flow.R][WARNING] 'Time' parameter is missing although $TIMESTEP keyword is specified in file ", fcs.current$file, ".\n", sep=""))
+				}
 			} else {
-				warning(paste("$TIMESTEP keyword is not specified, although 'Time' parameter is present in file ", fcs.current$file, ".", sep=""))
+				if (config.debug.level >= 2) {
+					cat(paste("[todb_flow.R][WARNING] $TIMESTEP keyword is not specified, although 'Time' parameter is present in file ", fcs.current$file, ".\n", sep=""))
+				}
 			}
 		} else {
 			if(! is.null(index.col.time)) {
 				fcs.current$data[,index.col.time] <- fcs.current$data[,index.col.time] * fcs.timestep
 			} else {
-				message("No time parameter recorded")
+				if (config.debug.level >= 3) {
+					cat(paste("[todb_flow.R][INFO] No time parameter recorded in file ", fcs.current$file, ".\n", sep=""))
+				}
 			}
 		}
-
 
 		# Set the current barcode as variable in the database
 		#
@@ -299,14 +293,14 @@ lapply(
 						)
 					)
 				} else {
-				    if (config.debug.level >= 2) {
-				        cat(
+					if (config.debug.level >= 2) {
+						cat(
 							paste(
-								"[todb_flow.R][WARN] Parameters already present for plate ", fcs.barcode, " sort_id ", sort.id.current, ". New parameters not inserted.\n",
+								"[todb_flow.R][WARNING] Parameters already present for plate ", fcs.barcode, " sort_id ", sort.id.current, ". New parameters not inserted.\n",
 								sep=""
 							)
 						)
-				    }
+					}
 				}
 			}
 		)
@@ -336,16 +330,15 @@ lapply(
 					)
 				)
 
-			    if (config.debug.level >= 3) {
-			        cat(
+				if (config.debug.level >= 3) {
+					cat(
 						paste(
 							"[todb_flow.R][INFO] Insert barcode ", fcs.barcode, " with sort_id ", id.sort.current,
 							" and (events:dimensions) ", paste(dim(sort.data.combined), collapse=":"), "\n",
 							sep=""
 						)
 					)
-			    }
-
+				}
 
 				apply(
 					sort.data.combined[vector.select.sort.id, c("event_id", df.channels[,"detector_name"])],
@@ -376,15 +369,30 @@ lapply(
 							"\')",
 							sep=""
 						)
-						dbGetQuery(
-							connection.mysql,
-							paste(
-								"INSERT INTO ", list.config.global$database,".flow ",
-								"(event_id, value, channel_id) ",
-								"VALUES ", temp.string.flow.data,
-								sep=""
-							)
+						status.insert.event <- try(
+							dbGetQuery(
+								connection.mysql,
+								paste(
+									"INSERT INTO ", list.config.global$database,".flow ",
+									"(event_id, value, channel_id) ",
+									"VALUES ", temp.string.flow.data,
+									sep=""
+								)
+							),
+							silent=TRUE
 						)
+						if (! is.null(status.insert.event)) {
+							if (config.debug.level >= 2) {
+								cat(
+									paste(
+										"[todb_flow.R][WARNING] Database INSERT failed: ",
+										attr(status.insert.event,"condition")$message,
+										"\n",
+										sep=""
+									)
+								)
+							}
+						}
 					}
 				)
 			}

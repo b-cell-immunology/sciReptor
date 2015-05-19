@@ -98,7 +98,7 @@ all: $(dir)/PHASE2
 # PHASE 2 starts, after the fasta files for alignment have been generated
 # otherwise, make does not know which files belong to *.cfasta and *.caln
 $(dir)/PHASE2: PHASE1
-	$(MAKE) $(dir)/consensusfasta.done $(dir)/metainfotodb.done $(dir)/cdrfwrtodb.done $(dir)/allsigout.done $(dir)/allsblout.done $(dir)/igblastalignments.done $(dir)/mutations.done $(dir)/qualitycheck.done
+	$(MAKE) $(dir)/consensusfasta.done $(dir)/metainfotodb.done $(dir)/cdrfwrtodb.done $(dir)/allsigout.done $(dir)/allsblout.done $(dir)/igblastalignments.done $(dir)/mutations.done $(dir)/qualitycontrol.done
 	@echo "Finished without errors on `date --utc +%Y-%m-%d\ %H:%M:%S\ %Z`"
 	touch $@
 	
@@ -112,8 +112,8 @@ PHASE1:
 ##### PHASE2 targets
 #####
 
-$(dir)/qualitycheck.done: $(dir)/allsigout.done
-	Rscript pipeline_QA.R --run $(run) --qadir $(quality_base_dir)
+$(dir)/qualitycontrol.done: $(dir)/allsigout.done
+	Rscript pipeline_QC.R --run $(run) --qcdir $(quality_base_dir)
 
 # upload metainformation
 # DONT FORGET to put the plate and metainfo to the raw_data directory

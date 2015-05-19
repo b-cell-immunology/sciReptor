@@ -22,13 +22,17 @@ log_level=3
 # example: malaria, hiv, ....
 database=
 
-# database authentification
+# Database authentification works currently exclusively via MySQL's user config file ($HOME/.my.cnf), which
+# can contain multiple groups, each with different database/authentication parameters. The respective group
+# to use is set by the "db_group_auth" key below. Within the user config file, this group has to contain at
+# least the "user" and "password" parameter. In case the database is located on a remote server, additional
+# parameters like "host" and "port" might have to be included.
+#
 db_group_auth=mysql_igdb
-db_host=curry-d130
-db_port=3306
 
-# human or mouse
-#species=
+# Species from which the samples are derived from and against whose database the sequences will be BLASTed
+# against. Currently available options: human or mouse
+species=
 
 # Matrix size [<columns>_<rows>]
 #
@@ -43,7 +47,8 @@ matrix=
 tag_batch=
 tag_landing_zone=300
 
-# routines to use for correction of tag positions: "none" (default), "D01_plateposition", "tag_batch" (required for Mm_AGM_002)
+# routines to use for correction of tag positions: "none" (default), "D01_plateposition", "tag_batch" (required
+# for Mm_AGM_002)
 tag_correction=none
 
 plate_layout=1
@@ -51,15 +56,14 @@ nrows_per_plate=16
 ncols_per_plate=24
 
 # IgBLAST settings
-
+#
 num_V=3
 num_D=3
 num_J=3
 num_align_igblast=10
-out_format_igblast=7
 
 # BLAST settings
-# not used ?
+#
 #mismatch_penalty=-1   # default = 3
 #e_value=10            # default = 10
 #word_size=7           # default = 11
@@ -73,7 +77,8 @@ n_consensus=5
 
 # motif search
 # The regular expressions in the config file are critical, there is no warning in case they are modified.
-# They need to be compatible to perl regexp, but the config is also used as bash source. Pipes ("|") need to be escaped ("\").
+# They need to be compatible to perl regexp, but the config is also used as bash source. Pipes ("|") need to
+# be escaped ("\").
 
 # heavy
 h_CDR3_e=WG.G
