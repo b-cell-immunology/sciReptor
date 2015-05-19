@@ -23,7 +23,7 @@ log_level=3
 database=
 
 # Database authentification works currently exclusively via MySQL's user config file ($HOME/.my.cnf), which
-# can contain multiple groups, each wich different database/authentication parameters. The respective group
+# can contain multiple groups, each with different database/authentication parameters. The respective group
 # to use is set by the "db_group_auth" key below. Within the user config file, this group has to contain at
 # least the "user" and "password" parameter. In case the database is located on a remote server, additional
 # parameters like "host" and "port" might have to be included.

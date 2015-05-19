@@ -125,8 +125,9 @@ sub stop_log
 		close(LOG);
 		select STDOUT;
 		my @array_log_buffer = split(/\n/, $log_buffer);
-		print "[bcelldb_init.pm][DEBUG] Size of log_buffer: " . length($log_buffer) . " Lines of log_buffer: " . scalar @array_log_buffer . " \n" if ($conf{log_level}>=4);
-		my $status_update = $dbh->do("UPDATE log_table SET output='$log_buffer' where log_id=$log_id");
+		print "[bcelldb_init.pm][DEBUG] log_id: " . $log_id . "  Size of log_buffer: " . length($log_buffer) . "  Lines of log_buffer: " . scalar @array_log_buffer . "\n" if ($conf{log_level}>=4);
+		$log_buffer =~ s/(\\|\')/\\$1/g; # Escape characters which are problematic for SQL code (backslash and single quote)
+		my $status_update = $dbh->do("UPDATE log_table SET output='$log_buffer' WHERE log_id=$log_id");
 		if ($status_update) {
 			print "[bcelldb_init.pm][DEBUG] Number of rows updated in log_table: $status_update \n" if ($conf{log_level}>=4);
 		} else {
