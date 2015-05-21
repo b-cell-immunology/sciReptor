@@ -1,15 +1,15 @@
 # 
-# MAKEFILE FOR 454 PYROSEQUENCING DATA
+# MAKEFILE FOR MATRIX PCR NGS DATA
 #
 # This file sets up the rules (programming language 'make'), how different pipeline outputs depend on each other.
 # 
 # Arguments:
 # 	- run
 # 		name of the subdirectory, where you store the corresponding raw data, equivalent to sequencing run
-# 		e.g.: D1_1sthalf_run1
+# 		e.g.: D01_1sthalf_run1
 # 	- experiment_id
 # 		corresponding to the id of the matrix experiment
-# 		e.g. D1	
+# 		e.g. D01	
 #
 #
 # WORK FLOW FOR USE:

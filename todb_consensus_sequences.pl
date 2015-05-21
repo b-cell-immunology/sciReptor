@@ -18,7 +18,9 @@ Read the alignment output of MUSCLE, write consensus and identity percentage for
 
 2. Get Consensus from alignment. Consensus file must have the name matching 'cons_[consensus_id]'.
 
-3. Write to database.
+3. Find out whether it is 1. or 2. consensus rank
+
+4. Write to database.
 
 =head1 LOGGED INFORMATION
 
@@ -33,12 +35,7 @@ If the MUSCLE output contains letters that are not [ACGT], the character is igno
 
 =head1 AUTHOR
 
-Katharina Imkeller - imkeller@mpiib-berlin.mpg.de
-
-=head1 HISTORY
-
-Written Jan 2014
-Update Sep 2014 - Logging and Documentation
+Katharina Imkeller
 
 =cut
 
@@ -167,7 +164,7 @@ while (my @possible_consensus = $sel_all->fetchrow_array) {
 	else {$consensus_rank++};
 }
 
-### 3. Write to database.
+### 4. Write to database.
 
 $ins_seq->execute($consensus,length $consensus, $consensus_quality, $cons_id, $consensus_rank, $consensus,length $consensus, $consensus_quality, $cons_id, $consensus_rank);
 # log insert statement

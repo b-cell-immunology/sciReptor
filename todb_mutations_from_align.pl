@@ -39,7 +39,7 @@ optionaly write the output into a file (if just needed for analysis and do not w
 
 =head1 AUTHOR
 
-Katharina Imkeller - imkeller@mpiib-berlin.mpg.de
+Katharina Imkeller
 
 =head1 HISTORY
 

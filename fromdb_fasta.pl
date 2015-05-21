@@ -16,25 +16,20 @@ Get a fasta file of sequences in the sourcetable that do not have any correspond
 Needed as a step before executing further analysis.
 The fasta file will be used as source for IgBLAST, BLAST, RazerS and MUSCLE. The fasta file is written into the output subrepository.
 
-0.	Logging
+1.	Parse segmentation variables from the outfile variable.
 
-1.	Make a directory where fasta file will be stored.
-
-2.	Connect to database. Select all entries of sourcetable that do not have corresponding entry in targettable.
+2.	Select all entries of sourcetable that do not have corresponding entry in targettable.
 
 3.	Write seq_id and seq of selected rows into fasta file.
 
 =head1 LOGGED INFORMATION
+
 - select statement for sequences
 - total number of sequences that were selected
 
 =head1 AUTHOR
 
-Katharina Imkeller - imkeller@mpiib-berlin.mpg.de
-
-=head1 HISTORY
-
-Written Jan 2014
+Katharina Imkeller
 
 =cut
 
@@ -72,10 +67,7 @@ my $dbh = get_dbh($conf{database});
 
 
 
-### 1. Make a fasta directory in the output directory if not exist
-
-#my $tmpdir="../output_files/fasta";
-#`mkdir -p $tmpdir`;
+### 1. Parse segmentation variables from the outfile variable.
 
 
 if ($outfile) {
@@ -106,7 +98,7 @@ my $seq_count=0;
 my $sth = $dbh->prepare($statement);
 $sth->execute;
 
-# write to output file
+### 3. Write seq_id and seq of selected rows into fasta file.
 
 open(my $fasta, ">$outfile") or die "$outfile not openend";
 while ( my @row = $sth->fetchrow_array ) {

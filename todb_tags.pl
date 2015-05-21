@@ -4,7 +4,7 @@
 
 =head1 NAME
 
-todb_tags
+todb_tags - write the tag information of each read to database
 
 =head1 SYNOPSIS
 
@@ -15,8 +15,12 @@ todb_tags.pl -ro <razersoutput> [-h]
 Extract all the tags found by RazerS and write them to the database. Calculate number of insertions, deletions and mutations in the tag.
 
 Necessary input:
-
 -ro	RazerS output file.
+
+Steps:
+1. Prepare database to insert tag information
+2. Open RazerS output
+3. Parse tag information and write to database
 
 =head1 LOGGED INFORMATION
 
@@ -24,11 +28,7 @@ Necessary input:
 
 =head1 AUTHOR
 
-Katharina Imkeller - imkeller@mpiib-berlin.mpg.de
-
-=head1 HISTORY
-
-Written Jan 2014
+Katharina Imkeller
 
 =cut
 

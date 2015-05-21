@@ -27,12 +27,7 @@ Kappa chain Row1-16:Col25-48 is exchanged by Row17-32:Col1-24 and vice versa.
 
 =head1 AUTHOR
 
-Katharina Imkeller - imkeller@mpiib-berlin.mpg.de
-
-=head1 HISTORY
-
-Written Jan 2014
-Added Feb 2014
+Katharina Imkeller
 
 =cut
 
@@ -90,7 +85,7 @@ sub correct_tags_240_256_1 {
 }
 
 
-### Experiment D02
+### Experiment D01
 
 sub correct_tags_D01_2 {
 

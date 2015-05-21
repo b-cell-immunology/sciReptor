@@ -8,7 +8,7 @@ fromdb_consensus_fasta
 
 =head1 SYNOPSIS
 
-fromdb_consensus_fasta.pl [-h <help>]
+fromdb_consensus_fasta.pl -p <output_path> [-h <help>]
 
 =head1 DESCRIPTION
 
@@ -18,8 +18,6 @@ For each consensus, that does not yet have a sequence assigned:
 	- get the corresponding reads
 	- update information in consensus
 
-
-0. Logging and database init
 1. Select consensus_ids and prepare selection for reads
 2. Loop over consensi, for each of them select all the reads and write fasta
 3. Logging counts
@@ -37,6 +35,10 @@ For each consensus, that does not yet have a sequence assigned:
 =head1 TODO
 
 It might be nice to directly cut away the tags here.
+
+=head1 AUTHOR
+
+Katharina Imkeller
 	
 =cut
 
@@ -85,14 +87,6 @@ $sel_consensus_sth->execute;
 my $sel_reads_sth = $dbh->prepare("SELECT seq_id, orient, seq \
   FROM $conf{database}.reads \
   WHERE consensus_id = ?");
-
-# select the tags and positions from database
-# in order to be able to cut away tag region
-
-#my $sel_tag_pos = $dbh->prepare("SELECT reads.orient, reads. FROM $conf{database}.reads AS reads 
-#	JOIN $conf{database}.reads_tags AS tags ON reads.seq_id=tags.seq_id
-#	JOIN $conf{database}.
-#	WHERE ");
 
 
 ### 2. Loop over all consensi

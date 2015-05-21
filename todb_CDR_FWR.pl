@@ -16,7 +16,7 @@ Write CDR/FWR DNA and protein sequences and length to the database. Also include
 
 Get input sequences of Ig genes from DB.sequences, get CDR/FWR positions from previous IgBLAST output. 
 Up to CDR2 regions are directly identified using the positions indicated by IgBLAST. 
-Additionally determine FWR3, CDR3, J and constant rest according to sequence motifs (regular expressions listed in config). From FWR3 end the region for motif search is (-15,100). Split into subsequences and write to database.
+Additionally determine FWR3, CDR3, J and constant rest according to protein sequence motifs (regular expressions listed in config). From FWR3 end the region for motif search is (-15,100). Split into subsequences and write to database.
 
 1. Prepare insert statements for CDR/FWRs, Prepare subroutines (they need the insert statements, thus the order!)
 2. get query_ids and CDR/FWR positions from IgBLAST output, retrieve sequence from DB --> LOOP OVER IgBLAST OUTPUT
@@ -34,11 +34,7 @@ They need to be compatible to perl regexp, but also not cause no problems when u
 
 =head1 AUTHOR
 
-Katharina Imkeller - imkeller@mpiib-berlin.mpg.de
-
-=head1 HISTORY
-
-Written Dec 2013
+Katharina Imkeller
 
 =cut
 

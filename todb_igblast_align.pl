@@ -4,7 +4,7 @@
 
 =head1 NAME
 
-todb_igblast_align
+todb_igblast_align - write alignment observed sequence/ germline to a file
 
 =head1 SYNOPSIS
 
@@ -21,11 +21,7 @@ Write a file for each alignment, that can later be processed by the mutation cou
 
 =head1 AUTHOR
 
-Katharina Imkeller - imkeller@mpiib-berlin.mpg.de
-
-=head1 HISTORY
-
-Written Mar 2013
+Katharina Imkeller
 
 =cut
 
