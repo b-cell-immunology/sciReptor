@@ -18,11 +18,7 @@ The underlying model for mutations assumes the lowest number of mutations and do
 
 =head1 AUTHOR
 
-Katharina Imkeller - imkeller@mpiib-berlin.mpg.de
-
-=head1 HISTORY
-
-Written Mar 2014
+Katharina Imkeller
 
 =cut
 

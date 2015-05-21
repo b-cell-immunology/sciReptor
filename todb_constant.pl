@@ -4,7 +4,7 @@
 
 =head1 NAME
 
-todb_constant.pl
+todb_constant - insert constant segment usage information into database
 
 =head1 SYNOPSIS
 
@@ -14,8 +14,6 @@ todb_constant.pl -bo <blastoutput> -t <targettable> [-h]
 
 Open a BLAST output file. Parse the necessary information and write to database.
 The identifiers in the BLAST output need to be the same as the seq_id in reads or sequences table.
-
-0. Logging
 
 1. Prepare DB statements: insert into constant table, select id from constant library.
 
@@ -31,11 +29,7 @@ The identifiers in the BLAST output need to be the same as the seq_id in reads o
 
 =head1 AUTHOR
 
-Katharina Imkeller - imkeller@mpiib-berlin.mpg.de
-
-=head1 HISTORY
-
-Written Jan 2014
+Katharina Imkeller
 
 =cut
 

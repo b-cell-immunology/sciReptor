@@ -11,7 +11,7 @@
 # - none (bcelldb_logger removed Oct 2014, in order to reduce number of entries in log table)
 #
 # AUTHOR
-# Katharina Imkeller - imkeller@mpiib-berlin.mpg.de
+# Katharina Imkeller
 #
 # HISTORY
 # Written Jan 2014

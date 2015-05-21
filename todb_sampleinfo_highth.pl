@@ -4,7 +4,7 @@
 
 =head1 NAME
 
-todb_sampleinfo_highth
+todb_sampleinfo_highth - write metainformation for matrix PCR experiment to database
 
 =head1 SYNOPSIS
 
@@ -37,11 +37,7 @@ Two necessary input files:
 
 =head1 AUTHOR
 
-Katharina Imkeller, imkeller@mpiib-berlin.mpg.de
-
-=head1 HISTORY
-
-written Jan 2014
+Katharina Imkeller
 
 =cut
 

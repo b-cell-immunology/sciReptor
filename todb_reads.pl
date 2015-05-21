@@ -1,10 +1,8 @@
 #!/usr/bin/perl
 
-# Plain old documentation
-
 =head1 NAME
 
-todb_reads.pl - upload raw 454 sequencing data to bcelldb
+todb_reads.pl - upload raw sequencing data to bcelldb
 
 =head1 SYNOPSIS
 
@@ -40,11 +38,7 @@ information and information about sequencing run.
 
 =head1 AUTHOR
 
-Katharina Imkeller - imkeller@mpiib-berlin.mpg.de
-
-=head1 HISTORY
-
-Written Jan 2014
+Katharina Imkeller
 
 =cut
 
@@ -191,7 +185,7 @@ else {
 my $n_inserted = 0;
 # count the total number of sequences
 my $n_reads = 0;
-print "Reads inserted into reads table:\nname\tread_id\n";
+#print "Reads inserted into reads table:\nname\tread_id\n";
 foreach (@identifiers) {
 #	print "$_\t";
 	$n_reads++;	# count total reads

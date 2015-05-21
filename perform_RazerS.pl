@@ -12,22 +12,17 @@ perform_RazerS [-h] -f <sequencefasta> -ro <razersoutput>
 
 =head1 DESCRIPTION
 
-Create a fasta file for tags and take a fasta file for reads.
-Run RazerS on these files.
-Insert the output to the database.
+1. Create a fasta file for tags and take a fasta file for reads.
+2. Run RazerS on these files.
 
 =head1 LOGGED INFORMATION
+
 - tag select statement
 - number of selected tags
 
 =head1 AUTHOR
 
-Katharina Imkeller - imkeller@mpiib-berlin.mpg.de
-
-=head1 HISTORY
-
-Written Jan 2014
-Modified Sep 2014 - moved razers path to config file
+Katharina Imkeller
 
 =cut
 
@@ -59,7 +54,7 @@ select LOG;
 my $dbh = get_dbh($conf{library});
 
 
-### 2. Get tags from library and write to fasta file
+### 1. Get tags from library and write to fasta file
 
 # get tags from the database
 
@@ -83,7 +78,7 @@ while ( my @row = $get_tag->fetchrow_array ) {
 print "\n\ngot $tag_count tags for the matrix $conf{matrix}\n\n";
 
 
-# perform razers
+### 2. Perform razers
 
 # razers parameters
 my $razers_percid = 90;    # minimal required percid between query and template

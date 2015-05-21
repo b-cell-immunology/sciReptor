@@ -4,7 +4,7 @@
 
 =head1 NAME
 
-todb_VDJ
+todb_VDJ - parse IgBLAST output and wirte to database
 
 =head1 SYNOPSIS
 
@@ -20,7 +20,7 @@ Necessary input:
 
 -io	IgBLAST output file.
 
--ut Table that will be updated according to what was foun by IgBLAST (orientation, locus). Can be reads or sequences.
+-ut 	Table that will be updated according to what was foun by IgBLAST (orientation, locus). Can be reads or sequences.
 
 
 The program goes through the IgBLAST output and looks for each query identifier, which is identical with the seq_id in reads or sequences table. For each seq_id, it writes the corresponding segments of 1. and 2. IgBLAST rank to the database. The corresponding VDJ_ids from the library are also looked up and inserted. Orientation and locus are updated in the updatetable, according to whether IgBLAST used the reverse complement and what locus the 1. hit V segment has. Version: IGBLASTN 2.2.28+
@@ -39,11 +39,7 @@ nothing yet
 
 =head1 AUTHOR
 
-Katharina Imkeller - imkeller@mpiib-berlin.mpg.de
-
-=head1 HISTORY
-
-Written Jan 2014
+Katharina Imkeller
 
 =cut
 

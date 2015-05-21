@@ -4,7 +4,7 @@
 
 =head1 NAME
 
-todb_consensus_tags
+todb_consensus_tags - distribute consensus_id, i.e. determine which reads will go into one consensus sequence
 
 =head1 SYNOPSIS 
 
@@ -14,24 +14,31 @@ todb_consensus_tags.pl [-h <help>] -m <experiment_id> -l locus
 
 write the identifying tags to consensus stats and the corresponding to the reads table
 
-- either all reads that do not yet have a consensus id
-- or a list of reads (for updating consensus e.g.)
+Necessary input:
 
-1. Get a list of all seq_ids that will be processed. This means select all the reads without well_id.
+-m	Experiment ID (formerly called matrix)
+-l	locus [H,K,L]
 
-2. Prepare select statement: for a seq_id get the right identifying tags from the database.
+Steps:
 
-3. Prepare database to insert well_id.
+1.	Get a list of all seq_ids that will be processed. This means select all the reads without well_id.
 
-4. Go through all the reads, select tags and assign well_id.
+2.	Prepare select statement: for a seq_id get the right identifying tags from the database.
 
-5. Select all well_ids that do not yet have a consensus_id assigned.
+3.	Prepare database to insert well_id.
 
-6. Prepare database: for a certain well_id, select the most common and 2nd most common V-J combination
+4.	Go through all the reads, select tags and assign well_id.
 
-7. Prepare database: insert into consensus_stats, select all related seq_ids and update consensus_id for these.
+5.	Select all well_ids that do not yet have a consensus_id assigned.
 
-8. Go through all the well_ids. Determine V-J combinations, insert to consensus_stats and update reads table consensus_id. 
+6.	Prepare database: for a certain well_id, select the most common and 2nd most common V-J combination
+
+7.	Prepare database: insert into consensus_stats, select all related seq_ids and update consensus_id for these.
+
+8.	Go through all the well_ids. Determine V-J combinations, insert to consensus_stats and update reads table consensus_id.
+	!!! Constant segment identification is not considered, only V-gene-allele/J-gene-allele!!!
+	We decided against taking into account constant segment identification since IgG subclass identification e.g. can be ambiguous.
+	Building different consensi for different constant assignment could thus lead to artificial 2. consensus occurrence.
 
 =head1 LOGGED INFORMATION
 
@@ -41,11 +48,9 @@ write the identifying tags to consensus stats and the corresponding to the reads
 - count of well_ids that were processed
 - count of sequence ids that resulted (it can be 2 sequences in one well, corresponding to 1. and 2. consensus)
 
-=head1 KNOWN BUGS
-
 =head1 AUTHOR
 
-Katharina Imkeller - imkeller@mpiib-berlin.mpg.de
+Katharina Imkeller
 
 =head1 HISTORY
 

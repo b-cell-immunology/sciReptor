@@ -14,7 +14,7 @@ Call MUSCLE to perform multiple alignment. This is done in an extra perl script 
 
 =head1 AUTHOR
 
-Katharina Imkeller - imkeller@mpiib-berlin.mpg.de
+Katharina Imkeller
 
 =head1 HISTORY
 

@@ -41,11 +41,7 @@ E.g. write all duplicates into a file in order to be later on be able to juge th
 
 =head1 AUTHOR
 
-Katharina Imkeller, imkeller@mpiib-berlin.mpg.de
-
-=head1 HISTORY
-
-written Jan 2014
+Katharina Imkeller
 
 =cut
 

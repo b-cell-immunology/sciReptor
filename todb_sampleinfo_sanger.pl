@@ -24,11 +24,7 @@ Necessary input file:
 
 =head1 AUTHOR
 
-Katharina Imkeller, imkeller@mpiib-berlin.mpg.de
-
-=head1 HISTORY
-
-written Jan 2014
+Katharina Imkeller
 
 =cut
 

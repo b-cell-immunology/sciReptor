@@ -10,6 +10,8 @@ Arguments:
 <experiment_id>     All wells in one experiment id will be plotted. There is a statement in the title of the figure saying which different sequencing runs were included.
 <runname>           This argument is needed to be able to store the figure in a defined folder. Nevertheless we include all available sequencing runs related to the experiment_id in the plot.
 <greyscale>         Default: no greyscale. Use 'gs' for only greyscale and 'gs_log' for grayscale on log10(data).
+
+Author: Katharina Imkeller
 """
 
 # imports
