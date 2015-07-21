@@ -1,31 +1,28 @@
-sciReptor - single cell immunoglobulin repertoire analysis toolkit
-==================================================================
+sciReptor - single-cell immunoglobulin repertoire analysis toolkit
+------------------------------------------------------------------
 
-Installation
-------------
+###Installation
 
 Due to several external tools and various dependencies, sciReptor will take
 around half an hour to be setup up. Step-by-step guides for the host and the
 toolkit itself (including demo datasets) are available. However, in case you
 want to have a look at it first, there is also a completely set up **virtual
-machine [available][]** (as VirtualBox 4.3 appliance), which contains every-
+machine available][]** (as VirtualBox 4.3 appliance), which contains every-
 thing including two pre-installed demo datasets.
 
 [virtual machine available]: http://b-cell-immunology.dkfz.de/sciReptor_VMs/
 
-Related repositories
---------------------
+###Related repositories
 
-- [sciReptor_library][https://github.com/b-cell-immunology/sciReptor_library]
+- [sciReptor_library](https://github.com/b-cell-immunology/sciReptor_library)
   is a set positional data files and processing scripts, which download the 
   the reference sequences and build the interal and BLAST databases used by
   sciReptor.
-- [sciReptor_analysis][https://github.com/b-cell-immunology/sciReptor_analysis]
+- [sciReptor_analysis](https://github.com/b-cell-immunology/sciReptor_analysis)
   contains various scripts for downstream repertoire analysis.
 
 
-Copyright and License
----------------------
+###Copyright and License
 
 Copyright (2011-2015) Katharina Imkeller, Christian Busse, Irina Czogiel and
 Peter Arndt.
