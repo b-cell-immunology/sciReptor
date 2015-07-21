@@ -49,6 +49,7 @@ use Getopt::Long;
 use Bio::SeqIO;
 use bcelldb_init;
 
+my $config_seq_length_max = 1000;
 my $help = 0;
 my $output = "reads";
 my $fastafile;
@@ -99,8 +100,8 @@ my @identifiers = ();
 my $seq_id;
 while (my $seq = $fasta_in->next_seq()) {
 	my $seq_id =  $seq->id;
-	# take all letters in upper case
-	$id_seq_hash{$seq_id} = uc $seq->seq;
+	# take all letters in upper case, clip at maximal length of DB field.
+	$id_seq_hash{$seq_id} = substr(uc $seq->seq, 0, $config_seq_length_max);
 	# list of all seq_id
 	push(@identifiers, $seq_id);
 }
@@ -110,7 +111,8 @@ while (my $seq = $fasta_in->next_seq()) {
 my $qual_id;
 while (my $qual = $qual_in->next_seq()) {
 	$qual_id = $qual->id;
-	$id_qual_hash{$qual_id} = $qual->seq;
+	my @temp_qual = split(/\s+/, $qual->seq);
+	$id_qual_hash{$qual_id} = join(' ', splice(@temp_qual, 0, $config_seq_length_max));
 }
 
 
@@ -173,7 +175,7 @@ if ($seq_run_bool eq 1) {	# this is true when $query2 returned one, i.e. success
 	print "Inserted sequencing run $sequencing_run_id, $runname, $rundate into sequencing_run table.\n";
 }
 else {
-	print "Sequencing run allready exists. Please check the sequencing run settings (date and name), if that is not correct.";
+	print "Sequencing run already exists. Please check the sequencing run settings (date and name), if that is not correct.";
 }
 
 

@@ -72,7 +72,8 @@ if (length(vector.file.names.full) == 0) {
 
 list.fcs.all.indexed <- lapply(
 	vector.file.names.full,
-	FUN=func.read.indexed.FCS  
+	FUN=func.read.indexed.FCS,
+	debug.level=config.debug.level
 )
 
 # Get a DB connection, using ".my.cnf" group (specify alternative file using "default.file" keyword)
@@ -87,6 +88,14 @@ connection.mysql <- dbConnect(
 lapply(
 	list.fcs.all.indexed, 
 	function(fcs.current) {
+
+		# Ignore empty elements
+		if (length(fcs.current)==0) {
+			if (config.debug.level >= 2) {
+				cat(paste("[todb_flow.R][WARNING] Skiped one empty FCS record.\n"))
+			}
+			return(NULL)
+		}
 
 		# Read the custom barcode keyword.
 		#

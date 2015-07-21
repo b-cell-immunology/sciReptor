@@ -45,6 +45,11 @@ matrix=
 # human: Hs_G_001 (48x48), Hs_AEGM_001 (48x48)
 # mouse: Mm_AGM_001 (48x48), Mm_AGM_002 (240x256) or Mm_ADGM_001 (48x48)
 tag_batch=
+
+# "Landing Zone" for distal tags
+#
+# Minimal distance of a distal tag from the start of a given read. All distal tags starting at positions [bp]
+# smaller than the value given here, will be ignored. Default is 300.
 tag_landing_zone=300
 
 # routines to use for correction of tag positions: "none" (default), "D01_plateposition", "tag_batch" (required
@@ -102,13 +107,13 @@ l_altCDR3_e3=FG..
 l_Jend=[T\|I][V\|I\|A]L
 
 # configuration of the database access
-#library=igdb_library
+library=library_scireptor
 
 # Configuration of databases used by the pipeline. Note that $IGDATA should point to the folder containing the
 # "database", "internal_data" and "optional_file" folders, NOT to the "database" folder itself. The paths
 # specified as "blastdb_segments_X" are relative to $IGDATA
 #
-#IGDATA=${HOME}/analysis_pipeline/igdata
+IGDATA=${HOME}/analysis_pipeline/igrepositories/scireptor_library/igdata
 
 # default settings for IGBLAST stock installation, automatic switch between species
 blastdb_segments_V=database/${species}_gl_V
@@ -117,16 +122,9 @@ blastdb_segments_J=database/${species}_gl_J
 blastdb_segments_C=database/${species}_gl_C
 blastdb_auxiliary=optional_file/${species}_gl.aux
 
-## internal default settings for human
-# blastdb_segments_V=database/human_gl_V
-# blastdb_segments_D=database/human_gl_D
-# blastdb_segments_J=database/human_gl_J
-# blastdb_segments_C=database/hIGH-K-L_constant_exon1.fasta
-# blastdb_auxiliary=optional_file/human_gl.aux
-
 ## internal default settings for mouse
-# blastdb_segments_V=database/mouse_V-segment_NCBIm38
-# blastdb_segments_D=database/mouse_D-segment_NCBIm38
-# blastdb_segments_J=database/mouse_J-segment_NCBIm38
-# blastdb_segments_C=database/mouse_C-segment_NCBIm38
-# blastdb_auxiliary=optional_file/mouse_NCBIm38.aux
+# blastdb_segments_V=database/mouse_ncbim38_gl_V
+# blastdb_segments_D=database/mouse_ncbim38_gl_D
+# blastdb_segments_J=database/mouse_ncbim38_gl_J
+# blastdb_segments_C=database/mouse_ncbim38_gl_C
+# blastdb_auxiliary=optional_file/mouse_ncbim38_gl.aux

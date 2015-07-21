@@ -1,11 +1,13 @@
 # Name:			lib_flowcyt_sorting_indexed.R
-# Verson:		0.1.1  (2014-04-29)
+# Verson:		0.1.2  (2015-07-21)
 # Author(s):	Christian Busse
-# Maintainer:	Christian Busse (busse@mpiib-berlin.mpg.de)
+# Maintainer:	Christian Busse (christian.busse@dkfz-heidelberg.de)
 # Licence:		AGPL3
 # Provides:		Functions to read index sort location data along with the flow cytometric parameters from FCS files produced by BD's 
 #				FACSDiVa software (Versions 7 and 8 should work, but only 8 is tested). The evalulated keywords are not standardized
 #				up to FCS3.1, therefore data from non-BD machines/software will most likely not work.
+#				Please note: BD's Sortware software uses a completely different approach to record index sort data and is therefore
+#				currently not supported.
 # Requires:		Bioconductor flowCore package
 # 
 #
@@ -14,9 +16,11 @@ library(flowCore)
 
 # Defines the supported versions of FCS files
 #
-config.fcs.versions.valid            <- c("FCS2.0","FCS3.0","FCS3.1")
-config.fcs.versions.supported        <- c("FCS2.0","FCS3.0")
-config.fcs.keyword.creator.supported <- c("BD FACSDiva Software Version 8.0")
+config.fcs.versions.valid			<- c("FCS2.0","FCS3.0","FCS3.1")
+config.fcs.versions.supported		<- c("FCS2.0","FCS3.0","FCS3.1")
+config.software.identifier.keywords	<- c("CREATOR","APPLICATION")
+config.software.whitelist <- c("BD FACSDiva Software Version 8.0", "BD FACSDiva Software Version 8.0.1")
+config.software.blacklist <- c("BD FACS<e2><84><a2> Sortware 1.2.0.142")
 
 # Call:			func.read.indexed.FCS(filename)
 #
@@ -30,47 +34,80 @@ config.fcs.keyword.creator.supported <- c("BD FACSDiva Software Version 8.0")
 #				- "data"		[matrix]	The flow cytometric anf location data for all $TOT events in the file ($PAR + 3 columns). Note that "row" and "column"
 #											are real coordinates NOT offsets to well A01. "events" are counted from A01 left-to-right, then top-to-bottom.
 #
-# Description:	This function reads an FCS file containing index sort data and returns a list data structure contain flow cytometric and location data.
+# Description:	This function reads an FCS file containing index sort data and returns a list data structure containing flow cytometric and location data.
 #
-func.read.indexed.FCS <- function(fcs.file.full, require.sorting.plate.barcode) {
+func.read.indexed.FCS <- function(fcs.file.full, debug.level) {
 
-	# Sanity checks 1. There is no flowCore internal function to test for the actual FCS version, therefore this information is retreived
-	# via a direct read (thats basically the same thing that isFCSfile() does). Currently (04/2014) flowCore does not support FCS3.1 which
-	# contains some changes in keywords, therefore there is a two-stage test plus the check whether flowCore support hass changed.
+    if(missing(debug.level)) {
+		debug.level <- 2
+	}
+
+	# Sanity checks 1. There is no flowCore internal function to test for the actual FCS version, therefore this information is retrieved
+	# via a direct read (which is basically the same thing that isFCSfile() does). As of 06/2015, index sorting data is not specified in the current FCS 3.1 standard,
+	# which might result in isolated problems in the processing of index information. Therefore there is a two-stage test plus the check of flowCore support for a given
+	# FCS version. However, it seems like there is hardly any difference in the way how FACSDiva writtes FCS 3.0 and 3.1 files, therefore no compatibility problem were
+	# found (yet).
 	#
 	if( ! file.exists(fcs.file.full)) {
-		stop(paste("File", fcs.file.full, "does not exist. Aborting!"))
+		internal.func.logging(paste("File \"", fcs.file.full, "\" does not exist.", sep=""), 0, debug.level)
+		return(list())
 	}
 	fcs.version <- readChar(fcs.file.full, 6)
 	if( ! fcs.version %in% config.fcs.versions.supported) {
 		if(fcs.version %in% config.fcs.versions.valid) {
-			stop(
-				paste(
-					"File ", fcs.file.full, " uses currently unsupported ", fcs.version, "! ",
-					"Current flowCore support for this version is ", as.character(unname(isFCSfile(fcs.file.full))[1]), "! ",
-					"Aborting!",
-					sep=""
-				)
-			)
+			internal.func.logging(paste("File \"", fcs.file.full, "\" uses currently unsupported FCS version ", fcs.version, ".", sep=""), 1, debug.level)
+			internal.func.logging(paste("Current flowCore support for this FCS version is ", as.character(unname(isFCSfile(fcs.file.full))[1]), ".", sep=""), 3, debug.level)
+			return(list())
 		} else {
-			stop(paste("File", fcs.file.full, "is not a valid FCS file. Aborting!"))
+			internal.func.logging(paste("File \"", fcs.file.full, "\" is not a valid FCS file.", sep=""), 1, debug.level)
+			return(list())
 		}
 	}
-
 	fcs.data <- read.FCS(fcs.file.full)
 
 
-	# Sanity checks 2. Files might have been recorded during an index sort without actually containing index sort location data. Until further 
-	# information is provided from BD, the testing for the "INDEX SORT DEVICE TYPE" and "INDEX SORT SORTED LOCATION COUNT" seems to be the most 
-	# reliable option to sort this out.
+	# Sanity checks 2. The current version of the FCS format does not specify a way to handle index sort data. In addition, BD has two different sorter
+	# applications (FACSDiva and Sortware), which use completely different ways to store index data. Finally, files might have been recorded during an
+	# index sort without actually containing index sort location data. Until further information is provided from BD, the testing for the
+	# "INDEX SORT DEVICE TYPE" and "INDEX SORT SORTED LOCATION COUNT" seems to be the most reliable option to sort this out.
 	#
-	if(is.null(description(fcs.data)$"CREATOR")) {
-		warning(paste("File ",fcs.file.full, " does not contain a CREATOR keyword.", sep=""))
+	fcs.keyword.software.all<-description(fcs.data)[names(description(fcs.data)) %in% config.software.identifier.keywords]
+	if (length(fcs.keyword.software.all) > 1) {
+		if (length(fcs.keyword.software.all) == rle(unlist(unname(fcs.keyword.software.all)))$length[1]) {
+			fcs.keyword.software.current <- names(fcs.keyword.software.all)[1]
+		} else {
+			stop(paste(
+				"File ",
+				fcs.file.full,
+				" contains multiple software identfier keywords with non-identical values (keywords: ",
+				paste(names(fcs.keyword.software.all),collapse=", "),
+				") Aborting!",
+				sep=""
+			))
+		}
 	} else {
-		 if (! description(fcs.data)$"CREATOR" %in% config.fcs.keyword.creator.supported) {
-			warning(paste("File ",fcs.file.full, " was generated by unsupported CREATOR ", description(fcs.data)$"CREATOR", ".", sep=""))
+		if (length(fcs.keyword.software.all) < 1) {
+			stop(paste("File ",fcs.file.full, " does not contain a valid software identfier keyword.", sep=""))
+		} else {
+			fcs.keyword.software.current <- names(fcs.keyword.software.all)[1]
 		 }
 	}
+
+	fcs.value.software.current <- description(fcs.data)[[fcs.keyword.software.current]]
+	if (fcs.value.software.current %in% config.software.blacklist) {
+		stop(paste(
+			"File ", fcs.file.full, " was generated by blacklisted \"", fcs.keyword.software.current, "\"=\"", fcs.value.software.current, "\".",
+			sep=""
+		))
+	}
+	if (! description(fcs.data)[[fcs.keyword.software.current]] %in% config.software.whitelist) {
+		warning(paste(
+			"File ", fcs.file.full, " was generated by \"", fcs.keyword.software.current, "\"=\"", fcs.value.software.current,
+			"\", which is NOT on the whitelist.",
+			sep=""
+		))
+	}
+
 
 	if(is.null(description(fcs.data)$"INDEX SORTING SORTED LOCATION COUNT")) {
 		if(is.null(description(fcs.data)$"INDEX SORTING DEVICE TYPE")) {
@@ -85,7 +122,7 @@ func.read.indexed.FCS <- function(fcs.file.full, require.sorting.plate.barcode) 
 	if(fcs.index.sorting.sorted.location.count != as.integer(description(fcs.data)$"$TOT")) {
 		stop(
 			paste(
-				"File ", fcs.file.full, "has non-identical counts for total (n=", as.integer(description(fcs.data)$"$TOT"),
+				"File ", fcs.file.full, " has non-identical counts for total (n=", as.integer(description(fcs.data)$"$TOT"),
 				") versus sorted events (n=", fcs.index.sorting.sorted.location.count,
 				"). Aborting!",
 				sep=""
@@ -95,7 +132,7 @@ func.read.indexed.FCS <- function(fcs.file.full, require.sorting.plate.barcode) 
 
 
 	# Get metainfo on the type and size of the sorting device.
-	# CAVE: The device definition in BD FACSDiVa software is transposed (rows x columns) in comparision to the "normal" plate format (columns x rows).
+	# ATTENTION: The device definition in BD FACSDiVa software is transposed (rows x columns) in comparision to the "normal" plate format (columns x rows).
 	# However this is only true for the device definition, the index sorting information are in a "<column_offset>,<row_offset>;" format.
 	#
 	fcs.index.sorting.device.type <- as.integer(description(fcs.data)$"INDEX SORTING DEVICE TYPE")
@@ -232,4 +269,20 @@ func.read.indexed.FCS <- function(fcs.file.full, require.sorting.plate.barcode) 
 			data=fcs.data.export
 		)
 	)
+}
+
+internal.func.logging<-function(log.message, log.severity, log.level){
+	lut.severity <- c("FATAL","ERROR","WARNING","INFO","DEBUG","DEBUG+")
+	if(log.severity <= log.level){
+		cat(
+			paste(
+				"[lib_flowcyt_sorting_indexed.R][",
+				lut.severity[log.severity+1],
+				"] ",
+				log.message,
+				"\n",
+				sep=""
+			)
+		)
+	}
 }

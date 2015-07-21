@@ -515,8 +515,8 @@ lapply(
 
 		if (length(df.length.quality) > 0) {
 			plot(
-				c(1:length(df.length.quality$length)),
-				df.length.quality$length,
+				c(1:(length(df.length.quality$length)+1)),
+				c(df.length.quality$length,0),
 				type='l',
 				xlab="position [bp]",
 				ylab="reads",
@@ -527,8 +527,8 @@ lapply(
 				)
 			)
 			polygon(
-				c(1:length(df.length.quality$length)),
-				df.length.quality$length,
+				c(1:(length(df.length.quality$length)+1)),
+				c(df.length.quality$length,0),
 				col=unlist(list.config.colors.locus[locus.current]),
 				border=NA
 			)
