@@ -6,7 +6,7 @@
 # - NO white space characters directly before or after the "=" of the <key>=<value> pair
 # - Trailing semi-colons and white space characters will be removed from <value>
 # - Lines starting with "#" will be considered comments
-# - Enviroment variables and variables previously (!) defined in the config file will be expanded (SEE BELOW)
+# - Environment variables and variables previously (!) defined in the config file will be expanded (SEE BELOW)
 #
 # However, this file is also parsed by other (non-bash) scripts, which results in the following limitations:
 # - Usage of commands other than <key>=<value> pairs and comments IS NOT SUPPORTED
@@ -22,7 +22,7 @@ log_level=3
 # example: malaria, hiv, ....
 database=
 
-# Database authentification works currently exclusively via MySQL's user config file ($HOME/.my.cnf), which
+# Database authentication works currently exclusively via MySQL's user config file ($HOME/.my.cnf), which
 # can contain multiple groups, each with different database/authentication parameters. The respective group
 # to use is set by the "db_group_auth" key below. Within the user config file, this group has to contain at
 # least the "user" and "password" parameter. In case the database is located on a remote server, additional
@@ -80,10 +80,15 @@ num_align_blast=1
 # consensus settings
 n_consensus=5
 
-# motif search
+# Search motives to define end of the CDR3 region.
+#
 # The regular expressions in the config file are critical, there is no warning in case they are modified.
-# They need to be compatible to perl regexp, but the config is also used as bash source. Pipes ("|") need to
-# be escaped ("\").
+# They need to be compatible to Perl regexp, but the config is also used as bash source. Pipes ("|") need to
+# be escaped ("\"). ATTENTION: The CDR3 motives are assumed to be four characters long. In case you do not
+# want to use a given altCDR3 motif, replace it with a string that does not occur in nucleotide sequences,
+# such as "ZZZZ". DO NOT comment the altCDR3 motif or pass an empty string, as thing will lead to an 
+# unconditional match at position 0.
+#
 
 # heavy
 h_CDR3_e=WG.G

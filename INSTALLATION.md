@@ -34,7 +34,7 @@ The base Linux system used is a [CentOS 7.1](http://isoredirect.centos.org/cento
 9. Update machine using `sudo yum update`
 10. Reboot
 11. Install additional repository and tools: `sudo yum install epel-release redhat-lsb kernel-devel gcc bzip2`
-12. If you are using a virtual machine, the next steps are recommended for better useability but not required. If you are using a real machine, you
+12. If you are using a virtual machine, the next steps are recommended for better usability but not required. If you are using a real machine, you
     can skip to step 18.
 13. Remove the old kernel package: `sudo yum erase kernel`
 14. To increase the screen resolution, edit /etc/default/grub and add `vga=0x347` to the `GRUB_CMDLINE_LINUX` line.  
@@ -54,17 +54,23 @@ The base Linux system used is a [CentOS 7.1](http://isoredirect.centos.org/cento
     `curl -# http://www.drive5.com/muscle/downloads3.8.31/muscle3.8.31_i86linux64.tar.gz | tar -zx`   
     then install the executable system-wide using: `sudo cp ./muscle3.8.31_i86linux64 /usr/bin; sudo ln -s /usr/bin/muscle3.8.31_i86linux64
     /usr/bin/muscle`.
-24. Start R with administrator priviledges (`sudo R`), then install `install.packages(RMySQL)`, `source("http://bioconductor.org/biocLite.R");
-    biocLite();` and `biocLite("flowCore")` and exit again using `q()`.
-25. Install Bioperl, according to documentation on bioperl.org: upgrade CPAN, Install/upgrade Module::Build
-26. Install packages which were not in YUM repository: `cpan -i Data::Stag`
-27. `sudo cpan` then `install CJFIELDS/BioPerl-1.6.924.tar.gz`
-28. Enable database `systemctl enable mariadb.service; systemctl start mariadb.service`
-29. setup firewall allowing connections on tcp/22 (SSH) and tcp/3306 (MySQL)
-30. /etc/ssh/sshd_config: Allow password-less login, prohibit root login
-31. Setup port forwarding in VirtualBox, 60022 -> 22 and 63306 -> 3306
-32. EXTERNAL: ssh -fNL localhost:63310:localhost:3306 -p 60022 scireptor@localhost
-33. EXTERNAL: MySQL Workbench connect to localhost:63310 -> setup root and scireptor users in mariaDB
+21. Switch to a shell with full _root_ privileges: `sudo bash`;
+24. Start `R`, then install `install.packages(RMySQL)`, `source("http://bioconductor.org/biocLite.R"); biocLite()` and `biocLite("flowCore")` and
+    exit again using `q()`.
+25. Prepare Bioperl installation, according to documentation on [bioperl.org](http://www.bioperl.org/wiki/Installing_BioPerl_on_Unix): First "Upgrade
+    CPAN", then "Install/upgrade Module::Build".
+26. Install packages, which are not present in the YUM repository: `cpan -i Data::Stag`
+27. Install Bioperl: By calling `cpan` then `install CJFIELDS/BioPerl-1.6.924.tar.gz`
+28. Leave _root_ shell via `exit`.
+29. Enable database `sudo systemctl enable mariadb.service; sudo systemctl start mariadb.service`
+30. Setup firewall allowing connections on tcp/22 (SSH) and tcp/3306 (MySQL)
+31. /etc/ssh/sshd_config: Allow password-less login, prohibit root login
+32. Setup port forwarding in VirtualBox, 60022 -> 22 and 63306 -> 3306
+33. [host machine:] From the shell of the host machine, create an SSH tunnel for the subsequent database connection:  
+    `ssh -fNL localhost:63310:localhost:3306 -p 60022 scireptor@localhost`
+34. [host machine:] Use MySQL Workbench to connect to localhost:63310, then setup _root_ and _scireptor_ users in mariaDB. Make sure that user
+    _scireptor_ has the necessary privileges to create database schemes when connecting from localhost. For convenience, _scireptor_ should
+    also be allowed to connect to the database from the host machine (this saves you setting up the SSH tunnel everytime).
 
 
 Installing and Running sciReptor

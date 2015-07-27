@@ -17,7 +17,7 @@ datasets.
 
 - [sciReptor_library](https://github.com/b-cell-immunology/sciReptor_library)
   is a set positional data files and processing scripts, which download the 
-  the reference sequences and build the interal and BLAST databases used by
+  the reference sequences and build the internal and BLAST databases used by
   sciReptor.
 - [sciReptor_analysis](https://github.com/b-cell-immunology/sciReptor_analysis)
   contains various scripts for downstream repertoire analysis.
