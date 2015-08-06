@@ -246,7 +246,10 @@ $(dir)/allrazers.done: $(dir)/alltodb.done $(razers_files)
 	./todb_tags.pl -ro $@
 
 %.rrzout: %.rfasta
-	./perform_RazerS.pl -f $< -ro $@.razers
+	file_temp_fasta="$(patsubst %.rfasta,%.fasta,$<)"; \
+	mv $< $$file_temp_fasta; \
+	./perform_RazerS.pl -f $$file_temp_fasta -ro $@.razers; \
+	mv $$file_temp_fasta $<; \
 	mv $@.razers $@
 
 %.rblout: %.rfasta

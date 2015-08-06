@@ -48,8 +48,8 @@ The base Linux system used is a [CentOS 7.1](http://isoredirect.centos.org/cento
  `curl -# ftp://ftp.ncbi.nih.gov/blast/executables/blast+/2.2.30/ncbi-blast-2.2.30+-3.x86_64.rpm --output ncbi-blast-2.2.30+-3.x86_64.rpm`   
     and install them using `yum install ncbi-*.rpm`.
 19. Download and unzip RazerS3:  
-    `curl -# http://packages.seqan.de/razers3/razers3-3.4.0-Linux-x86_64.tar.bz2 | tar -jx`   
-    then install the executable system-wide using: `sudo cp ./razers3-3.4.0-Linux-x86_64/bin/razers3 /usr/bin`
+    `curl -# http://packages.seqan.de/razers3/razers3-3.1.1-Linux-x86_64.tar.bz2 | tar -jx`
+    then install the executable system-wide using: `sudo cp ./razers3-3.1.1-Linux-x86_64/bin/razers3 /usr/bin`
 20. Download and unzip Muscle3:  
     `curl -# http://www.drive5.com/muscle/downloads3.8.31/muscle3.8.31_i86linux64.tar.gz | tar -zx`   
     then install the executable system-wide using: `sudo cp ./muscle3.8.31_i86linux64 /usr/bin; sudo ln -s /usr/bin/muscle3.8.31_i86linux64
