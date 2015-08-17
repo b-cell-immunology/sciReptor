@@ -7,8 +7,8 @@ Due to several external tools and various dependencies, sciReptor will take
 around half an hour to be setup up. A [step-by-step guide](INSTALLATION.md)
 for the host and the toolkit itself (including demo datasets) is available.
 However, in case you want to have a look at it first, there is also a
-completely set up **[virtual machine available][]** (as VirtualBox 4.3
-appliance), which contains everything including two pre-installed demo
+completely set up **[virtual machine available][]** (as VirtualBox 5.0
+appliance), which contains everything including three pre-installed demo
 datasets.
 
 [virtual machine available]: http://b-cell-immunology.dkfz.de/sciReptor_VMs/

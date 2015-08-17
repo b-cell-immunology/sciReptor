@@ -7,7 +7,7 @@ Host Installation
 The following section covers the installation of a virtual machine capable of running sciReptor. In case you are performing a direct installation
 (i.e. without a virtualization layer), there will some of instruction you can omit, but otherwise the procedure is identical. The workflow described
 here was used to generate the [pre-build sciReptor VM](http://b-cell-immunology.dkfz.de/sciReptor_VMs/). The VM supervisor used is
-[Virtual Box 4.3](https://www.virtualbox.org/wiki/Download_Old_Builds_4_3), which is available for most commonly used operating systems. The
+[Virtual Box 5.0](https://www.virtualbox.org/wiki/Download_Old_Builds_5_0), which is available for most commonly used operating systems. The
 following resources should be considered the minimum requirements, recommend would be the double amount of everything (except network adapters):
 
 * CPU cores: 4
@@ -93,7 +93,8 @@ Installing and Running sciReptor
 2.  Create subdirectories: `mkdir bin raw_data quality_control pipeline_output`
 3.  Get current sciReptor release: `git clone https://github.com/b-cell-immunology/sciReptor bin`
 4.  Switch to code directory: `cd bin`
-5.  Install config file in project root and edit it: `mv config ..; vi ../config`
+5.  Add version tag to config file, install config file in project root and edit it:  
+    `echo -e -n "\nversion=$( git describe --tag --long --always )\n" >> config; mv config ..; vi ../config`
 6.  Create database scheme  
     `mysql --defaults-file=$HOME/.my.cnf --defaults-group-suffix=_igdb -e "CREATE SCHEMA IF NOT EXISTS test_data_mouse_B6;"`   
     and its tables:  
@@ -107,7 +108,7 @@ Installing and Running sciReptor
     Expected output is "test_data_mouse_B6.tar.bz2: OK"
 10. Unpack and remove archive: `tar -jxf test_data_mouse_B6.tar.bz2; rm test_data_mouse_B6.tar.bz2` 
 11. Verify the signature of the checksum list: `gpg2 --verify test_data_mouse_B6.sha256`  
-    Expected output is "gpg: Good signature from "XXX <XXX@dkfz-heidelberg.de>")
+    Expected output is "gpg: Good signature from 'XXX <XXX@dkfz-heidelberg.de>'"
 12. Verify the integrity of the files: `sha256sum -c test_data_mouse_B6.sha256`  
     Expected output is "filename : OK" for each file
 13. Switch back to code directory: `cd ../../bin`
@@ -119,7 +120,8 @@ Installing and Running sciReptor
 2.  Create subdirectories: `mkdir bin raw_data quality_control pipeline_output`
 3.  Get current sciReptor release: `git clone https://github.com/b-cell-immunology/sciReptor bin`
 4.  Switch to code directory: `cd bin`
-5.  Install config file in project root and edit it: `mv config ..; vi ../config`
+5.  Add version tag to config file, install config file in project root and edit it:  
+    `echo -e -n "\nversion=$( git describe --tag --long --always )\n" >> config; mv config ..; vi ../config`
 6.  Create the database scheme  
     `mysql --defaults-file=$HOME/.my.cnf --defaults-group-suffix=_igdb -e "CREATE SCHEMA IF NOT EXISTS test_data_human;"`  
     and its tables  
@@ -133,9 +135,36 @@ Installing and Running sciReptor
     Expected output is "test_data_human.tar.bz2: OK"
 10. Unpack and remove archive: `tar -jxf test_data_human.tar.bz2; rm test_data_human.tar.bz2`
 11. Verify the signature of the checksum list: `gpg2 --verify test_data_human.sha256`  
-    Expected output is "gpg: Good signature from "XXX <XXX@dkfz-heidelberg.de>")
+    Expected output is "gpg: Good signature from 'XXX <XXX@dkfz-heidelberg.de>'"
 12. Verify the integrity of the files: `sha256sum -c test_data_human.sha256`  
     Expected output is "filename : OK" for each file
 13. Switch back to code directory: `cd ../../bin`
 14. Run sciReptor, substitute the number of availavailable CPU cores:  
     `./pipeline_start.sh --cores=<NUMBER_OF_CORES> --run=test_data_human --experiment_id=D01`
+
+###Run Test Data Set "Sanger"
+1.  Create and enter project directory: `mkdir sciReptor_test_project_Sanger; cd sciReptor_test_project_Sanger`
+2.  Create subdirectories: `mkdir bin raw_data quality_control pipeline_output`
+3.  Get current sciReptor release: `git clone https://github.com/b-cell-immunology/sciReptor bin`
+4.  Switch to code directory: `cd bin`
+5.  Add version tag to config file, install config file in project root and edit it:  
+    `echo -e -n "\nversion=$( git describe --tag --long --always )\n" >> config; mv config ..; vi ../config`
+6.  Create the database scheme  
+    `mysql --defaults-file=$HOME/.my.cnf --defaults-group-suffix=_igdb -e "CREATE SCHEMA IF NOT EXISTS test_data_Sanger;"`  
+    and its tables  
+    `mysql --defaults-file=$HOME/.my.cnf --defaults-group-suffix=_igdb --database=test_data_Sanger < igdb_project.sql`
+7.  Create run-specific directories using `make -f Makefile.sanger init-env run=test_data_Sanger`
+8.  Switch to the data directory: `cd ../raw_data/test_data_Sanger`
+9.  Download the test data set:  
+    `curl -# http://b-cell-immunology.dkfz.de/sciReptor_datasets/test_data_Sanger.tar.bz2 --output test_data_Sanger.tar.bz2`   
+    and test its integrity:  
+    `sha256sum -c <( curl -# http://b-cell-immunology.dkfz.de/sciReptor_datasets/CHECKSUMS.sha256 | grep test_data_Sanger.tar.bz2 )`   
+    Expected output is "test_data_Sanger.tar.bz2: OK"
+10. Unpack and remove archive: `tar -jxf test_data_Sanger.tar.bz2; rm test_data_Sanger.tar.bz2`
+11. Verify the signature of the checksum list: `gpg2 --verify test_data_Sanger.sha256`  
+    Expected output is "gpg: Good signature from 'XXX <XXX@dkfz-heidelberg.de>'"
+12. Verify the integrity of the files: `sha256sum -c test_data_Sanger.sha256`  
+    Expected output is "filename : OK" for each file
+13. Switch back to code directory: `cd ../../bin`
+14. Run sciReptor:  
+    `make -f Makefile.sanger run=test_data_Sanger`

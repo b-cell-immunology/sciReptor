@@ -1,14 +1,17 @@
-
-
-
+# set project root
 project_root=..
 
 # pipeline output, separated by sequencing run
 dir=$(project_root)/pipeline_output/$(run)
+
 # raw data, separated by sequencing run
 raw_data=$(project_root)/raw_data/$(run)
+
 # folder for quality control
 quality_control=$(project_root)/quality_control/$(run)
+
+# files to be processed
+todb_reads_files=$(addprefix $(dir)/, $(notdir $(patsubst %.fasta,%.todb_reads_done,$(wildcard $(raw_data)/*.fasta))))
 
 all: $(dir)/todb_constant.done $(dir)/todb_CDR_FWR.done $(dir)/todb_igblast_align.done $(dir)/mutations.done $(dir)/todb_sampleinfo_sanger.done
 
@@ -58,16 +61,18 @@ $(dir)/allsanger.rfasta: $(dir)/todb_sequences_sanger.done
 
 # write metainfo to database
 $(dir)/todb_sampleinfo_sanger.done: $(dir)/todb_sequences_sanger.done
-	./todb_sampleinfo_sanger.pl -m $(raw_data)/sanger_metainfo.tsv
+	./todb_sampleinfo_sanger.pl -m $(raw_data)/*_metainfo.tsv
 
-# write sequences to database
-$(dir)/todb_sequences_sanger.done: init-env
-	./todb_sequences_sanger.pl -f $(fasta_infile) -q $(qual_infile) -m $(raw_data)/sanger_metainfo.tsv
+$(dir)/todb_sequences_sanger.done: $(todb_reads_files)
+	touch $@
+
+$(dir)/$(notdir %.todb_reads_done ): $(raw_data)/$(notdir %.fasta)
+	./todb_sequences_sanger.pl -f $< -q $<.qual -m $(raw_data)/*_metainfo.tsv
 	touch $@
 
 init-env: 
 ifndef run
-	@echo "specify run using project=<matrixname_runname>"
+	@echo "specify run directory using run=<matrixname_runname>"
 	exit 1
 endif
 	mkdir -p $(raw_data)

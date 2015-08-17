@@ -1,2 +1,2 @@
-,,event,,,,,sort,,,sample,,,donor,,,,,species
-Fasta ID,Sequence name (unique!!!),well,plate,plate_barcode,sequencing_run_date,add_event_info,antigen,sorting_date,add_sort_info,tissue,sampling_date,add_sample_info,donor_identifier,background_treatment,project,strain,add_donor_info,species
+		event					sort				sample			donor					species
+Fasta ID	Sequence name (unique!!!)	well	plate	plate_barcode	sequencing_run_date	add_event_info	antigen	population	sorting_date	add_sort_info	tissue	sampling_date	add_sample_info	donor_identifier	background_treatment	project	strain	add_donor_info	species
