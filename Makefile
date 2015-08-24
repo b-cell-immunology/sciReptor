@@ -305,7 +305,7 @@ convert-sff-qual: $(qual_files)
 
 %.fasta: %.sff
 	sffinfo -seq -notrim $< > $@
-	cp -n ./seqrun_info.txt $@.info
+	cp -n metainfo/seqrun_info.txt $@.info
 
 %.fasta.qual: %.sff
 	sffinfo -qual -notrim $< > $@

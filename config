@@ -19,7 +19,7 @@
 log_level=3
 
 # name of the project, will be used for repository structure and database scheme
-# example: malaria, hiv, ....
+# example: healthy, malaria, ....
 database=
 
 # Database authentication works currently exclusively via MySQL's user config file ($HOME/.my.cnf), which
@@ -36,13 +36,13 @@ species=
 
 # Matrix size [<columns>_<rows>]
 #
-# valid sizes: 48_48 and 240_256
+# valid sizes: 48_48, 72_64 and 240_256
 matrix=
 
 # tag batch [<species>_<isotypes>_<number>]
 #
-# valid batches as of 2015-01-01 (dimensions in parenthesis are only for information, DO NOT COPY THEM BELOW)
-# human: Hs_G_001 (48x48), Hs_AEGM_001 (48x48)
+# valid batches as of 2015-07-01 (dimensions in parenthesis are only for information, DO NOT COPY THEM BELOW)
+# human: Hs_G_001 (48x48), Hs_AEGM_001 (48x48), Hs_AEGM_002 (72x64)
 # mouse: Mm_AGM_001 (48x48), Mm_AGM_002 (240x256) or Mm_ADGM_001 (48x48)
 tag_batch=
 
