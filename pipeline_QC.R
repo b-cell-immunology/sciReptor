@@ -141,23 +141,30 @@ lapply(
 	names(list.tag.stats),
 	function(locus.current) {
 		nreads.all.total <- sum(list.tag.stats[[locus.current]][["status"]])
-		barplot(
-			rev(list.tag.stats[[locus.current]][["status"]]) / nreads.all.total,
-			main=paste(
-				list.config.loci[[locus.current]]," total\n(n=",
-				prettyNum(
-					nreads.all.total,
-					big.mark=",",
-					big.interval=3L
-				), ")",
-				sep=""
-			),
-			ylim=c(0,1),
-			names.arg = c("both tags","proximal only","distal only","no tags"),
-			ylab="[%]",
-			axes=FALSE
-		)
-		axis(2, seq(from=0, to=1, by=0.2), seq(from=0, to=100, by=20))
+		if(nreads.all.total > 0){
+			barplot(
+				rev(list.tag.stats[[locus.current]][["status"]]) / nreads.all.total,
+				main=paste(
+					list.config.loci[[locus.current]]," total\n(n=",
+					prettyNum(
+						nreads.all.total,
+						big.mark=",",
+						big.interval=3L
+					), ")",
+					sep=""
+				),
+				ylim=c(0,1),
+				names.arg = c("both tags","proximal only","distal only","no tags"),
+				ylab="[%]",
+				axes=FALSE
+			)
+			axis(2, seq(from=0, to=1, by=0.2), seq(from=0, to=100, by=20))
+		} else {
+			plot.new()
+			box()
+			title(main=paste(list.config.loci[[locus.current]]," total\n(n=", nreads.all.total, ")", sep=""))
+			text(0.5, 0.5, labels=c("No data available"), adj=c(0.5,0.5))
+		}
 
 		lapply(
 			names(list.config.directions),
@@ -510,7 +517,8 @@ lapply(
 			connection.mysql = connection.mysql,
 			name.database = list.config.global$database,
 			name.run = config.name.run,
-			locus = locus.current
+			locus = locus.current,
+			debug.level = config.debug.level
 		)
 
 		if (length(df.length.quality) > 0) {

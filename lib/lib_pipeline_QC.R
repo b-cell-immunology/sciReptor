@@ -59,7 +59,7 @@ func.tag.stats <- function(connection.mysql, name.database, name.run, tag.landin
 		)
 	)
 
-	if (length(selected.seq_ids) > 0) {
+	if (nrow(selected.seq_ids) > 0) {
 		for (current.seq_id in selected.seq_ids[,"seq_id"]) {
 
 			if(debug.level >= 4) cat(paste("[lib_pipeline_QC.R][DEBUG] Selecting reads with seq_id ", current.seq_id, " and locus ", locus, "\n", sep=""));
@@ -324,7 +324,11 @@ func.reads.well <- function(connection.mysql, name.database, name.run, locus, co
 # Description:	This function performs basic aggregation of read counts and quality value by bp position. 
 #				CAVE: This function does require a reasonable amount of memory (2+ GB) for a normal sized run. It's is not clear whether there
 #				would be  any more elegant solution (i.e. performing the aggregation in the DBMS), since this would require quite a lot from MySQL.
-func.qual.length <- function(connection.mysql, name.database, name.run, locus) {
+func.qual.length <- function(connection.mysql, name.database, name.run, locus, debug.level) {
+
+	if(missing(debug.level)) {
+		debug.level <- 2
+	}
 
  	query.result <- dbGetQuery(
  		connection.mysql,
@@ -339,7 +343,9 @@ func.qual.length <- function(connection.mysql, name.database, name.run, locus) {
 		)
 	)
 
-	if (length(query.result) > 0) {
+	if(debug.level >= 4) cat(paste("[lib_pipeline_QC.R][DEBUG] Locus: ", locus ," reads: ", nrow(query.result), " max. length: ", max(query.result$length), "\n", sep=""));
+
+	if (nrow(query.result) > 0) {
 		length.max <- max(query.result$length)
 		length.aggregated <- hist(query.result$length, breaks=c(0:length.max), plot=FALSE)$counts
 
