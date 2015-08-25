@@ -18,6 +18,7 @@ Two necessary input files:
 	-m	<experiment_id>_metainfo.tsv file, tab delimited (use template 48_48_ or 240_256_metainfo.xls->worksheet2 and store as tsv with tabs). The first column is the numerical identifier that will be used in the plate layout. The first two rows of the TSV will be ignored, since they contain the headers in the current spreadsheet.
 	-p	<experiment_id>_plate.tsv file (use template 48_48_ or 240_256_metainfo.xls->worksheet1 and store as tsv with tabs). When parsing, first row and column are ignored, they contain row and col numbers. The other 48*48 or 240*256 cells contain the identifier that already appeared in metainfo.tsv to specify which well contains what.
 	-pb	<experiment_id>_platebarcodes.tsv file with the plate barcode corresponding to each plate number.
+	-exp	experiment_id
 
 1. Get information on matrix (48_48 e.g.) and plate layout (384 well plates, nrows, ncols e.g.)
 
@@ -53,11 +54,13 @@ my $help=0;
 my $plate_input="";
 my $metainfo_input="";
 my $plate_barcodes="";
+my $experiment_id="";
 
 &GetOptions("h!" => \$help,
 	"p=s" => \$plate_input,
 	"m=s" => \$metainfo_input,
 	"pb=s" => \$plate_barcodes,
+	"exp=s"  => \$experiment_id,
 );
 
 $help=1 unless $plate_input;
@@ -102,7 +105,7 @@ my $ins_event = $dbh->prepare("INSERT INTO $conf{database}.event
 # select sequence id where event_id will be inserted
 my $sel_seq_id = $dbh->prepare("SELECT seq_id FROM $conf{database}.sequences 
   JOIN $conf{database}.consensus_stats ON consensus_stats.sequences_seq_id = sequences.seq_id 
-  WHERE event_id IS NULL AND row_tag=? and col_tag=? AND sequences.locus=?");
+  WHERE event_id IS NULL AND row_tag=? and col_tag=? AND sequences.locus=? AND experiment_id=?");
 
 # update event_id
 my $update_event = $dbh->prepare("UPDATE $conf{database}.sequences SET event_id=? where seq_id=?");
@@ -225,7 +228,7 @@ while (<$meta>) {
 					print "Old tags $col_tag, $row_tag\nNew tags $corr_col_tag, $corr_row_tag\n";
 				}
 				# get the corresponding sequence id
-				$sel_seq_id->execute($corr_row_tag, $corr_col_tag, $locus);
+				$sel_seq_id->execute($corr_row_tag, $corr_col_tag, $locus, $experiment_id);
 				while (my @row = $sel_seq_id->fetchrow_array) {
 					my $seq_id = $row[0];
 					$update_event->execute($event_id, $seq_id);
