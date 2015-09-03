@@ -14,9 +14,12 @@ When uploading Sanger sequences to the DB this program inserts the provided even
 Necessary input file: 
 	-m 	tsv table with the metainformation (use sanger_metainfo.tsv as template)
 
-1. Prepare the database for insertion into event, sort, sample and donor tables. There are unique keys on each of these tables that prevent from overwriting or duplicating. If an entry already exists, it is not overwritten, but the corresponding id is still determined and can be inserted to the next table.
+1. Prepare the database for insertion into event, sort, sample and donor tables. There are unique keys on each of these
+tables that prevent from overwriting or duplicating. If an entry already exists, it is not overwritten, but the
+corresponding id is still determined and can be inserted to the next table.
 
-2. Parse information from the tsv table and insert into database. If the entry in species column does not correspond to the species identifiers "human" or "mouse", the program dies.
+2. Parse information from the tsv table and insert into database. If the entry in species column does not correspond to
+the species identifiers "human" or "mouse", the program dies.
 
 =head1 LOGGED INFORMATION
 
@@ -45,28 +48,28 @@ $help=1 unless ($input_metainfo);
 exec('perldoc',$0) if $help;
 
 
-### 0. Logging
-
-select LOG;
-my $dbh = get_dbh($conf{database});
+### Logging to database turned off, due to possible database timeouts.
+# select LOG;
 
 
 ### 1. Prepare database for insertion
 
-my $ins_donor = $dbh->prepare("INSERT INTO $conf{database}.donor 
-  (donor_identifier, background_treatment, project, strain, add_donor_info, species_id) 
-  VALUES (?,?,?,?,?,?) ON DUPLICATE KEY UPDATE donor_id = LAST_INSERT_ID(donor_id)");
+my $dbh = get_dbh($conf{database});
 
-my $ins_sample = $dbh->prepare("INSERT INTO $conf{database}.sample 
-  (tissue, sampling_date, add_sample_info, donor_id) 
-  VALUES (?,?,?,?) ON DUPLICATE KEY UPDATE sample_id=LAST_INSERT_ID(sample_id)");
+my $ins_donor = $dbh->prepare("INSERT INTO $conf{database}.donor
+	(donor_identifier, background_treatment, project, strain, add_donor_info, species_id)
+	VALUES (?,?,?,?,?,?) ON DUPLICATE KEY UPDATE donor_id = LAST_INSERT_ID(donor_id)");
 
-my $ins_sort = $dbh->prepare("INSERT INTO $conf{database}.sort 
-  (antigen, population, sorting_date, add_sort_info, sample_id) 
-  VALUES (?,?,?,?,?) ON DUPLICATE KEY UPDATE sort_id=LAST_INSERT_ID(sort_id)");
+my $ins_sample = $dbh->prepare("INSERT INTO $conf{database}.sample
+	(tissue, sampling_date, add_sample_info, donor_id)
+	VALUES (?,?,?,?) ON DUPLICATE KEY UPDATE sample_id=LAST_INSERT_ID(sample_id)");
 
-my $ins_event = $dbh->prepare("INSERT INTO $conf{database}.event 
-  (well, plate, plate_barcode, sort_id) VALUES (?,?,?,?) ON DUPLICATE KEY UPDATE event_id=LAST_INSERT_ID(event_id)");
+my $ins_sort = $dbh->prepare("INSERT INTO $conf{database}.sort
+	(antigen, population, sorting_date, add_sort_info, sample_id)
+	VALUES (?,?,?,?,?) ON DUPLICATE KEY UPDATE sort_id=LAST_INSERT_ID(sort_id)");
+
+my $ins_event = $dbh->prepare("INSERT INTO $conf{database}.event
+	(well, plate, plate_barcode, sort_id) VALUES (?,?,?,?) ON DUPLICATE KEY UPDATE event_id=LAST_INSERT_ID(event_id)");
 
 my $update_sequences = $dbh->prepare("UPDATE $conf{database}.sequences SET event_id=? WHERE name=?");
 
@@ -79,8 +82,11 @@ my $count_line = 0;
 while (<$meta>) {
 	$count_line++;
 	chomp $_;
+	if ($conf{log_level} >=4) { print "[todb_sampleinfo_sanger.pl][DEBUG] File $input_metainfo:$count_line : $_\n" };
 	if ($count_line > 2) {
-		my ($id, $name, $well, $plate, $plate_barcode, $seq_run_date, $add_event_info, $antigen, $population, $sorting_date, $add_sort_info, $tissue, $sampling_date, $add_sample_info, $donor_identifier, $background_treatment, $project, $strain, $add_donor_info, $species) = split("\t", $_);
+		my ($id, $name, $well, $plate, $plate_barcode, $seq_run_date, $add_event_info, $antigen, $population, $sorting_date,
+			$add_sort_info, $tissue, $sampling_date, $add_sample_info, $donor_identifier, $background_treatment, $project, $strain,
+			$add_donor_info, $species) = split("\t", $_);
 
 		# check if species id correct
 		unless ($species eq $conf{species}) {
@@ -90,23 +96,18 @@ while (<$meta>) {
 		# insert donor
 		$ins_donor->execute($donor_identifier, $background_treatment, $project, $strain, $add_donor_info, $species);
 		my $donor_id = $dbh->{mysql_insertid};
-		# log donor
-		print "Donor: $ins_donor->{Statement}\n";
 
 		# insert sample
 		$ins_sample->execute($tissue, $sampling_date, $add_sample_info, $donor_id);
 		my $sample_id = $dbh->{mysql_insertid};
-		print "Sample: $ins_sample->{Statement}\n";
 
 		# insert sort
 		$ins_sort->execute($antigen, $population, $sorting_date, $add_sort_info, $sample_id);
 		my $sort_id = $dbh->{mysql_insertid};
-		print "Sort: $ins_sort->{Statement}\n";
 
 		# insert event
 		$ins_event->execute($well, $plate, $plate_barcode, $sort_id);
 		my $event_id = $dbh->{mysql_insertid};
-		print "Event: $ins_event->{Statement}";
 
 		# update sequence table event id
 		$update_sequences->execute($event_id, $name);
