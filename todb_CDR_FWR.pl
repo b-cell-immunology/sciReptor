@@ -58,7 +58,7 @@ exec('perldoc',$0) if $help;
 
 ### 0. Logging
 
-select LOG;
+#select LOG;
 my $dbh = get_dbh($conf{database});
 
 ###
@@ -111,26 +111,23 @@ sub get_regions {
 	my $end = shift;
 	my $seq_id = shift;
 	my $sequence = $seq_id_sequence{$seq_id};
-	my $dna_seq = substr($sequence, $start - 1, $end - $start + 1);
-	my $nucobj = Bio::Seq->new(-seq => $dna_seq,
+	if ($end - $start + 1 > 0) {
+		my $dna_seq = substr($sequence, $start - 1, $end - $start + 1);
+		my $nucobj = Bio::Seq->new(-seq => $dna_seq,
 			-id => "nucleotides");
-	my $protobj = $nucobj -> translate;
-	my $prot_seq = $protobj -> seq;
-	my $prot_length = length $prot_seq;
- 	my $stop_codon;
-	if (index($prot_seq, "*") != -1) {
-		$stop_codon = 1;
+		my $protobj = $nucobj -> translate;
+		my $prot_seq = $protobj -> seq;
+		my $prot_length = length $prot_seq;
+		my $stop_codon;
+		if (index($prot_seq, "*") != -1) {
+			$stop_codon = 1;
+		} else {
+			$stop_codon = 0;
+		}
+		$ins_regions->execute($seq_id, $type, $start, $end, $dna_seq, $prot_seq, $prot_length, $stop_codon);
+	} else {
+		if ($conf{log_level} >= 3) { print "[todb_CDR_FWR.pl][INFO] seq_id $seq_id has zero or negative length region $type, no INSERT into database.\n" };
 	}
-	else { $stop_codon = 0; }
-
-	$ins_regions->execute($seq_id,
-		$type,
-		$start,
-		$end,
-		$dna_seq,
-		$prot_seq,
-		$prot_length,
-		$stop_codon);
 }
 
 
@@ -197,9 +194,9 @@ while(<IN_IgBLAST>) {
 		my @all = split(/\t/, $_);
 		my $l = @all;
 		if($l > 0){
-	    	($type, $start, $end) = @all[0 .. 2];
-	    	my @type = split(/ /, $type);
-	    	$type = $type[0];
+			($type, $start, $end) = @all[0 .. 2];
+			my @type = split(/ /, $type);
+			$type = $type[0];
 		}
 		# write the positions and sequences for regions until CDR2 into output
 		my @simple_regions = ("FR1", "CDR1", "FR2", "CDR2");
@@ -216,8 +213,8 @@ while(<IN_IgBLAST>) {
 			$FWR3_end = $end;
 		}
 	}
-	
-	
+
+
 	###
 	### 4. Split sequence in regions and write to database
 	###
@@ -227,22 +224,22 @@ while(<IN_IgBLAST>) {
 		# CDR3 positions have not been initialized yet, since they do not appear in the IgBLAST output 
 		# or we like to define them differently
 
-	    # for each locus a different AA motif indicates the end of CDR3 region
-	    # locus, i.e. chain types: "h", "k", "l"
- 		my %CDR3_end_motif = ( "H" => "$conf{h_CDR3_e}",
+		# for each locus a different AA motif indicates the end of CDR3 region
+		# locus, i.e. chain types: "h", "k", "l"
+		my %CDR3_end_motif = ( "H" => "$conf{h_CDR3_e}",
 			"K" => "$conf{k_CDR3_e}",
 			"L" => "$conf{l_CDR3_e}"
-			);	
+		);
 		# alternativ CDR3_end motif (if first one could not be found)
 		my %alt_CDR3_end_motif = ( "H" => {1 => "$conf{h_altCDR3_e1}", 2 => "$conf{h_altCDR3_e2}", 3 => "$conf{h_altCDR3_e3}"},
 			"K" => {1 => "$conf{k_altCDR3_e1}", 2 => "$conf{k_altCDR3_e2}", 3 => "$conf{k_altCDR3_e3}"},
 			"L" => {1 => "$conf{l_altCDR3_e1}", 2 => "$conf{l_altCDR3_e2}", 3 => "$conf{l_altCDR3_e3}"}
-			);
+		);
 		# J segment end motif
 		my %J_end_motif = ( "H" => "$conf{h_Jend}",
 			"K" => "$conf{k_Jend}",
 			"L" => "$conf{l_Jend}"
-			);
+		);
 
 		# initialize variables for warnings table
 		my $FWR3_igblast_output = 0;
@@ -251,54 +248,53 @@ while(<IN_IgBLAST>) {
 		my $alt_CDR3_end = 0;
 		my $J_end = 0;
 
-		
 		unless ($FWR3_start eq "N/A") { 
 			$FWR3_igblast_output = 1;
-		    	# find region that should contain the CDR3 
-		    	my $FWR3dna_length = $FWR3_end-$FWR3_start + 1;
-	    		my $frame_overhang = $FWR3dna_length % 3;
-	    
-	    		my $critregion_start = $FWR3_start + ($FWR3dna_length - $frame_overhang - 15);
+			# find region that should contain the CDR3
+			my $FWR3dna_length = $FWR3_end-$FWR3_start + 1;
+			my $frame_overhang = $FWR3dna_length % 3;
+
+			my $critregion_start = $FWR3_start + ($FWR3dna_length - $frame_overhang - 15);
 			my $sequence = $seq_id_sequence{$query_id};
-	    		my $critregion =  substr($sequence, $critregion_start - 1, 115);
-	    		my $critdnaobj = Bio::Seq->new(-seq => $critregion,
-					   -id => "nucleotides");
-	    		my $critprotobj = $critdnaobj -> translate;
-	    		my $critprot = $critprotobj -> seq;
-	    
-	    		# find actual CDR3 in terms of aa
-	    		my $CDR3protend = "N/A";
-	    		my $CDR3protstart = "N/A";
-	    		if ($critprot =~ m/C/g) {
+			my $critregion =  substr($sequence, $critregion_start - 1, 115);
+			my $critdnaobj = Bio::Seq->new(-seq => $critregion,
+				-id => "nucleotides");
+			my $critprotobj = $critdnaobj -> translate;
+			my $critprot = $critprotobj -> seq;
+
+			# find actual CDR3 in terms of aa
+			my $CDR3protend = "N/A";
+			my $CDR3protstart = "N/A";
+			if ($critprot =~ m/C/g) {
 				$CDR3protstart = pos $critprot;
 				$CDR3_start_C = 1;
-	    		}
+			}
 
 			# go on with looking for CDR3 end motif
-	    		my ($rest_J_protstart, $rest_J_protend, $rest_const_protstart, $rest_const_protend) = ("N/A","N/A","N/A","N/A");
+			my ($rest_J_protstart, $rest_J_protend, $rest_const_protstart, $rest_const_protend) = ("N/A","N/A","N/A","N/A");
 			if ($critprot =~ m/$CDR3_end_motif{$seq_id_locus{$query_id}}/g) {
-		    		$CDR3protend = pos $critprot;
-		    		$CDR3protend = $CDR3protend - 5;
-		    		$rest_J_protstart = $CDR3protend+1;
+				$CDR3protend = pos $critprot;
+				$CDR3protend = $CDR3protend - 5;
+				$rest_J_protstart = $CDR3protend+1;
 				$CDR3_end_motif = 1;
-			}
-			elsif (($critprot =~ m/$alt_CDR3_end_motif{$seq_id_locus{$query_id}}{1}/g) || ($critprot =~ m/$alt_CDR3_end_motif{$seq_id_locus{$query_id}}{2}/g) || ($critprot =~ m/$alt_CDR3_end_motif{$seq_id_locus{$query_id}}{3}/g)) {
-			    		$CDR3protend = pos $critprot;
-			    		$CDR3protend = $CDR3protend - 5;
-			    		$rest_J_protstart = $CDR3protend+1;
-					$alt_CDR3_end = 1;
+			} elsif (($critprot =~ m/$alt_CDR3_end_motif{$seq_id_locus{$query_id}}{1}/g) || ($critprot =~ m/$alt_CDR3_end_motif{$seq_id_locus{$query_id}}{2}/g) || ($critprot =~ m/$alt_CDR3_end_motif{$seq_id_locus{$query_id}}{3}/g)) {
+				$CDR3protend = pos $critprot;
+				$CDR3protend = $CDR3protend - 5;
+				$rest_J_protstart = $CDR3protend+1;
+				$alt_CDR3_end = 1;
 			}	
+
 			# look for necessary AA motif and adjust rest protein positions
-		    	if ($critprot =~ m/$J_end_motif{$seq_id_locus{$query_id}}/g) {
+			if ($critprot =~ m/$J_end_motif{$seq_id_locus{$query_id}}/g) {
 				$rest_const_protstart = pos($critprot);
 				$rest_J_protend = $rest_const_protstart - 1; 
-		   		$J_end = 1;
+				$J_end = 1;
 			}
-		   	if ($CDR3_end_motif == 0 && ($alt_CDR3_end == 0 || $J_end ==0)) {
+			if ($CDR3_end_motif == 0 && ($alt_CDR3_end == 0 || $J_end ==0)) {
 				$CDR3protend = "N/A";
 				$rest_J_protstart = "N/A";
 			}
-		
+
 			if ($CDR3protstart ne "N/A" && $CDR3protend ne "N/A"){
 				my $CDR3 = substr($critprot, $CDR3protstart, ($CDR3protend-$CDR3protstart+1));
 				my $CDR3_length = length $CDR3;
@@ -308,7 +304,7 @@ while(<IN_IgBLAST>) {
 				$CDR3_start = $FWR3_end + 1;
 				$CDR3_end = $CDR3_start + $CDR3dna_length - 1;
 				get_regions("CDR3", $CDR3_start, $CDR3_end, $query_id);
-		    	}	
+			}
 			# write regions for FWR3 into output 
 			# this is done here, due to optional reseting, after CDR3 was localized
 			get_regions("FR3", $FWR3_start, $FWR3_end, $query_id); 
@@ -316,12 +312,12 @@ while(<IN_IgBLAST>) {
 				my $rest_J_start = $critregion_start + 3*$rest_J_protstart;
 				my $rest_J_end = $critregion_start + 3*($rest_J_protend+1) -1;
 				get_regions("rest_J", $rest_J_start, $rest_J_end, $query_id);
-		    	}
-		    	if (($rest_const_protstart ne "N/A") && ($rest_J_protend ne "N/A")) {
+			}
+			if (($rest_const_protstart ne "N/A") && ($rest_J_protend ne "N/A")) {
 				my $rest_const_start = $critregion_start + 3*$rest_const_protstart;
 				my $rest_const_end = $query_length;
 				get_regions("rest_const", $rest_const_start, $rest_const_end, $query_id);
-		    	}
+			}
 		}
 		# print warning if its not empty
 		$ins_warnings->execute($query_id, $FWR3_igblast_output ,$CDR3_start_C, $CDR3_end_motif, $alt_CDR3_end, $J_end);
