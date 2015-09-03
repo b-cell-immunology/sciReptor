@@ -67,7 +67,7 @@ my $inputdir="";
 $help=1 unless $inputdir;
 exec('perldoc',$0) if $help;
 
-## logging currently turned of due database time-outs
+## logging to database currently turned off due to database time-outs
 # select LOG;
 
 ###
@@ -167,8 +167,7 @@ foreach my $input (@files) {
 	my $seq_id = $1;
 	
 	# print seq_id into log table
-	print "\n\n--------\nSequence id: $seq_id.\n\n";
-	
+	if ($conf{log_level} >= 4) { print "[todb_mutations_from_align.pl][DEBUG] Procssing sequence $seq_id\n" };
 	
 	###
 	### 4. For every codon look for mutations and stopcodons
@@ -192,14 +191,12 @@ foreach my $input (@files) {
 	
 		# is there a stop codon in the germline? --> then there likely is a problem with the frame...
 		if ($subject_codon eq 'TAA' || $subject_codon eq 'TGA' || $subject_codon eq 'TAG') {
-			print "Query: $query_codon\tGermline:$subject_codon\tPosition:$i\n";
-			print "stop codon in germline!!! is it the right frame?\n";
+			if ($conf{log_level} >= 3) { print "[todb_mutations_from_align.pl][INFO] sequence $seq_id position $i query \"$query_codon\" germline \"$subject_codon\" : stop codon in germline sequence.\n" };
 			$stop_codon_germline = 1;
 		}
 	
 		if ($query_codon eq 'TAA' || $query_codon eq 'TGA' || $query_codon eq 'TAG') {
-			print "Query: $query_codon\tGermline:$subject_codon\tPosition:$i\n";
-			print "stop codon in sequence!!! is it the right frame?\n";
+			if ($conf{log_level} >= 3) { print "[todb_mutations_from_align.pl][INFO] sequence $seq_id position $i query \"$query_codon\" germline \"$subject_codon\" : stop codon in query sequence.\n" };
 			$stop_codon_sequence = 1;
 		}
 
