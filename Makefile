@@ -97,15 +97,15 @@ all: $(dir)/PHASE2
 
 # PHASE 2 starts, after the fasta files for alignment have been generated
 # otherwise, make does not know which files belong to *.cfasta and *.caln
-$(dir)/PHASE2: PHASE1
+$(dir)/PHASE2: $(dir)/PHASE1
 	$(MAKE) $(dir)/consensusfasta.done $(dir)/metainfotodb.done $(dir)/cdrfwrtodb.done $(dir)/allsigout.done $(dir)/allsblout.done $(dir)/igblastalignments.done $(dir)/mutations.done $(dir)/qualitycontrol.done
 	@echo "Finished without errors on `date --utc +%Y-%m-%d\ %H:%M:%S\ %Z`"
 	touch $@
 	
 # PHASE 1 does everything up to generating the *.caln files to db	
-PHASE1: 
+$(dir)/PHASE1:
 	$(MAKE) $(dir)/allaligntodb.done
-
+	touch $@
 
 
 #####
@@ -182,7 +182,7 @@ $(dir)/allsblout.done: $(sblout_files) $(sfasta_files)
 #####
 
 # tell that all alignments are in the database
-$(dir)/allaligntodb.done: $(dir)/consensusfasta.done   $(caln_files)
+$(dir)/allaligntodb.done: $(dir)/consensusfasta.done $(caln_files)
 	@echo $(MAKEFLAGS)
 	@echo $(sfasta_files)
 	@echo $(sblout_files)
@@ -262,7 +262,8 @@ $(dir)/allrazers.done: $(dir)/alltodb.done $(razers_files)
 
 .PRECIOUS: %.rfasta
 
-%.rfasta: $(dir)/alltodb.done
+# Use order-only prerequiste to avoid failing rebuild if change dates are to close
+%.rfasta: | $(dir)/alltodb.done
 	./fromdb_fasta.pl -s reads -t reads_VDJ_segments -f $@.x
 	mv $@.x $@
 
