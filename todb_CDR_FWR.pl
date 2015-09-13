@@ -226,19 +226,37 @@ while(<IN_IgBLAST>) {
 
 		# for each locus a different AA motif indicates the end of CDR3 region
 		# locus, i.e. chain types: "h", "k", "l"
-		my %CDR3_end_motif = ( "H" => "$conf{h_CDR3_e}",
-			"K" => "$conf{k_CDR3_e}",
-			"L" => "$conf{l_CDR3_e}"
+		
+		# get rid of quotes from the config file
+		$conf{h_CDR3_e} =~ s/^"(.*)"$/\1/;
+		$conf{k_CDR3_e} =~ s/^"(.*)"$/\1/;
+		$conf{l_CDR3_e} =~ s/^"(.*)"$/\1/;
+		$conf{h_altCDR3_e1} =~ s/^"(.*)"$/\1/;
+		$conf{h_altCDR3_e2} =~ s/^"(.*)"$/\1/;
+		$conf{h_altCDR3_e3} =~ s/^"(.*)"$/\1/;
+		$conf{k_altCDR3_e1} =~ s/^"(.*)"$/\1/;
+		$conf{k_altCDR3_e2} =~ s/^"(.*)"$/\1/;
+		$conf{k_altCDR3_e3} =~ s/^"(.*)"$/\1/;
+		$conf{l_altCDR3_e1} =~ s/^"(.*)"$/\1/;
+		$conf{l_altCDR3_e2} =~ s/^"(.*)"$/\1/;
+		$conf{l_altCDR3_e3} =~ s/^"(.*)"$/\1/;
+		$conf{h_Jend} =~ s/^"(.*)"$/\1/;
+		$conf{k_Jend} =~ s/^"(.*)"$/\1/;
+		$conf{l_Jend} =~ s/^"(.*)"$/\1/;
+
+		my %CDR3_end_motif = ( "H" => qr/$conf{h_CDR3_e}/,
+			"K" => qr/$conf{k_CDR3_e}/,
+			"L" => qr/$conf{l_CDR3_e}/
 		);
 		# alternativ CDR3_end motif (if first one could not be found)
-		my %alt_CDR3_end_motif = ( "H" => {1 => "$conf{h_altCDR3_e1}", 2 => "$conf{h_altCDR3_e2}", 3 => "$conf{h_altCDR3_e3}"},
-			"K" => {1 => "$conf{k_altCDR3_e1}", 2 => "$conf{k_altCDR3_e2}", 3 => "$conf{k_altCDR3_e3}"},
-			"L" => {1 => "$conf{l_altCDR3_e1}", 2 => "$conf{l_altCDR3_e2}", 3 => "$conf{l_altCDR3_e3}"}
+		my %alt_CDR3_end_motif = ( "H" => {1 => qr/$conf{h_altCDR3_e1}/, 2 => qr/$conf{h_altCDR3_e2}/, 3 => qr/$conf{h_altCDR3_e3}/},
+			"K" => {1 => qr/$conf{k_altCDR3_e1}/, 2 => qr/$conf{k_altCDR3_e2}/, 3 => qr/$conf{k_altCDR3_e3}/},
+			"L" => {1 => qr/$conf{l_altCDR3_e1}/, 2 => qr/$conf{l_altCDR3_e2}/, 3 => qr/$conf{l_altCDR3_e3}/}
 		);
 		# J segment end motif
-		my %J_end_motif = ( "H" => "$conf{h_Jend}",
-			"K" => "$conf{k_Jend}",
-			"L" => "$conf{l_Jend}"
+		my %J_end_motif = ( "H" => qr/$conf{h_Jend}/,
+			"K" => qr/$conf{k_Jend}/,
+			"L" => qr/$conf{l_Jend}/
 		);
 
 		# initialize variables for warnings table
@@ -256,7 +274,7 @@ while(<IN_IgBLAST>) {
 
 			my $critregion_start = $FWR3_start + ($FWR3dna_length - $frame_overhang - 15);
 			my $sequence = $seq_id_sequence{$query_id};
-			my $critregion =  substr($sequence, $critregion_start - 1, 115);
+			my $critregion =  substr($sequence, $critregion_start - 1, 155);
 			my $critdnaobj = Bio::Seq->new(-seq => $critregion,
 				-id => "nucleotides");
 			my $critprotobj = $critdnaobj -> translate;
@@ -272,12 +290,13 @@ while(<IN_IgBLAST>) {
 
 			# go on with looking for CDR3 end motif
 			my ($rest_J_protstart, $rest_J_protend, $rest_const_protstart, $rest_const_protend) = ("N/A","N/A","N/A","N/A");
-			if ($critprot =~ m/$CDR3_end_motif{$seq_id_locus{$query_id}}/g) {
+
+			if ($critprot =~ /$CDR3_end_motif{$seq_id_locus{$query_id}}/g) {
 				$CDR3protend = pos $critprot;
 				$CDR3protend = $CDR3protend - 5;
 				$rest_J_protstart = $CDR3protend+1;
 				$CDR3_end_motif = 1;
-			} elsif (($critprot =~ m/$alt_CDR3_end_motif{$seq_id_locus{$query_id}}{1}/g) || ($critprot =~ m/$alt_CDR3_end_motif{$seq_id_locus{$query_id}}{2}/g) || ($critprot =~ m/$alt_CDR3_end_motif{$seq_id_locus{$query_id}}{3}/g)) {
+			} elsif (($critprot =~ /$alt_CDR3_end_motif{$seq_id_locus{$query_id}}{1}/g) || ($critprot =~ /$alt_CDR3_end_motif{$seq_id_locus{$query_id}}{2}/g) || ($critprot =~ /$alt_CDR3_end_motif{$seq_id_locus{$query_id}}{3}/g)) {
 				$CDR3protend = pos $critprot;
 				$CDR3protend = $CDR3protend - 5;
 				$rest_J_protstart = $CDR3protend+1;
@@ -285,7 +304,7 @@ while(<IN_IgBLAST>) {
 			}	
 
 			# look for necessary AA motif and adjust rest protein positions
-			if ($critprot =~ m/$J_end_motif{$seq_id_locus{$query_id}}/g) {
+			if ($critprot =~ /$J_end_motif{$seq_id_locus{$query_id}}/g) {
 				$rest_const_protstart = pos($critprot);
 				$rest_J_protend = $rest_const_protstart - 1; 
 				$J_end = 1;
