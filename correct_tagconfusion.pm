@@ -39,7 +39,7 @@ use Bio::Seq;
 use bcelldb_init;
 
 
-#### mouse matrix 240_256, tags mixed due to wrong pipetting
+#### mouse matrix 240_256, tags mixed due partial quadrant exchange during synthesis
 
 sub correct_tags_240_256_1 {
 
@@ -55,29 +55,22 @@ sub correct_tags_240_256_1 {
 	}
 
 	if ($old_tag_1 =~ m/R/) {	# only row tags
-		
+
 		$old_tag_num = substr $old_tag_1, 1, 3;
 		$old_tag_num = int($old_tag_num);
 
-		if ($old_tag_num <= 192 && $old_tag_num%2 == 0) {	# plates 1-12: every second row...
-			if ( ceil($old_tag_num/16) % 2 == 0 ) {	# ... on a even plate number ...
-				$new_tag_num = $old_tag_num - 16;	# ... is actually 16 rows up
+		if ($old_tag_num <= 192 && $old_tag_num % 2 == 1) {	# plates rows 1-12: every odd row...
+			if ( ceil($old_tag_num/16) % 2 == 0 ) {			# ... on a even plate number ...
+				$new_tag_num = $old_tag_num - 16;			# ... is actually 16 rows up
+			} else {										# ... on uneven plates ...
+				$new_tag_num = $old_tag_num + 16;			# ... is actually 16 rows down
 			}
-			else {	# ... on uneven plates ...
-				$new_tag_num = $old_tag_num + 16;	# ... is actually 16 rows down
-			}
-		}
-
-		else {	# row%2 != 0
+		} else {											# no change for even rows
 			$new_tag_num = $old_tag_num;
 		}
-			
+
 		$new_tag_1 = "R".sprintf("%03d", $new_tag_num);
-
-
-	}
-	
-	else {	# col tag
+	} else {	# no change for column tags
 		$new_tag_1 = $old_tag_1;
 	}
 
@@ -90,7 +83,7 @@ sub correct_tags_240_256_1 {
 sub correct_tags_D01_2 {
 
 	# Kappa chain Row1-16:Col25-48 is exchanged by Row17-32:Col1:24 and vice versa
-	
+
 	my $old_col_tag_2 = shift;
 	my $old_row_tag_2 = shift;
 	my $locus_2 = shift;
@@ -101,15 +94,14 @@ sub correct_tags_D01_2 {
 	my $new_col_tag_num;	
 	my $old_row_tag_num;
 	my $new_row_tag_num;
-	
-	print STDOUT "old_col_tag_2: $old_col_tag_2\nold_row_tag_2: $old_row_tag_2\nlocus_2: $locus_2\n";
 
+	print STDOUT "old_col_tag_2: $old_col_tag_2\nold_row_tag_2: $old_row_tag_2\nlocus_2: $locus_2\n";
 
 	if ($locus_2 ne 'K') { # confusion only kappa
 		print STDOUT "locus not K\n\n";
 		return ($old_col_tag_2, $old_row_tag_2);
 	}
-	
+
 	else {
 		$old_col_tag_num = substr $old_col_tag_2, 1, 3;
 		$old_col_tag_num = int($old_col_tag_num);	
@@ -122,7 +114,7 @@ sub correct_tags_D01_2 {
 			$new_row_tag_num = $old_row_tag_num + 16;
 			$new_col_tag_num = $old_col_tag_num - 24;
 		}
-	
+
 		# plate 2
 		elsif ($old_row_tag_num >= 17 && $old_row_tag_num <= 32 && $old_col_tag_num >= 1 && $old_col_tag_num <= 24) {
 			# move left down to plate 3
@@ -134,7 +126,7 @@ sub correct_tags_D01_2 {
 			$new_row_tag_num = $old_row_tag_num;
 			$new_col_tag_num = $old_col_tag_num;
 		}
-	
+
 		$new_col_tag_2 = "C".sprintf("%03d", $new_col_tag_num);
 		$new_row_tag_2 = "R".sprintf("%03d", $new_row_tag_num);
 
@@ -168,7 +160,7 @@ sub correct_tags {
 		$new_col_tag_main = $col_tag_main;
 		$new_row_tag_main = $row_tag_main;
 
-	}	
+	}
 	return ($new_col_tag_main, $new_row_tag_main);
 }
 

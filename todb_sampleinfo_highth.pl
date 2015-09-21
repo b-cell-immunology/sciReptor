@@ -126,20 +126,24 @@ my %id_row_col_hash;
 
 my $count_line = 0;
 while (<$plate>) {
-    $count_line++;
-    chomp $_;
+	$count_line++;
+	chomp $_;
 
-    # get entries from 2. line on
-    unless ($count_line <= 1 || $count_line > $row_num + 1) {
-        my $row = $count_line - 1;
-        my @entries = split("\t", $_);
-        for ( my $i = 1; $i <= $col_num; $i++ ) {
+	# get entries from 2nd line on
+	unless ($count_line <= 1 || $count_line > $row_num + 1) {
+		my $row = $count_line - 1;
+		my @entries = split("\t", $_);
+		# get entries from 2nd column on (first column contains index),
+		for ( my $i = 1; $i <= $col_num; $i++ ) {
 			# for each id store the list of R-C pairs
 			if ($entries[$i]) {
-			      push(@{$id_row_col_hash{$entries[$i]}}, "R".sprintf("%03d", $row)."-C".sprintf("%03d", $i));
+				push(
+					@{$id_row_col_hash{$entries[$i]}},
+					"R".sprintf("%03d", $row)."-C".sprintf("%03d", $i)
+				);
 			}
-        }   
-    }
+		}
+	}
 }
 close($plate);
 
@@ -189,7 +193,7 @@ while (<$meta>) {
 		my $sort_id = $dbh->{mysql_insertid};
 		# log sort
 		print "Sort: $ins_sort->{Statement}\nWith values: $antigen, $population, $sorting_date, $add_sort_info, $sample_id.\n\n";
-		
+
 		# count events and sequences for that donor-sample-sort combi
 		my $count_events = 0;
 		my $count_sequences =0;
@@ -200,7 +204,7 @@ while (<$meta>) {
 			my ($row_tag, $col_tag) = split("-", $_);
 			my $row = substr $row_tag, 1, 3;
 			my $col = substr $col_tag, 1, 3;
-			
+
 			# only if correct row and col have been found
 			unless ($row > 0 && $col > 0) {last;}
 
@@ -223,7 +227,7 @@ while (<$meta>) {
 				my ($corr_col_tag, $corr_row_tag) = correct_tagconfusion::correct_tags($col_tag, $row_tag, $locus);
 				
 				# log the tag correction
-				if (!($corr_col_tag eq $col_tag) && !($corr_row_tag eq $row_tag)) {
+				if ($corr_col_tag ne $col_tag || $corr_row_tag ne $row_tag) {
 					print "Tag correction took place for the event $event_id on $locus locus:\n";
 					print "Old tags $col_tag, $row_tag\nNew tags $corr_col_tag, $corr_row_tag\n";
 				}
@@ -236,10 +240,10 @@ while (<$meta>) {
 				}
 			}
 		}
-		
+
 		# log event and sequence count
 		print "Number of events for this combi: $count_events\n";
 		print "Number of sequences (H,K,L) for this combi: $count_sequences\n\n";
-	}	
+	}
 }
 close($meta);
