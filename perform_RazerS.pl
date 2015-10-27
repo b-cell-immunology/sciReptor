@@ -77,6 +77,7 @@ while ( my @row = $get_tag->fetchrow_array ) {
 
 print "\n\ngot $tag_count tags for the matrix $conf{matrix}\n\n";
 
+close_dbh($dbh);
 
 ### 2. Perform razers
 

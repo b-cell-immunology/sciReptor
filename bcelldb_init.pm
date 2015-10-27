@@ -17,10 +17,11 @@ use DBI;
 
 our $VERSION = '1.00';
 use base 'Exporter';
-our @EXPORT = qw(*LOG %conf $dry_run get_dbh);
+our @EXPORT = qw(*LOG %conf $dry_run get_dbh close_dbh);
 
 my $log_buffer="";
 my $log_id=0;
+my %status_dbh;
 our %conf;
 our $dry_run=0;
 
@@ -111,7 +112,7 @@ sub start_log
 				values(0,NOW(),\"$conf{version}\",\"$ENV{USER}\",user(),\"$command_line\",\"\")");
 		die "no insert possible" unless $ra==1;
 		$log_id=$dbh->last_insert_id("","","","");
-		$dbh->disconnect;
+		close_dbh($dbh);
 	}
 }
 
@@ -133,7 +134,7 @@ sub stop_log
 		} else {
 			print "[bcelldb_init.pm][ERROR] Update of log_table failed: " . $dbh->errstr . "\n" if ($conf{log_level}>=1);
 		}
-		$dbh->disconnect;
+		close_dbh($dbh);
 	} else {
 		close(LOG);
 		select STDOUT;
@@ -187,9 +188,18 @@ sub get_dbh
 
 	$dbh->{RaiseError}=1;
 	$dbh->{PrintError}=1;
+	$status_dbh{$dbh}{"status"} = 1;
+	$status_dbh{$dbh}{"handle"} = $dbh;
+
 	return $dbh;
 }
 
+sub close_dbh
+{
+	my $dbh=shift;
+	$dbh->disconnect;
+	$status_dbh{$dbh}{"status"} = 0;
+}
 
 INIT{ 
 #	(my $caller_package, my $caller_filename, my $caller_line) = caller;
@@ -201,6 +211,11 @@ INIT{
 END{ 
 #	(my $caller_package, my $caller_filename, my $caller_line) = caller;
 #	print "[bcelldb_init.pm][DEBUG+] caller END: package: $caller_package, filename: $caller_filename, line: $caller_line\n";
+	foreach (keys %status_dbh) {
+		if ($status_dbh{$_}{"status"}) {
+			close_dbh($status_dbh{$_}{"handle"});
+		}
+	}
 	stop_log(); 
 } 
 
