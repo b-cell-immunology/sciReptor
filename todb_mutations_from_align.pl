@@ -167,7 +167,7 @@ foreach my $input (@files) {
 	my $seq_id = $1;
 	
 	# print seq_id into log table
-	if ($conf{log_level} >= 4) { print "[todb_mutations_from_align.pl][DEBUG] Procssing sequence $seq_id\n" };
+	if ($conf{log_level} >= 4) { print "[todb_mutations_from_align.pl][DEBUG] Processing sequence $seq_id\n" };
 	
 	###
 	### 4. For every codon look for mutations and stopcodons

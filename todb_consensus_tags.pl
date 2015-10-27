@@ -112,7 +112,7 @@ $sel_reads1_sth->execute;
 my $count_seqs = 0;
 while ( my ($seq_id, $orient, $locus) = $sel_reads1_sth->fetchrow_array ) {
 	if ($conf{log_level} >= 4) {
-		print STDOUT "[todb_consensus_tags][debug] seq_id: $seq_id ori: $orient locus: $locus\n";
+		print STDOUT "[todb_consensus_tags.pl][DEBUG] seq_id: $seq_id ori: $orient locus: $locus\n";
 	}
 	$seqid_orient_hash{$seq_id} = $orient;
 	$seqid_locus_hash{$seq_id} = $locus;
