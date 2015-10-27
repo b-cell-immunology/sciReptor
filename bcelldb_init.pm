@@ -3,7 +3,7 @@
 # 	- returning database handles (with configurations in the .my.cnf file in your home directory)
 #
 # Authors: Peter Arndt, Christian Busse
-# Maintainer: Christian Busse (bussec@dkfz-heidelberg.de)
+# Maintainer: Christian Busse (christian.busse@dkfz-heidelberg.de)
 # Date: Dec 2013
 # Changes: Feb 2015 CB Introduced Variable expansion for config file 
 #
@@ -87,13 +87,6 @@ sub start_log
 			}
 			$conf{$key} = $value;
 
-			#	# THE FOLLOWING BLOCK IS DEPRECATED AND WILL BE REMOVED IN FUTURE RELEASES. USE PROPER AUTHENTICATION!
-			#	# Do not show the database password in log file
-			#	#
-			#	if ($key eq "dbpass"){
-			#		$value = "***";
-			#	}
-
 			print LOG "Parsed: " . $key . "=" . $value . "\n"
 
 		} else {
@@ -163,23 +156,6 @@ sub get_dbh
 		$dbh = DBI->connect($dsn,undef,undef,{PrintError=>0});
 		print "[bcelldb_init.pm][DEBUG] db connect through configuartion:$dsn\n" if ($conf{log_level} >= 4);
 	}
-
-	#	# THE FOLLOWING BLOCK IS DEPRECATED AND WILL BE REMOVED IN FUTURE RELEASES. USE PROPER AUTHENTICATION!
-	#	# In case there is no DB connection until this point, fall back to user/password authentication. 
-	#	# 
-	#	#
-	#	if (! $dbh){
-	#		my $host	=($conf{dbhost} ? $conf{dbhost}:  'localhost');
-	#		my $user	=($conf{dbuser} ? $conf{dbuser}:  $ENV{USER});
-	#		my $password=($conf{dbpass} ? $conf{dbpass}:  "");
-	#		my $port	=($conf{dbport} ? $conf{dbport}:  3306);
-	#
-	#		$dsn="DBI:mysql:database=$database;host=$host;port=$port";
-	#		$dbh = DBI->connect($dsn,$user,$password,{PrintError=>0}) ||
-	#
-	#		print "[bcelldb_init.pm][WARN] Using a deprecated method (username) for database authentication\n" if ($conf{log_level} >= 2);
-	#		print "[bcelldb_init.pm][DEBUG] db connect through username from config:$dsn\n" if ($conf{log_level} >= 4);
-	#	}
 
 	if (! $dbh) {
 		print "[bcelldb_init.pm][FATAL] Could not connect to database\n" if ($conf{log_level} >= 0);
