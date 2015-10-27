@@ -24,9 +24,9 @@ Modified Mar 2014 (Documentation + logging with capture)
 =cut
 
 use strict;
-use bcelldb_init;
+# use bcelldb_init;
 use Getopt::Long;
-use DBI;
+# use DBI;
 use Capture::Tiny 'capture';
 
 my $help=0;
@@ -45,7 +45,7 @@ exec('perldoc',$0) if $help;
 
 ### 0. Logging and database init
 
-select LOG;
+# select LOG;
 
 ### 1. Call MUSCLE
 
@@ -53,10 +53,7 @@ select LOG;
 my ($stdout, $stderr, $return) = capture {
   system "/usr/bin/muscle -in $fastain -maxiters 1 -quiet -out $alignout";
 };
-
-print "STDOUT: $stdout\n";
-print "STDERR: $stderr\n";
-print "Return: $return\n";
-
-
+if ($return) {
+	print "[perform_muscle.pl][ERROR] return code: " . $return . " STDOUT: \"" . $stdout . "\" STDERR: \"" . $stderr . "\"\n";
+}
 
