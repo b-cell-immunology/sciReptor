@@ -228,21 +228,21 @@ while(<IN_IgBLAST>) {
 		# locus, i.e. chain types: "h", "k", "l"
 		
 		# get rid of quotes from the config file
-		$conf{h_CDR3_e} =~ s/^"(.*)"$/\1/;
-		$conf{k_CDR3_e} =~ s/^"(.*)"$/\1/;
-		$conf{l_CDR3_e} =~ s/^"(.*)"$/\1/;
-		$conf{h_altCDR3_e1} =~ s/^"(.*)"$/\1/;
-		$conf{h_altCDR3_e2} =~ s/^"(.*)"$/\1/;
-		$conf{h_altCDR3_e3} =~ s/^"(.*)"$/\1/;
-		$conf{k_altCDR3_e1} =~ s/^"(.*)"$/\1/;
-		$conf{k_altCDR3_e2} =~ s/^"(.*)"$/\1/;
-		$conf{k_altCDR3_e3} =~ s/^"(.*)"$/\1/;
-		$conf{l_altCDR3_e1} =~ s/^"(.*)"$/\1/;
-		$conf{l_altCDR3_e2} =~ s/^"(.*)"$/\1/;
-		$conf{l_altCDR3_e3} =~ s/^"(.*)"$/\1/;
-		$conf{h_Jend} =~ s/^"(.*)"$/\1/;
-		$conf{k_Jend} =~ s/^"(.*)"$/\1/;
-		$conf{l_Jend} =~ s/^"(.*)"$/\1/;
+		$conf{h_CDR3_e} =~ s/^"(.*)"$/$1/;
+		$conf{k_CDR3_e} =~ s/^"(.*)"$/$1/;
+		$conf{l_CDR3_e} =~ s/^"(.*)"$/$1/;
+		$conf{h_altCDR3_e1} =~ s/^"(.*)"$/$1/;
+		$conf{h_altCDR3_e2} =~ s/^"(.*)"$/$1/;
+		$conf{h_altCDR3_e3} =~ s/^"(.*)"$/$1/;
+		$conf{k_altCDR3_e1} =~ s/^"(.*)"$/$1/;
+		$conf{k_altCDR3_e2} =~ s/^"(.*)"$/$1/;
+		$conf{k_altCDR3_e3} =~ s/^"(.*)"$/$1/;
+		$conf{l_altCDR3_e1} =~ s/^"(.*)"$/$1/;
+		$conf{l_altCDR3_e2} =~ s/^"(.*)"$/$1/;
+		$conf{l_altCDR3_e3} =~ s/^"(.*)"$/$1/;
+		$conf{h_Jend} =~ s/^"(.*)"$/$1/;
+		$conf{k_Jend} =~ s/^"(.*)"$/$1/;
+		$conf{l_Jend} =~ s/^"(.*)"$/$1/;
 
 		my %CDR3_end_motif = ( "H" => qr/$conf{h_CDR3_e}/,
 			"K" => qr/$conf{k_CDR3_e}/,

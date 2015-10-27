@@ -91,25 +91,25 @@ n_consensus=5
 #
 
 # heavy
-h_CDR3_e=WG.G
-h_altCDR3_e1=.G.G
-h_altCDR3_e2=W..G
-h_altCDR3_e3=WG..
-h_Jend=VS[S\|A]
+h_CDR3_e=".*WG.G"
+h_altCDR3_e1=".*W..G"
+h_altCDR3_e2=".*WG.."
+h_altCDR3_e3=".*.G.G"
+h_Jend="VS[SA]"
 
 # kappa
-k_CDR3_e=FG.G
-k_altCDR3_e1=.G.G
-k_altCDR3_e2=F..G
-k_altCDR3_e3=FG..
-k_Jend=T[K\|R][L\|V][E\|D]IK
+k_CDR3_e=".*FG.G"
+k_altCDR3_e1=".*F..G"
+k_altCDR3_e2=".*FG.."
+k_altCDR3_e3=".*.G.G"
+k_Jend="T[KR][LV][ED]IK"
 
 # lambda
-l_CDR3_e=FG.G
-l_altCDR3_e1=.G.G
-l_altCDR3_e2=F..G
-l_altCDR3_e3=FG..
-l_Jend=[T\|I][V\|I\|A]L
+l_CDR3_e=".*FG.G"
+l_altCDR3_e1=".*F..G"
+l_altCDR3_e2=".*FG.."
+l_altCDR3_e3=".*.G.G"
+l_Jend="[TI][VIA]L"
 
 # configuration of the database access
 library=library_scireptor
