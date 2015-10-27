@@ -106,6 +106,8 @@ while (<$mutation_table>) {
 ### 3. Go through all files, split alignment into reading frame codons
 ###
 
+my $dbh = get_dbh($conf{database});
+
 foreach my $input (@files) {
 
 	# open alignment file
@@ -159,7 +161,6 @@ foreach my $input (@files) {
 		in_status, del_status) \
 		VALUES (?,?,?,?,?,?,?,?,?,?,?);";
 	
-	my $dbh = get_dbh($conf{database});
 	my $insert_mutation = $dbh->prepare($statement);
 	
 	# get the query id from the filename... maybe change that
