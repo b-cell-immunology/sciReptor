@@ -69,7 +69,7 @@ exec('perldoc',$0) if $help;
 
 ### 0. Logging
 
-select LOG;
+#select LOG;
 my $dbh = get_dbh($conf{database});
 
 
@@ -153,14 +153,19 @@ my %plate_barcode_hash;
 
 $count_line = 0;
 while (<$barcodes>) {
-    $count_line++;
-    chomp $_;
-    unless ($count_line <= 1) {
-	(my $plate_nr, my $plate_barcode) = split("\t", $_);
-	$plate_barcode_hash{$plate_nr} = $plate_barcode;
-    }
+	$count_line++;
+	chomp $_;
+	if ($count_line > 1) {
+		(my $plate_nr, my $plate_barcode) = split("\t", $_);
+		if ($plate_barcode) {
+			if ($conf{log_level} >= 4) { print "[todb_sampleinfo_highth.pl][DEBUG] Read plate barcode \"$plate_barcode\" for plate $plate_nr from metadata file.\n" };
+			$plate_barcode_hash{$plate_nr} = $plate_barcode;
+		} else {
+			if ($conf{log_level} >= 4) { print "[todb_sampleinfo_highth.pl][DEBUG] No barcode provided for plate $plate_nr.\n" };
+		}
+	}
 }
-
+close($barcodes);
 
 ### 5. Extract sample information for each id from META
 
@@ -168,12 +173,11 @@ $count_line = 0;
 while (<$meta>) {
 	$count_line++;
 	chomp $_;
-	
-	# exclude the headings
-	unless ($count_line == 1 || $count_line == 2) {
-		my ($identifier, $antigen, $population, $sorting_date, $add_sort_info, $tissue, $sampling_date, $add_sample_info, $donor_identifier, $background_treatment, $project, $strain, $add_donor_info) = split("\t", $_);
 
-		unless ($population) {last;}	# dont take empty lines
+	# exclude the headings
+	if ($count_line > 2) {
+		my ($identifier, $antigen, $population, $sorting_date, $add_sort_info, $tissue, $sampling_date, $add_sample_info, $donor_identifier, $background_treatment, $project, $strain, $add_donor_info) = split("\t", $_);
+		next if (! $population);  # ignore empty lines
 
 		# insert donor
 		$ins_donor->execute($donor_identifier, $background_treatment, $project, $strain, $add_donor_info, $conf{species});
@@ -215,9 +219,10 @@ while (<$meta>) {
 			my $new_row = $row -1;
 			my $new_col = $col -1;
 			my $well = ($new_col %= $n_col_per_plate) + (($new_row %= $n_row_per_plate)) * $n_col_per_plate +1;
- 			
+
 			$ins_event->execute($well, $plate, $row, $col, $sort_id, $conf{plate_layout}, $plate_barcode_hash{$plate});
 			my $event_id = $dbh->{mysql_insertid};
+			if ($conf{log_level} >= 4) { print "[todb_sampleinfo_highth.pl][DEBUG] Inserted event $event_id with well $well, plate $plate, row $row, column $col, sort id $sort_id, plate layout $conf{plate_layout}, plate barcode $plate_barcode_hash{$plate}.\n" };
 			$count_events++;
 
 			my @loci = ("H", "K", "L");
@@ -228,8 +233,9 @@ while (<$meta>) {
 				
 				# log the tag correction
 				if ($corr_col_tag ne $col_tag || $corr_row_tag ne $row_tag) {
-					print "Tag correction took place for the event $event_id on $locus locus:\n";
-					print "Old tags $col_tag, $row_tag\nNew tags $corr_col_tag, $corr_row_tag\n";
+					if ($conf{log_level} >= 2) {
+						print "[todb_sampleinfo_highth.pl][WARNING] Tag correction performed for event $event_id on $locus locus: $col_tag, $row_tag -> $corr_col_tag, $corr_row_tag (column, row).\n";
+					}
 				}
 				# get the corresponding sequence id
 				$sel_seq_id->execute($corr_row_tag, $corr_col_tag, $locus, $experiment_id);
@@ -242,8 +248,9 @@ while (<$meta>) {
 		}
 
 		# log event and sequence count
-		print "Number of events for this combi: $count_events\n";
-		print "Number of sequences (H,K,L) for this combi: $count_sequences\n\n";
+		if ($conf{log_level} >= 4) {
+			print "[todb_sampleinfo_highth.pl][DEBUG] Donor ID: $donor_id Sample ID: $sample_id Sort ID: $sort_id  has $count_events events and $count_sequences sequences (H,K,L).";
+		}
 	}
 }
 close($meta);
