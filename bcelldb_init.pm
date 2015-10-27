@@ -13,6 +13,8 @@ package bcelldb_init;
 use strict;
 use warnings;
 use Getopt::Long qw(:config pass_through);
+use Time::HiRes qw(usleep);
+use Sys::SigAction qw( set_sig_handler );
 use DBI;
 
 our $VERSION = '1.00';
@@ -150,11 +152,35 @@ sub get_dbh
 	my $mysql_mycnf = "$ENV{HOME}/.my.cnf";
 	my $mysql_group =($conf{db_group_auth} ? $conf{db_group_auth}:  'mysql_igdb');
 
+	my $config_connection_attempts=5;
+	my $config_connection_timeout=20;
+
 	if (-f $mysql_mycnf){
 		$dsn="DBI:mysql:$database;mysql_read_default_file=$mysql_mycnf;mysql_read_default_group=$mysql_group;";
-	
-		$dbh = DBI->connect($dsn,undef,undef,{PrintError=>0});
-		print "[bcelldb_init.pm][DEBUG] db connect through configuartion:$dsn\n" if ($conf{log_level} >= 4);
+
+		while ((! $dbh) && ($config_connection_attempts-- > 0)) {
+			usleep(rand(100)*100000);
+			print "[bcelldb_init.pm][DEBUG] attempting db connect through configuration:$dsn\n" if ($conf{log_level} >= 4);
+
+			eval {
+				my $temp_handler = set_sig_handler( 'ALRM' ,sub {  die "TIMEOUT MYSQL CONNECT\n"; } );
+				eval {
+					alarm($config_connection_timeout);
+					$dbh = DBI->connect($dsn,undef,undef,{PrintError=>0});
+					alarm(0);
+				};
+				alarm(0);
+				die $@ if $@;
+			};
+			if ($@) {
+				if ($@ eq "TIMEOUT MYSQL CONNECT\n" ) {
+					print "[bcelldb_init.pm][ERROR] MySQL Connect Timeout\n";
+				} else {
+					print "[bcelldb_init.pm][FATAL] MySQL Connect died with \"$@\"\n";
+					die;
+				}
+			}
+		}
 	}
 
 	if (! $dbh) {
