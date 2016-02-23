@@ -151,8 +151,8 @@ while(<$in_igblast>) {
 			my $VDJ_type = $fields[0];
 			my $seq_id = $fields[1];
 			my $VDJ_name = $fields[2];
-			my $evalue = $fields[10];
-			my $score = $fields[11];
+			my $evalue = $fields[11];
+			my $score = $fields[12];
 
 			if ($VDJ_name =~ m/:/) {  # needed for the mouse database, where chromosomal location also appears
 				($VDJ_name, my $foo, my $bar) = split(/:/, $VDJ_name);
