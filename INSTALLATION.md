@@ -35,7 +35,7 @@ The base Linux system used is a [CentOS 7.1](http://isoredirect.centos.org/cento
 10. Reboot
 11. Install additional repository and tools: `sudo yum install epel-release redhat-lsb kernel-devel gcc bzip2`
 12. If you are using a virtual machine, the next steps are recommended for better usability but not required. If you are using a real machine, you
-    can skip to step 18.
+    can skip to step 17.
 13. Remove the old kernel package: `sudo yum erase kernel`
 14. To increase the screen resolution, edit /etc/default/grub and add `vga=0x347` to the `GRUB_CMDLINE_LINUX` line.  
     Then run `mkconfig-grub2 --output=/etc/grub2/grub.cfg` to push the changes to the boot menu.

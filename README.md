@@ -22,10 +22,18 @@ datasets.
 - [sciReptor_analysis](https://github.com/b-cell-immunology/sciReptor_analysis)
   contains various scripts for downstream repertoire analysis.
 
+###Citing sciReptor
+
+If you are using sciReptor or its subcomponents in a publication please cite:
+
+Imkeller K, Arndt PF, Wardemann H, Busse CE. sciReptor: analysis of single-cell
+level immunoglobulin repertoires. BMC Bioinformatics 17:67 (2016)
+PMID: [26847109](https://www.ncbi.nlm.nih.gov/pubmed/26847109)
+DOI: [10.1186/s12859-016-0920-1](https://dx.doi.org/10.1186/s12859-016-0920-1)
 
 ###Copyright and License
 
-Copyright (2011-2015) Katharina Imkeller, Christian Busse, Irina Czogiel and
+Copyright (2011-2016) Katharina Imkeller, Christian Busse, Irina Czogiel and
 Peter Arndt.
 
 sciReptor is free software: you can redistribute it and/or modify it under
