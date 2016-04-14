@@ -182,27 +182,25 @@ while (<$meta>) {
 		# insert donor
 		$ins_donor->execute($donor_identifier, $background_treatment, $project, $strain, $add_donor_info, $conf{species});
 		my $donor_id = $dbh->{mysql_insertid};
-		# log donor
-		print "-----------\n----------\n\n";
-		print "Donor: $ins_donor->{Statement}\nWith values $donor_identifier, $background_treatment, $project, $strain, $add_donor_info, $conf{species}.\n\n";
+		if ($conf{log_level} >= 4) { print "[todb_sampleinfo_highth.pl][DEBUG] Inserted donor $donor_id with donor identifier $donor_identifier, background $background_treatment, project $project, strain $strain, additional donor info $add_donor_info, species $conf{species}.\n" };
 
 		# insert sample
 		$ins_sample->execute($tissue, $sampling_date, $add_sample_info, $donor_id);
 		my $sample_id = $dbh->{mysql_insertid};
-		# log sample
-		print "Sample: $ins_sample->{Statement}\nWith values $tissue, $sampling_date, $add_sample_info, $donor_id.\n\n";
+		if ($conf{log_level} >= 4) { print "[todb_sampleinfo_highth.pl][DEBUG] Inserted sample $sample_id with tissue $tissue, sampling data $sampling_date, additional sample info $add_sample_info, donor id $donor_id.\n" };
 
 		# insert sort
 		$ins_sort->execute($antigen, $population, $sorting_date, $add_sort_info, $sample_id);
 		my $sort_id = $dbh->{mysql_insertid};
-		# log sort
-		print "Sort: $ins_sort->{Statement}\nWith values: $antigen, $population, $sorting_date, $add_sort_info, $sample_id.\n\n";
+		if ($conf{log_level} >= 4) { print "[todb_sampleinfo_highth.pl][DEBUG] Inserted sort $sort_id with antigen $antigen, population $population, sorting date $sorting_date, additional sort info $add_sort_info, sample id $sample_id.\n" };
 
 		# count events and sequences for that donor-sample-sort combi
 		my $count_events = 0;
 		my $count_sequences =0;
+
 		# get the corresponding events
 		my @wells = @{$id_row_col_hash{$identifier}};
+		if ($conf{log_level} >= 4) { print "[todb_sampleinfo_highth.pl][DEBUG] Metainfo identifier $identifier has " . scalar(@wells) . " wells on plates.\n" };
 
 		foreach (@wells) {
 			my ($row_tag, $col_tag) = split("-", $_);
@@ -248,8 +246,8 @@ while (<$meta>) {
 		}
 
 		# log event and sequence count
-		if ($conf{log_level} >= 4) {
-			print "[todb_sampleinfo_highth.pl][DEBUG] Donor ID: $donor_id Sample ID: $sample_id Sort ID: $sort_id  has $count_events events and $count_sequences sequences (H,K,L).";
+		if ($conf{log_level} >= 3) {
+			print "[todb_sampleinfo_highth.pl][INFO] Donor ID: $donor_id Sample ID: $sample_id Sort ID: $sort_id  has $count_events events and $count_sequences sequences (H,K,L).\n";
 		}
 	}
 }

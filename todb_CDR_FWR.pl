@@ -226,7 +226,7 @@ while(<IN_IgBLAST>) {
 
 		# for each locus a different AA motif indicates the end of CDR3 region
 		# locus, i.e. chain types: "h", "k", "l"
-		
+
 		# get rid of quotes from the config file
 		$conf{h_CDR3_e} =~ s/^"(.*)"$/$1/;
 		$conf{k_CDR3_e} =~ s/^"(.*)"$/$1/;
