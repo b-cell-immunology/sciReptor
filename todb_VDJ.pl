@@ -104,7 +104,7 @@ my $count_line = 0;
 my $query_id;
 my $VDJ_type;
 my $VDJ_locus;
-my $igblast_productive = "NULL";
+my $igblast_productive = undef;   # This is the correct way to encode "NULL" for Perl DBI
 
 
 ### 4. Go through IgBLAST output and parse.
@@ -154,8 +154,8 @@ while(<$in_igblast>) {
 			my $evalue = $fields[11];
 			my $score = $fields[12];
 
-			if ($VDJ_name =~ m/:/) {  # needed for the mouse database, where chromosomal location also appears
-				($VDJ_name, my $foo, my $bar) = split(/:/, $VDJ_name);
+			if ($VDJ_name =~ m/:/) {  # needed for mouse NCBIm38 database, where position information is part of the FASTA full name
+				$VDJ_name = (split /:/, $VDJ_name, 2)[0];
 			}
 			if ($seq_id =~ m/reversed/) {
 				$seq_orient = "R";
@@ -172,7 +172,7 @@ while(<$in_igblast>) {
 				# First V segment is used to determine locus of the sequence update
 				if ($count_V == 1) {
 					$upd_posloc_sth->execute($seq_orient, $VDJ_locus, $igblast_productive, $query_id);
-					$igblast_productive = "NULL";
+					$igblast_productive = undef;
 				}
 			} elsif ($VDJ_type eq "D" && $count_D <= 1) {
 				$count_D++;
