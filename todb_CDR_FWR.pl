@@ -218,9 +218,12 @@ while(<IN_IgBLAST>) {
 	###
 	### 4. Split sequence in regions and write to database
 	###
-	elsif ($_ =~ m/IGBLAST/ && $count_line >=3 ) {
-		# at the end of a new query (count_line>3 to skip the first line of IgBLAST output)
-		# deal with the rest of the sequence to extract positions of CDR3, J, etc.
+	elsif (( m/^# IGBLASTN [0-9.+]+$/ ) && ( $count_line >=3 ) || ( m/^# BLAST processed [0-9]+ quer(?:y|ies)/ )) {
+		#
+		# At the begin of a new query block process the remainder of the previous query sequence to extract positions
+		# of FWR3, CDR3, J and constant. (count_line >= 3) is required to ignore the first lines of the IgBLAST output,
+		# "# BLAST processed ..." to process the last query block (since "# IGBLASTN ..." starts a new block and is
+		# therefore absent for the last one.
 		# CDR3 positions have not been initialized yet, since they do not appear in the IgBLAST output 
 		# or we like to define them differently
 
