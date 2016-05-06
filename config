@@ -144,8 +144,8 @@ blastdb_segments_C=database/${species}_gl_C
 blastdb_auxiliary=optional_file/${species}_gl.aux
 
 ## internal default settings for mouse
-# blastdb_segments_V=database/mouse_ncbim38_gl_V
-# blastdb_segments_D=database/mouse_ncbim38_gl_D
-# blastdb_segments_J=database/mouse_ncbim38_gl_J
-# blastdb_segments_C=database/mouse_ncbim38_gl_C
-# blastdb_auxiliary=optional_file/mouse_ncbim38_gl.aux
+# blastdb_segments_V=database/mouse_grcm38_gl_V
+# blastdb_segments_D=database/mouse_grcm38_gl_D
+# blastdb_segments_J=database/mouse_grcm38_gl_J
+# blastdb_segments_C=database/mouse_grcm38_gl_C
+# blastdb_auxiliary=optional_file/mouse_grcm38_gl.aux

@@ -85,7 +85,7 @@ Installing and Running sciReptor
 1.  Create and enter library directory: `mkdir sciReptor_test_library; cd sciReptor_test_library`
 2.  Get current release: `git clone https://github.com/b-cell-immunology/sciReptor_library .`
 3.  Build default sciReptor library: `./build_library_scireptor.sh`
-4.  Build custom NCBIm38 mouse library: `./build_library_mouse_ncbim38.sh`
+4.  Build custom GRCm38 mouse library: `./build_library_mouse_grcm38.sh`
 5.  Switch to home directory again: `cd ..`
 
 ###Run Test Data Set "Mouse B6"

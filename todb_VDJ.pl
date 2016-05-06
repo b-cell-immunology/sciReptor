@@ -154,7 +154,7 @@ while(<$in_igblast>) {
 			my $evalue = $fields[11];
 			my $score = $fields[12];
 
-			if ($VDJ_name =~ m/:/) {  # needed for mouse NCBIm38 database, where position information is part of the FASTA full name
+			if ($VDJ_name =~ m/:/) {  # needed for mouse GRCm38 database, where position information is part of the FASTA full name
 				$VDJ_name = (split /:/, $VDJ_name, 2)[0];
 			}
 			if ($seq_id =~ m/reversed/) {
