@@ -195,8 +195,7 @@ while(<IN_IgBLAST>) {
 		my $l = @all;
 		if($l > 0){
 			($type, $start, $end) = @all[0 .. 2];
-			my @type = split(/ /, $type);
-			$type = $type[0];
+			$type =~ s/^((?:CD|F)R[1-3]).*/$1/;
 		}
 		# write the positions and sequences for regions until CDR2 into output
 		my @simple_regions = ("FR1", "CDR1", "FR2", "CDR2");
@@ -231,33 +230,56 @@ while(<IN_IgBLAST>) {
 		# locus, i.e. chain types: "h", "k", "l"
 
 		# get rid of quotes from the config file
+		$conf{a_CDR3_e} =~ s/^"(.*)"$/$1/;
+		$conf{b_CDR3_e} =~ s/^"(.*)"$/$1/;
 		$conf{h_CDR3_e} =~ s/^"(.*)"$/$1/;
 		$conf{k_CDR3_e} =~ s/^"(.*)"$/$1/;
 		$conf{l_CDR3_e} =~ s/^"(.*)"$/$1/;
+
+		$conf{a_altCDR3_e1} =~ s/^"(.*)"$/$1/;
+		$conf{b_altCDR3_e1} =~ s/^"(.*)"$/$1/;
 		$conf{h_altCDR3_e1} =~ s/^"(.*)"$/$1/;
-		$conf{h_altCDR3_e2} =~ s/^"(.*)"$/$1/;
-		$conf{h_altCDR3_e3} =~ s/^"(.*)"$/$1/;
 		$conf{k_altCDR3_e1} =~ s/^"(.*)"$/$1/;
-		$conf{k_altCDR3_e2} =~ s/^"(.*)"$/$1/;
-		$conf{k_altCDR3_e3} =~ s/^"(.*)"$/$1/;
 		$conf{l_altCDR3_e1} =~ s/^"(.*)"$/$1/;
+
+		$conf{a_altCDR3_e2} =~ s/^"(.*)"$/$1/;
+		$conf{b_altCDR3_e2} =~ s/^"(.*)"$/$1/;
+		$conf{h_altCDR3_e2} =~ s/^"(.*)"$/$1/;
+		$conf{k_altCDR3_e2} =~ s/^"(.*)"$/$1/;
 		$conf{l_altCDR3_e2} =~ s/^"(.*)"$/$1/;
+
+		$conf{a_altCDR3_e3} =~ s/^"(.*)"$/$1/;
+		$conf{b_altCDR3_e3} =~ s/^"(.*)"$/$1/;
+		$conf{h_altCDR3_e3} =~ s/^"(.*)"$/$1/;
+		$conf{k_altCDR3_e3} =~ s/^"(.*)"$/$1/;
 		$conf{l_altCDR3_e3} =~ s/^"(.*)"$/$1/;
+
+		$conf{a_Jend} =~ s/^"(.*)"$/$1/;
+		$conf{b_Jend} =~ s/^"(.*)"$/$1/;
 		$conf{h_Jend} =~ s/^"(.*)"$/$1/;
 		$conf{k_Jend} =~ s/^"(.*)"$/$1/;
 		$conf{l_Jend} =~ s/^"(.*)"$/$1/;
 
-		my %CDR3_end_motif = ( "H" => qr/$conf{h_CDR3_e}/,
+		my %CDR3_end_motif = (
+			"A" => qr/$conf{a_CDR3_e}/,
+			"B" => qr/$conf{b_CDR3_e}/,
+			"H" => qr/$conf{h_CDR3_e}/,
 			"K" => qr/$conf{k_CDR3_e}/,
 			"L" => qr/$conf{l_CDR3_e}/
 		);
 		# alternativ CDR3_end motif (if first one could not be found)
-		my %alt_CDR3_end_motif = ( "H" => {1 => qr/$conf{h_altCDR3_e1}/, 2 => qr/$conf{h_altCDR3_e2}/, 3 => qr/$conf{h_altCDR3_e3}/},
+		my %alt_CDR3_end_motif = (
+			"A" => {1 => qr/$conf{a_altCDR3_e1}/, 2 => qr/$conf{a_altCDR3_e2}/, 3 => qr/$conf{a_altCDR3_e3}/},
+			"B" => {1 => qr/$conf{b_altCDR3_e1}/, 2 => qr/$conf{b_altCDR3_e2}/, 3 => qr/$conf{b_altCDR3_e3}/},
+			"H" => {1 => qr/$conf{h_altCDR3_e1}/, 2 => qr/$conf{h_altCDR3_e2}/, 3 => qr/$conf{h_altCDR3_e3}/},
 			"K" => {1 => qr/$conf{k_altCDR3_e1}/, 2 => qr/$conf{k_altCDR3_e2}/, 3 => qr/$conf{k_altCDR3_e3}/},
 			"L" => {1 => qr/$conf{l_altCDR3_e1}/, 2 => qr/$conf{l_altCDR3_e2}/, 3 => qr/$conf{l_altCDR3_e3}/}
 		);
 		# J segment end motif
-		my %J_end_motif = ( "H" => qr/$conf{h_Jend}/,
+		my %J_end_motif = (
+			"A" => qr/$conf{a_Jend}/,
+			"B" => qr/$conf{b_Jend}/,
+			"H" => qr/$conf{h_Jend}/,
 			"K" => qr/$conf{k_Jend}/,
 			"L" => qr/$conf{l_Jend}/
 		);

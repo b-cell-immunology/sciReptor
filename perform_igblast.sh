@@ -37,6 +37,8 @@ igblastn \
 	-outfmt '7 qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore qseq sseq frames qframe' \
 	-num_alignments_V $num_V -num_alignments_D $num_D -num_alignments_J  $num_J \
 	-num_alignments $num_align_igblast \
+	-domain_system $igblast_domain \
+	-ig_seqtype $igblast_seqtype \
 	> $out_file;
 
 # log the process to db

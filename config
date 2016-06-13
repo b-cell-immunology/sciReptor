@@ -62,6 +62,11 @@ ncols_per_plate=24
 
 # IgBLAST settings
 #
+# ATTENTION: String values are case-sensitive. "TCR" seqtype requires "imgt" domain since "kabat" only defines
+# immunoglobulin domains.
+#
+igblast_seqtype="Ig"   # Sets receptor type, either "Ig" or "TCR".
+igblast_domain="kabat" # Sets domain system to use, either "kabat" or "imgt".
 num_V=3
 num_D=3
 num_J=3
@@ -112,6 +117,21 @@ l_altCDR3_e1=".*F..G"
 l_altCDR3_e2=".*FG.."
 l_altCDR3_e3=".*.G.G"
 l_Jend="[TI][VIA]L"
+
+# TCR beta mouse
+b_CDR3_e=".*FG.G"
+b_altCDR3_e1=".*F..G"
+b_altCDR3_e2=".*FG.."
+b_altCDR3_e3=".*.G.G"
+b_Jend="L[ILST]V[ILTV]"
+
+# TCR alpha mouse ++FILLER ONLY++
+a_CDR3_e=".*FG.G"
+a_altCDR3_e1=".*F..G"
+a_altCDR3_e2=".*FG.."
+a_altCDR3_e3=".*.G.G"
+a_Jend="L.V[LTIV]"
+
 
 ## The following motifs (heavy and kappa) are refined to work with more highly mutated human sequences
 # h_CDR3_e=".*WG.G"
