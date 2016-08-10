@@ -36,14 +36,14 @@ species=
 
 # Matrix size [<columns>_<rows>]
 #
-# valid sizes: 48_48, 72_64 and 240_256
+# valid sizes: 48_48, 72_64, 96_96 and 240_256
 matrix=
 
 # tag batch [<species>_<isotypes>_<number>]
 #
 # valid batches as of 2015-07-01 (dimensions in parenthesis are only for information, DO NOT COPY THEM BELOW)
 # human: Hs_G_001 (48x48), Hs_AEGM_001 (48x48), Hs_AEGM_002 (72x64)
-# mouse: Mm_AGM_001 (48x48), Mm_AGM_002 (240x256) or Mm_ADGM_001 (48x48)
+# mouse: Mm_AGM_001 (48x48), Mm_AGM_002 (240x256), Mm_ADGM_001 (48x48) or Mm_ADGM_002 (96x96)
 tag_batch=
 
 # "Landing Zone" for distal tags
