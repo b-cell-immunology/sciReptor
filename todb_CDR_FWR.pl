@@ -15,8 +15,9 @@ todb_CDR_FWR.pl -io <igblastoutput> [-h]
 Write CDR/FWR DNA and protein sequences and length to the database. Also include warnings table.
 
 Get input sequences of Ig genes from DB.sequences, get CDR/FWR positions from previous IgBLAST output. 
-Up to CDR2 regions are directly identified using the positions indicated by IgBLAST. 
-Additionally determine FWR3, CDR3, J and constant rest according to protein sequence motifs (regular expressions listed in config). From FWR3 end the region for motif search is (-15,100). Split into subsequences and write to database.
+Up to CDR2 regions are directly identified using the positions indicated by IgBLAST. Additionally
+determine FWR3, CDR3, J and constant rest according to protein sequence motifs (regular expressions listed in
+config). From FWR3 end the region for motif search is (-15,100). Split into subsequences and write to database.
 
 1. Prepare insert statements for CDR/FWRs, Prepare subroutines (they need the insert statements, thus the order!)
 2. get query_ids and CDR/FWR positions from IgBLAST output, retrieve sequence from DB --> LOOP OVER IgBLAST OUTPUT
@@ -29,12 +30,12 @@ TO DO: Nb of queries for each chain, Nb of regions for each, but this can also l
 
 =head1 KNOWN BUGS
 
-The regular expressions in the config file are critical, there is no warning in case they are modified.
-They need to be compatible to perl regexp, but also not cause no problems when used as bash source.
+The regular expressions in the config file need to be compatible with Perl RegExp, but must also not cause problems
+when used as bash source. This is currently achieved by flankuing them in double quotes (")
 
 =head1 AUTHOR
 
-Katharina Imkeller
+Katharina Imkeller, Christian Busse
 
 =cut
 
@@ -131,6 +132,37 @@ sub get_regions {
 }
 
 
+# Generate hashes containing the CDR3 and J motifs. Each locus has its own set of motifs and up to three alternative
+# CDR3 motifs are supported. As noted in the config file, the motif must exist and must not be empty, otherwise the
+# resulting RegExp ("//") would simply match the first character. This is assumed to be an unindented behavior, thus
+# in these cases the key will be assigned the irrelevant pattern "ZZZZ", which does not exist in amino acid strings.
+#
+my %CDR3_end_motif, my %alt_CDR3_end_motif, my %J_end_motif;
+
+foreach my $key_conf_locus ( qw / a b h k l / ) {
+	# first, remove the quotes flanking the RegExp in the config file
+	foreach my $key_conf_suffix ( qw / CDR3_e altCDR3_e1 altCDR3_e2 altCDR3_e3 Jend / ) {
+		my $temp_key_conf = $key_conf_locus . "_" .  $key_conf_suffix;
+		if ((exists $conf{$temp_key_conf}) && ($conf{$temp_key_conf} !~ /^""$/)) {
+			$conf{$temp_key_conf} =~ s/^"(.*)"$/$1/;
+			if ($conf{log_level} >= 4) { print "[todb_CDR_FWR.pl][DEBUG] Motif search RegExp \"$conf{$temp_key_conf}\" assigned to key $temp_key_conf.\n" };
+		} else {
+			$conf{$temp_key_conf} = "ZZZZ";
+			if ($conf{log_level} >= 2) {
+				print "[todb_CDR_FWR.pl][WARNING] Search motifs: Key $temp_key_conf did not exist or contained an empty string. Assigned irrelevant pattern \"ZZZZ\".\n";
+			}
+		}
+	}
+	# second, assign the RegExp to the respective hash, using the locus as key. ATTENTION: key is upper case
+	$CDR3_end_motif{uc($key_conf_locus)} = qr/$conf{$key_conf_locus . "_CDR3_e"}/;
+	$alt_CDR3_end_motif{uc($key_conf_locus)} = {
+		1 => qr/$conf{$key_conf_locus . "_altCDR3_e1"}/,
+		2 => qr/$conf{$key_conf_locus . "_altCDR3_e2"}/,
+		3 => qr/$conf{$key_conf_locus . "_altCDR3_e3"}/
+	};
+	$J_end_motif{uc($key_conf_locus)} = qr/$conf{$key_conf_locus . "_Jend"}/;
+}
+
 ###
 ### 2. get query_ids and CDR/FWR positions from IgBLAST output
 ###
@@ -151,11 +183,11 @@ my ($FWR3_start, $FWR3_end, $CDR3_start, $CDR3_end);
 my ($type, $start, $end);
 
 # go through IgBLAST output and extract query_id and CDR/FWR positions
-while(<IN_IgBLAST>) {
+while (<IN_IgBLAST>) {
 	$count_line++;
 	chomp $_;
 
-		# identify the query
+	# identify the query
 	if ($_ =~ m/Query:/) {
 		#print $_."\n";
 		$count_query++;
@@ -225,64 +257,6 @@ while(<IN_IgBLAST>) {
 		# therefore absent for the last one.
 		# CDR3 positions have not been initialized yet, since they do not appear in the IgBLAST output 
 		# or we like to define them differently
-
-		# for each locus a different AA motif indicates the end of CDR3 region
-		# locus, i.e. chain types: "h", "k", "l"
-
-		# get rid of quotes from the config file
-		$conf{a_CDR3_e} =~ s/^"(.*)"$/$1/;
-		$conf{b_CDR3_e} =~ s/^"(.*)"$/$1/;
-		$conf{h_CDR3_e} =~ s/^"(.*)"$/$1/;
-		$conf{k_CDR3_e} =~ s/^"(.*)"$/$1/;
-		$conf{l_CDR3_e} =~ s/^"(.*)"$/$1/;
-
-		$conf{a_altCDR3_e1} =~ s/^"(.*)"$/$1/;
-		$conf{b_altCDR3_e1} =~ s/^"(.*)"$/$1/;
-		$conf{h_altCDR3_e1} =~ s/^"(.*)"$/$1/;
-		$conf{k_altCDR3_e1} =~ s/^"(.*)"$/$1/;
-		$conf{l_altCDR3_e1} =~ s/^"(.*)"$/$1/;
-
-		$conf{a_altCDR3_e2} =~ s/^"(.*)"$/$1/;
-		$conf{b_altCDR3_e2} =~ s/^"(.*)"$/$1/;
-		$conf{h_altCDR3_e2} =~ s/^"(.*)"$/$1/;
-		$conf{k_altCDR3_e2} =~ s/^"(.*)"$/$1/;
-		$conf{l_altCDR3_e2} =~ s/^"(.*)"$/$1/;
-
-		$conf{a_altCDR3_e3} =~ s/^"(.*)"$/$1/;
-		$conf{b_altCDR3_e3} =~ s/^"(.*)"$/$1/;
-		$conf{h_altCDR3_e3} =~ s/^"(.*)"$/$1/;
-		$conf{k_altCDR3_e3} =~ s/^"(.*)"$/$1/;
-		$conf{l_altCDR3_e3} =~ s/^"(.*)"$/$1/;
-
-		$conf{a_Jend} =~ s/^"(.*)"$/$1/;
-		$conf{b_Jend} =~ s/^"(.*)"$/$1/;
-		$conf{h_Jend} =~ s/^"(.*)"$/$1/;
-		$conf{k_Jend} =~ s/^"(.*)"$/$1/;
-		$conf{l_Jend} =~ s/^"(.*)"$/$1/;
-
-		my %CDR3_end_motif = (
-			"A" => qr/$conf{a_CDR3_e}/,
-			"B" => qr/$conf{b_CDR3_e}/,
-			"H" => qr/$conf{h_CDR3_e}/,
-			"K" => qr/$conf{k_CDR3_e}/,
-			"L" => qr/$conf{l_CDR3_e}/
-		);
-		# alternativ CDR3_end motif (if first one could not be found)
-		my %alt_CDR3_end_motif = (
-			"A" => {1 => qr/$conf{a_altCDR3_e1}/, 2 => qr/$conf{a_altCDR3_e2}/, 3 => qr/$conf{a_altCDR3_e3}/},
-			"B" => {1 => qr/$conf{b_altCDR3_e1}/, 2 => qr/$conf{b_altCDR3_e2}/, 3 => qr/$conf{b_altCDR3_e3}/},
-			"H" => {1 => qr/$conf{h_altCDR3_e1}/, 2 => qr/$conf{h_altCDR3_e2}/, 3 => qr/$conf{h_altCDR3_e3}/},
-			"K" => {1 => qr/$conf{k_altCDR3_e1}/, 2 => qr/$conf{k_altCDR3_e2}/, 3 => qr/$conf{k_altCDR3_e3}/},
-			"L" => {1 => qr/$conf{l_altCDR3_e1}/, 2 => qr/$conf{l_altCDR3_e2}/, 3 => qr/$conf{l_altCDR3_e3}/}
-		);
-		# J segment end motif
-		my %J_end_motif = (
-			"A" => qr/$conf{a_Jend}/,
-			"B" => qr/$conf{b_Jend}/,
-			"H" => qr/$conf{h_Jend}/,
-			"K" => qr/$conf{k_Jend}/,
-			"L" => qr/$conf{l_Jend}/
-		);
 
 		# initialize variables for warnings table
 		my $FWR3_igblast_output = 0;
@@ -368,3 +342,4 @@ while(<IN_IgBLAST>) {
 	}
 }
 
+if ($conf{log_level} >= 4) { print "[todb_CDR_FWR.pl][DEBUG] Processed $count_line lines from file $igblast_output.\n" };
