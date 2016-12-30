@@ -67,6 +67,12 @@ $help=1 unless $plate_input;
 $help=1 unless $metainfo_input;
 exec('perldoc',$0) if $help;
 
+my %config_hash_loci = (
+	Ig  => [ "H", "K", "L" ],
+	TCR => [ "B", "A" ]
+);
+my @loci_current = @{$config_hash_loci{$conf{igblast_seqtype}}};
+
 ### 0. Logging
 
 #select LOG;
@@ -223,9 +229,7 @@ while (<$meta>) {
 			if ($conf{log_level} >= 4) { print "[todb_sampleinfo_highth.pl][DEBUG] Inserted event $event_id with well $well, plate $plate, row $row, column $col, sort id $sort_id, plate layout $conf{plate_layout}, plate barcode $plate_barcode_hash{$plate}.\n" };
 			$count_events++;
 
-			my @loci = ("H", "K", "L");
-
-			foreach my $locus (@loci) {
+			foreach my $locus (@loci_current) {
 				# correct for tag confusion
 				my ($corr_col_tag, $corr_row_tag) = correct_tagconfusion::correct_tags($col_tag, $row_tag, $locus);
 				
@@ -247,7 +251,7 @@ while (<$meta>) {
 
 		# log event and sequence count
 		if ($conf{log_level} >= 3) {
-			print "[todb_sampleinfo_highth.pl][INFO] Donor ID: $donor_id Sample ID: $sample_id Sort ID: $sort_id  has $count_events events and $count_sequences sequences (H,K,L).\n";
+			print "[todb_sampleinfo_highth.pl][INFO] Donor \"$donor_id\", sample \"$sample_id\", sort \"$sort_id\": $count_events events and $count_sequences sequences ( Loci: @loci_current ).\n";
 		}
 	}
 }

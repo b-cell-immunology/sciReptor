@@ -65,8 +65,8 @@ ncols_per_plate=24
 # ATTENTION: String values are case-sensitive. "TCR" seqtype requires "imgt" domain since "kabat" only defines
 # immunoglobulin domains.
 #
-igblast_seqtype="Ig"   # Sets receptor type, either "Ig" or "TCR".
-igblast_domain="kabat" # Sets domain system to use, either "kabat" or "imgt".
+igblast_seqtype=Ig    # Sets receptor type, either "Ig" or "TCR". DO NOT USE QUOTES!
+igblast_domain=kabat  # Sets domain system to use, either "kabat" or "imgt".
 num_V=3
 num_D=3
 num_J=3
