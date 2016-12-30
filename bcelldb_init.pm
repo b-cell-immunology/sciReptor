@@ -27,6 +27,7 @@ my %status_dbh;
 our %conf;
 our $dry_run=0;
 
+my $regexp_inline_comments = qr /^(.*?)(?<!\\)#.*/;  # Match everything before a non-escaped hash
 my $regexp_key_value = qr /^\s*([_A-Za-z][_0-9A-Za-z]+)=(.*?)\s*;?\s*$/;
 
 sub start_log
@@ -68,6 +69,7 @@ sub start_log
 		} elsif ( /^\s*$/ ) {
 			next;
 		} elsif ( $regexp_key_value ) {
+			$_ =~ s/$regexp_inline_comments/$1/;
 			my ($key,$value) = $_ =~ $regexp_key_value;
 			
 			# Expand BASH variables ("${VARIABLE}"). Give precedence to values from config file itself,
