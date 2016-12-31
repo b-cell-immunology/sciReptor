@@ -97,23 +97,29 @@ while (<$igout>) {
 			}
 		}
 		if ($count_line == $mark_hittable_start + 3) {
+
+			# Read data elements. ATTENTION: Output elements are shifted to the right by 1, due to
+			# an additional letter in the raw output, which indicates the segment type.
+			#
 			my @first_hit = split("\t", $_);
 			$query_id = $first_hit[1];
 			$query_start = $first_hit[7];
 			$germline_start = $first_hit[9];
 			$query_seq = $first_hit[13];
 			$germline_seq = $first_hit[14];
-			#print "$query_id\n";
+
+			# Sanitize IgLAST output
+			$query_id =~ s/(?:reversed\|)?([0-9]+)/$1/;
 
 			# insert into database
 			$ins_aln->execute($query_id, $query_start, $germline_start, $query_seq, $germline_seq);
 
 			# print into a file
 			my $outfile;
-			open($outfile, ">$directory/$query_id.igblast.aln") or die "could not open $outfile";
+			open $outfile, ">", "$directory/$query_id.igblast.aln" or die "could not open $outfile";
 			print $outfile ">$query_id\_$query_start\_query\n$query_seq\n";
 			print $outfile ">$query_id\_$germline_start\_germline\n$germline_seq\n";
-			close($outfile);
+			close $outfile;
 		}
 	}
 }

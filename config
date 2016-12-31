@@ -42,14 +42,17 @@ matrix=
 # tag batch [<species>_<isotypes>_<number>]
 #
 # valid batches as of 2015-07-01 (dimensions in parenthesis are only for information, DO NOT COPY THEM BELOW)
-# human: Hs_G_001 (48x48), Hs_AEGM_001 (48x48), Hs_AEGM_002 (72x64)
-# mouse: Mm_AGM_001 (48x48), Mm_AGM_002 (240x256), Mm_ADGM_001 (48x48) or Mm_ADGM_002 (96x96)
+# human Ig : Hs_G_001 (48x48), Hs_AEGM_001 (48x48) or Hs_AEGM_002 (72x64)
+# mouse Ig : Mm_AGM_001 (48x48), Mm_AGM_002 (240x256), Mm_ADGM_001 (48x48) or Mm_ADGM_002 (96x96)
+# human TCR: Hs_AB_001 (72x64)
+# mouse TCR: Mm_AB_001 (72x64)
 tag_batch=
 
 # "Landing Zone" for distal tags
 #
 # Minimal distance of a distal tag from the start of a given read. All distal tags starting at positions [bp]
-# smaller than the value given here, will be ignored. Default is 300.
+# smaller than the value given here, will be ignored. Default is 300. The primers by A. Han (for human TCR )
+# require substantially smaller values as they are sometimes located towards the end of FWR3.
 tag_landing_zone=300
 
 # routines to use for correction of tag positions: "none" (default), "D01_plateposition", "tag_batch" (required
@@ -62,6 +65,11 @@ ncols_per_plate=24
 
 # IgBLAST settings
 #
+# ATTENTION: String values are case-sensitive. "TCR" seqtype requires "imgt" domain since "kabat" only defines
+# immunoglobulin domains.
+#
+igblast_seqtype=Ig    # Sets receptor type, either "Ig" or "TCR". DO NOT USE QUOTES!
+igblast_domain=kabat  # Sets domain system to use, either "kabat" or "imgt".
 num_V=3
 num_D=3
 num_J=3
@@ -91,7 +99,7 @@ n_consensus=5
 # regexp is greedy and will result in matching the LAST occurrence of the motif. Removing it will cause
 # the expression to match the first occurrence.
 
-# The following motifs match the germline of human and mouse J segments
+# The following motifs match the germline J segments of the human and mouse Ig loci
 # heavy
 h_CDR3_e=".*WG.G"
 h_altCDR3_e1=".*W..G"
@@ -112,6 +120,35 @@ l_altCDR3_e1=".*F..G"
 l_altCDR3_e2=".*FG.."
 l_altCDR3_e3=".*.G.G"
 l_Jend="[TI][VIA]L"
+
+# TCR beta human
+b_CDR3_e=".*FG.G"
+b_altCDR3_e1=".*VG.G"
+b_altCDR3_e2="ZZZZ"
+b_altCDR3_e3="ZZZZ"
+b_Jend="L[LST][VI][LTV]"
+
+# TCR alpha human, uses positive lookahead into constant region since there is no good J segment consensus
+a_CDR3_e=".*FG.G"
+a_altCDR3_e1=".*F..G"
+a_altCDR3_e2=".*FG.."
+a_altCDR3_e3=".*.G.G"
+a_Jend=".(?=.IQNPDP)"
+
+## TCR beta mouse
+# b_CDR3_e=".*FG.G"
+# b_altCDR3_e1=".*F..G"
+# b_altCDR3_e2=".*FG.."
+# b_altCDR3_e3=".*.G.G"
+# b_Jend="L[ILST]V[ILTV]"
+
+## TCR alpha mouse ++FILLER ONLY++
+# a_CDR3_e=".*FG.G"
+# a_altCDR3_e1=".*F..G"
+# a_altCDR3_e2=".*FG.."
+# a_altCDR3_e3=".*.G.G"
+# a_Jend="L.V[LTIV]"
+
 
 ## The following motifs (heavy and kappa) are refined to work with more highly mutated human sequences
 # h_CDR3_e=".*WG.G"

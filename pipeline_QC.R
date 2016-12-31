@@ -70,9 +70,8 @@ if(! is.null(list.config.global[["log_level"]])) {
 # determine which loci or directions will be included in the print-outs.
 #
 list.config.loci <- list(
-	H = "heavy",
-	K = "kappa",
-	L = "lambda"
+	B = "beta",
+	A = "alpha"
 )
 
 list.config.directions <- list(
@@ -86,9 +85,8 @@ list.config.directions <- list(
 # Which colors used to mark-up loci in mixed plots
 #
 list.config.colors.locus <- list(
-	H = "#FF1F00",
-	K = "#009F00",
-	L = "#3F3FFF"
+	B = "#FF1F00",
+	A = "#3F3FFF"
 )
 
 # Get a DB connection, using ".my.cnf" group (specify alternative file using "default.file" keyword)
@@ -135,7 +133,7 @@ names(list.tag.stats) <- sapply(list.tag.stats, function(x){x$locus})
 #
 #
 pdf(file=file.path(dir.output, config.name.run, "QC_out_tag_stats.pdf"), paper="A4r", width=11.7, height=8.27)
-par(mfrow = c(3, length(list.tag.stats)),oma=c(1, 0, 1.25, 0))
+par(mfrow = c(length(list.tag.stats), 3),oma=c(1, 0, 1.25, 0))
 
 lapply(
 	names(list.tag.stats),
@@ -408,7 +406,7 @@ if (config.debug.level >= 3) cat("[pipeline_QC.R][INFO] Leaving step 2\n");
 if (config.debug.level >= 3) cat("[pipeline_QC.R][INFO] Entering step 3\n");
 
 pdf(file=file.path(dir.output, config.name.run, "QC_out_reads_per_well.pdf"), paper="A4r", width=11.7, height=8.27)
-par(mfcol=c(2, 3), oma=c(1, 0, 1.25, 0))
+par(mfcol=c(2, length(list.tag.stats)), oma=c(1, 0, 1.25, 0))
 
 lapply(
 	names(list.config.loci),

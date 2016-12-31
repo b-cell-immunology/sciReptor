@@ -80,12 +80,16 @@ $help=1 unless $fixed_locus;
 exec('perldoc',$0) if $help;
 
 
+my %hash_locus_num = ( H  => "1",  K  => "2",  L  => "3",  B  => "4",  A  => "5");
+my %hash_num_locus = ('1' => "H", '2' => "K", '3' => "L", '4' => "B", '5' => "A");
+
+
 ### 0. Logging and database init
+select STDOUT;
+$| = 1;         # make STDOUT 'hot', i.e. perform auto-flush after each line
 
 select LOG;
 my $dbh = get_dbh($conf{database});
-
-
 
 
 ### 1. Get a list of all seq_id that will be processed,
@@ -112,7 +116,7 @@ $sel_reads1_sth->execute;
 my $count_seqs = 0;
 while ( my ($seq_id, $orient, $locus) = $sel_reads1_sth->fetchrow_array ) {
 	if ($conf{log_level} >= 4) {
-		print STDOUT "[todb_consensus_tags.pl][DEBUG] seq_id: $seq_id ori: $orient locus: $locus\n";
+		print STDOUT "[todb_consensus_tags.pl][DEBUG] locus: $locus seq_id: $seq_id ori: $orient\n";
 	}
 	$seqid_orient_hash{$seq_id} = $orient;
 	$seqid_locus_hash{$seq_id} = $locus;
@@ -120,10 +124,12 @@ while ( my ($seq_id, $orient, $locus) = $sel_reads1_sth->fetchrow_array ) {
 	$count_seqs++;
 }
 # log how many sequences were found
-print "\n\n$count_seqs reads will be processed.\n\n";
+print "\nSelected $count_seqs reads for processing from locus ${fixed_locus}.\n";
 
 # print to STDOUT
-print STDOUT "\nLocus $fixed_locus. Selected $count_seqs reads for being processed.....\n";
+if ($conf{log_level} >= 3) {
+	print STDOUT "[todb_consensus_tags.pl][INFO] locus ${fixed_locus}: selected $count_seqs reads for processing.\n";
+}
 
 
 ### 2. Prepare database query: for a certain seq_id get the right identifying tags from the database
@@ -160,13 +166,11 @@ my $sel_Rtags_sth = $dbh->prepare("SELECT found.tag_id, lib.name
 # i.e. CCCRRRL -> INT(7)
 
 # update well_id in reads
-my $update_reads_wellid = $dbh->prepare("UPDATE $conf{database}.reads SET well_id = ? WHERE seq_id = ?");
-
 
 
 ### 4. Go through list of seq_ids
 ### Select tags and assign well_id
-
+my %hash_wellid_seqid;
 
 foreach my $seq_id (@seq_id_list) {
 	$sel_Ftags_sth->execute($seq_id);
@@ -210,21 +214,48 @@ foreach my $seq_id (@seq_id_list) {
 			else {print "\nread $seq_id has no correct orientation\n"}	# log: no assigned orientation
 		}
 		
-		unless ($rowtag eq "" || $coltag eq "") {
-			my %locus_num_hash = (H => '1', K => '2', L => '3');
-			my $wellid_name = sprintf("%03d", $coltag) . sprintf("%03d", $rowtag) . "$locus_num_hash{$seqid_locus_hash{$seq_id}}";
-			$update_reads_wellid->execute($wellid_name,$seq_id);
+		if ($rowtag ne "" && $coltag ne "") {
+			my $wellid_name = sprintf("%03d%03d%1d", $coltag, $rowtag, $hash_locus_num{$seqid_locus_hash{$seq_id}});
+			push(@{$hash_wellid_seqid{$wellid_name}}, $seq_id)
 			# print "read $seq_id was matched to well_id $wellid_name\n";
 		}
 	}
 }
 
+my $cnt_wellids_assigned = 0;
+my $cnt_reads_updated = 0;
+
+foreach my $wellid_curr (keys %hash_wellid_seqid) {
+	my @seqids_curr = @{$hash_wellid_seqid{$wellid_curr}};
+	$cnt_wellids_assigned++;
+	$cnt_reads_updated += scalar @seqids_curr;
+
+	my $statement_update_reads_wellid = "UPDATE $conf{database}.reads SET well_id = $wellid_curr WHERE seq_id IN (" . join(",", @seqids_curr) . ");";
+	if ($conf{log_level} >= 3) {
+		print STDOUT "[todb_consensus_tags.pl][DEBUG+] SQL UPDATE statement: ${statement_update_reads_wellid}\n";
+	}
+	my $sql_update_reads_wellid = $dbh->prepare($statement_update_reads_wellid);
+	$sql_update_reads_wellid->execute;
+	my $temp_reads_updated = $sql_update_reads_wellid->rows;
+	if (($temp_reads_updated != scalar @seqids_curr) && ($conf{log_level} >= 2)){
+		print STDOUT "[todb_consensus_tags.pl][WARNING] Mismatched read counts for well_id $wellid_curr : selected " . scalar @seqids_curr . ", updated ${temp_reads_updated}.\n";
+	}
+}
+
 # status update to STDOUT
-print STDOUT "Assigned well ids....\n";
+if ($conf{log_level} >= 3) {
+	print STDOUT "[todb_consensus_tags.pl][INFO] Locus $fixed_locus : Assigned $cnt_reads_updated reads to $cnt_wellids_assigned wells.\n"
+}
+
 
 ### 5. Now, select all occuring well_ids without consensus_id
 
-my $sel_wellid = $dbh->prepare("SELECT well_id FROM $conf{database}.reads WHERE consensus_id IS NULL AND well_id is NOT NULL GROUP BY well_id;");
+my $sel_wellid = $dbh->prepare("SELECT well_id FROM $conf{database}.reads
+	WHERE consensus_id IS NULL
+	AND well_id IS NOT NULL
+	AND locus = '$fixed_locus'
+	GROUP BY well_id;"
+);
 $sel_wellid->execute;
 
 ### 6. Prepare database: for a certain well_id, select the most common and 2nd most common V-J combination
@@ -266,7 +297,6 @@ my $sel_seqids = $dbh->prepare("SELECT reads.seq_id FROM $conf{database}.reads
 	AND reads.consensus_id IS NULL
 	;");
 
-my $update_consensus = $dbh->prepare("UPDATE $conf{database}.reads SET consensus_id = ? WHERE seq_id = ?;");
 my $update_nseqs = $dbh->prepare("UPDATE $conf{database}.consensus_stats SET n_seq = n_seq+? WHERE consensus_id = ?;");
 
 
@@ -281,12 +311,13 @@ while (my @wellid_row = $sel_wellid->fetchrow_array) {
 	my $well_id = $wellid_row[0];
 	
 	# convert well_id back to locus, row and col
-	my %num_locus_hash = ('1' => 'H', '2' => 'K', '3' => 'L');
-	my $locus = $num_locus_hash{(substr $well_id, -1)};
+	my $locus = $hash_num_locus{(substr $well_id, -1)};
 	my $coltag = "C".(substr $well_id,0,3);
 	my $rowtag = "R".(substr $well_id,3,3);
 
-	print "Processing $locus $coltag $rowtag\n";
+	if ($conf{log_level} >= 3) {
+		print STDOUT "[todb_consensus_tags.pl][DEBUG] Locus $fixed_locus : Processing well locus ${locus} column ${coltag} row ${rowtag}.\n";
+	}
 
 	# get most occuring V_J combinations
 	$sel_VJs->execute($well_id);
@@ -301,14 +332,32 @@ while (my @wellid_row = $sel_wellid->fetchrow_array) {
 		$sel_seqids->execute($well_id, $Vsegm_id, $Jsegm_id);
 		
 		my $n_seq = $sel_seqids->rows;
-		print "Consensus $consensus_id has nseq $n_seq\n";
+		if ($conf{log_level} >= 3) {
+			print STDOUT "[todb_consensus_tags.pl][DEBUG] Locus ${locus} column ${coltag} row ${rowtag} : Consensus $consensus_id has $n_seq reads.\n";
+		}
+
 		# update the number of sequences in the consensus
 		$update_nseqs->execute($n_seq, $consensus_id);
 
+		my @sel_seqid;
 		while (my @seqid_row = $sel_seqids->fetchrow_array) {
-			my $sel_seqid = $seqid_row[0]; 
+			push @sel_seqid, $seqid_row[0];
+		}
+
+		my $cnt_reads_consensus_updated = 0;
+		if (scalar @sel_seqid > 0) {
 			# update the reads table with consensus_id
-			$update_consensus->execute($consensus_id, $sel_seqid);
+			my $sql_ins_seq = "UPDATE $conf{database}.reads SET consensus_id=${consensus_id} WHERE seq_id IN (" . join(",", @sel_seqid) . ");";
+			if ($conf{log_level} >= 3) {
+				print STDOUT "[todb_consensus_tags.pl][DEBUG+] SQL UPDATE statement: ${sql_ins_seq}\n";
+			}
+			my $update_consensus = $dbh->prepare($sql_ins_seq);
+			$update_consensus->execute;
+			$cnt_reads_consensus_updated = $update_consensus->rows;
+		}
+
+		if ($conf{log_level} >= 3) {
+			print STDOUT "[todb_consensus_tags.pl][DEBUG] Locus ${locus} column ${coltag} row ${rowtag} consensus $consensus_id : Updated $cnt_reads_consensus_updated reads.\n";
 		}
 	}
 }
@@ -317,6 +366,8 @@ print "Total number of well_ids processed: $count_wellids\n";
 print "Total number of assigned sequence ids: $count_seq_ids\n";
 
 # status update to STDOUT
-print STDOUT "Assigned $count_seq_ids sequence ids to $count_wellids well ids....\n";
+if ($conf{log_level} >= 3) {
+	print STDOUT "[todb_consensus_tags.pl][INFO] Assigned $count_seq_ids sequence IDs to $count_wellids well IDs for locus $fixed_locus\n";
+}
 
 
