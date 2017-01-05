@@ -15,6 +15,13 @@
 #   potentially unpredictable results.
 #
 
+# Set receptor type, either "IG" or "TCR"
+receptor_type=
+
+# Species from which the samples are derived from and against whose database the sequences will be BLASTed
+# against. Currently available options: human or mouse
+species=
+
 # Set the general log level (0=fatal, 1=error, 2=warning, 3=info, 4=debug, 5=debug+)
 log_level=3
 
@@ -29,10 +36,6 @@ database=
 # parameters like "host" and "port" might have to be included.
 #
 db_group_auth=mysql_igdb
-
-# Species from which the samples are derived from and against whose database the sequences will be BLASTed
-# against. Currently available options: human or mouse
-species=
 
 # Matrix size [<columns>_<rows>]
 #
@@ -171,7 +174,7 @@ library=library_scireptor
 # "database", "internal_data" and "optional_file" folders, NOT to the "database" folder itself. The paths
 # specified as "blastdb_segments_X" are relative to $IGDATA
 #
-IGDATA=${HOME}/analysis_pipeline/igrepositories/scireptor_library/igdata
+IGDATA=../../sciReptor_library/igdata
 
 # default settings for IGBLAST stock installation, automatic switch between species
 blastdb_segments_V=database/${species}_gl_V

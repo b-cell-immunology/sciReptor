@@ -1,7 +1,7 @@
 # 
-# MAKEFILE FOR MATRIX PCR NGS DATA
+# Makefile for sciReptor
 #
-# This file sets up the rules (programming language 'make'), how different pipeline outputs depend on each other.
+# This file sets up the rules how the differerent pipeline outputs depend on each other. It further controls parallelization.
 # 
 # Arguments:
 # 	- run
@@ -26,6 +26,7 @@
 # 	- include metainformation
 # 		<experiment_id>_metainfo.tsv
 # 		<experiment_id>_plate.tsv
+# 		<experiment_id>_platebarcode.tsv
 # 	
 # Third step on command line:
 # 	> make all run=<runname> experiment_id=<experiment_id>
@@ -34,17 +35,23 @@
 #
 #
 
-#####
-##### Initializing directories
-#####
+# Set path for executables
+#
+BASH := /usr/bin/bash
 
-# project root is one directory further up then bin
-project_root=..
-# pipeline output, separated by sequencing run
+# Set project root, which is one directory above 'bin' (expected to be the current working directory)
+#
+project_root := ..
+
+config_file := $(shell $(BASH) -c 'if [[ -r config ]]; then echo config; elif [[ -r $(project_root)/config ]]; then echo $(project_root)/config; else echo ""; fi;')
+ifdef config_file
+	receptor_type := $(shell $(BASH) -c 'source $(config_file); echo $${receptor_type^^}')
+endif
+
+
+# locations for pipeline output, raw daya and quality control output, separate for each sequencing run
 dir=$(project_root)/pipeline_output/$(run)
-# raw data, separated by sequencing run
 raw_data=$(project_root)/raw_data/$(run)
-# locations for quality control data
 quality_base_dir=$(project_root)/quality_control
 quality_control=$(project_root)/quality_control/$(run)
 
@@ -93,7 +100,7 @@ sblout_files = $(patsubst %.sfasta,%.sblout,$(sfasta_files))
 ##### PHASE1 ends with redefining sfasta and related files.
 #####
 
-all: $(dir)/PHASE2
+all: check_parameters $(dir)/PHASE2
 
 # PHASE 2 starts, after the fasta files for alignment have been generated
 # otherwise, make does not know which files belong to *.cfasta and *.caln
@@ -112,15 +119,20 @@ $(dir)/PHASE1:
 ##### PHASE2 targets
 #####
 
-$(dir)/qualitycontrol.done: $(dir)/allsigout.done
+$(dir)/qualitycontrol.done: $(dir)/allsigout.done $(dir)/metainfotodb.done
+ifeq ($(receptor_type), IG)
+	./create_spatials.py $(experiment_id) $(run)
+else ifeq ($(receptor_type), TCR)
+	./create_spatials_tcr.py $(experiment_id) $(run)
+endif
 	Rscript pipeline_QC.R --run $(run) --qcdir $(quality_base_dir)
+	touch $@
 
 # upload metainformation
 # DONT FORGET to put the plate and metainfo to the raw_data directory
 $(dir)/metainfotodb.done: $(dir)/mutations.done
 	./todb_sampleinfo_highth.pl -p $(raw_data)/*_plate.tsv -m $(raw_data)/*_metainfo.tsv -pb $(raw_data)/*_platebarcode.tsv -exp $(experiment_id)
 	Rscript todb_flow.R --path $(raw_data)
-	./create_spatials.py $(experiment_id) $(run)
 	touch $@
 
 # when igblast alignments uploaded, calculate mutations on all output files
@@ -144,21 +156,18 @@ $(dir)/igblastalignments.done: $(sigout_files)
 $(dir)/cdrfwrtodb.done: $(sigout_files) $(sfasta_files) $(dir)/allsigout.done
 	cat $(sigout_files) > $@.x
 	./todb_CDR_FWR.pl -io $@.x
-	#rm $@.x
 	touch $@
 
 # upload sequence VDJ segments
 $(dir)/allsigout.done: $(sigout_files) $(sfasta_files)
 	cat $(sigout_files) > $@.x
 	./todb_VDJ.pl -t VDJ_segments -io $@.x -ut sequences
-	#rm $@.x
 	touch $@
 
 # upload sequence constant segments
 $(dir)/allsblout.done: $(sblout_files) $(sfasta_files)
 	cat $(sblout_files) > $@.x
 	./todb_constant.pl -bo $@.x -t constant_segments
-	#rm $@.x
 	touch $@
 
 # how to generate sequence blout from sfasta
@@ -196,36 +205,43 @@ $(dir)/allaligntodb.done: $(dir)/consensusfasta.done $(caln_files)
 
 # get all the consensus fasta from the database
 # only here cfasta and caln variables can be updated
-$(dir)/consensusfasta.done: $(dir)/todb_consensus_tags_H.done $(dir)/todb_consensus_tags_K.done $(dir)/todb_consensus_tags_L.done
+$(dir)/consensusfasta.done: $(dir)/todb_consensus_tags.done
 	./fromdb_consensus_fasta.pl -p $(dir)
 	$(eval cfasta_files:=$(wildcard $(dir)/cons_*_seqs.cfasta))
 	$(eval caln_files:=$(patsubst %.cfasta, %.caln, $(cfasta_files)))
 	touch $@
 
-# distribute consensus ids for this matrix HEAVY
-$(dir)/todb_consensus_tags_H.done: $(dir)/allrigout.done $(dir)/allrblout.done $(dir)/allrazers.done
-ifndef experiment_id
-	@echo "specify the name of the experiment/matrix using experiment_id=<experiment_id>"
-	exit 1
-endif	
+# assign consensus ids for the involved loci
+$(dir)/todb_consensus_tags.done: $(dir)/allrigout.done $(dir)/allrblout.done $(dir)/allrazers.done
+ifeq ($(receptor_type), IG)
+	$(MAKE) $(dir)/todb_consensus_tags_H.done $(dir)/todb_consensus_tags_K.done $(dir)/todb_consensus_tags_L.done
+else ifeq ($(receptor_type), TCR)
+	$(MAKE) $(dir)/todb_consensus_tags_A.done $(dir)/todb_consensus_tags_B.done
+endif
+	touch $@
+
+# consensus ids for TCR/ALPHA
+$(dir)/todb_consensus_tags_A.done:
+	./todb_consensus_tags.pl -m $(experiment_id) -l A
+	touch $@
+
+# consensus ids for TCR/BETA
+$(dir)/todb_consensus_tags_B.done:
+	./todb_consensus_tags.pl -m $(experiment_id) -l B
+	touch $@
+
+# consensus ids for IG/HEAVY
+$(dir)/todb_consensus_tags_H.done:
 	./todb_consensus_tags.pl -m $(experiment_id) -l H
 	touch $@
-	
-# distribute consensus ids for this matrix KAPPA
-$(dir)/todb_consensus_tags_K.done: $(dir)/allrigout.done $(dir)/allrblout.done $(dir)/allrazers.done
-ifndef experiment_id
-	@echo "specify the name of the experiment/matrix using experiment_id=<experiment_id>"
-	exit 1
-endif	
+
+# consensus ids for IG/KAPPA
+$(dir)/todb_consensus_tags_K.done:
 	./todb_consensus_tags.pl -m $(experiment_id) -l K
 	touch $@
-	
-# distribute consensus ids for this matrix LAMBDA
-$(dir)/todb_consensus_tags_L.done: $(dir)/allrigout.done $(dir)/allrblout.done $(dir)/allrazers.done
-ifndef experiment_id
-	@echo "specify the name of the experiment/matrix using experiment_id=<experiment_id>"
-	exit 1
-endif	
+
+# consensus ids for IG/LAMBDA
+$(dir)/todb_consensus_tags_L.done:
 	./todb_consensus_tags.pl -m $(experiment_id) -l L
 	touch $@
 
@@ -274,6 +290,17 @@ $(dir)/$(notdir %.todb_reads_done ): $(raw_data)/$(notdir %.fasta)
 	./todb_reads.pl -f $< -q $<.qual -ri $<.info -m $(experiment_id)
 	touch $@
 
+.PHONY: check_parameters
+
+check_parameters:
+ifndef run
+	@echo "[Makefile][FATAL] Missing mandatory command-line parameter experiment_id!"
+	exit 1
+endif
+ifndef experiment_id
+	@echo "[Makefile][FATAL] Missing mandatory command-line parameter run!"
+	exit 1
+endif
 
 
 #####
