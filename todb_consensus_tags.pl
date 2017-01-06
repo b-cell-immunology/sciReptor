@@ -17,7 +17,7 @@ write the identifying tags to consensus stats and the corresponding to the reads
 Necessary input:
 
 -m	Experiment ID (formerly called matrix)
--l	locus [H,K,L]
+-l	locus [A,B,H,K,L]
 
 Steps:
 
@@ -128,7 +128,7 @@ print "\nSelected $count_seqs reads for processing from locus ${fixed_locus}.\n"
 
 # print to STDOUT
 if ($conf{log_level} >= 3) {
-	print STDOUT "[todb_consensus_tags.pl][INFO] locus ${fixed_locus}: selected $count_seqs reads for processing.\n";
+	print STDOUT "[todb_consensus_tags.pl][INFO] Locus ${fixed_locus}: Selected $count_seqs reads for processing.\n";
 }
 
 
@@ -162,7 +162,7 @@ my $sel_Rtags_sth = $dbh->prepare("SELECT found.tag_id, lib.name
 
 ### 3. Prepare database to insert well_id
 # assign the well id to each previously selected read
-# the well id is composed by column and row tag and 1,2 or three for H, K, L
+# the well id is composed by column and row tag and a number 1-5 representing the loci H, K, L, B, A
 # i.e. CCCRRRL -> INT(7)
 
 # update well_id in reads
@@ -231,7 +231,7 @@ foreach my $wellid_curr (keys %hash_wellid_seqid) {
 	$cnt_reads_updated += scalar @seqids_curr;
 
 	my $statement_update_reads_wellid = "UPDATE $conf{database}.reads SET well_id = $wellid_curr WHERE seq_id IN (" . join(",", @seqids_curr) . ");";
-	if ($conf{log_level} >= 3) {
+	if ($conf{log_level} >= 5) {
 		print STDOUT "[todb_consensus_tags.pl][DEBUG+] SQL UPDATE statement: ${statement_update_reads_wellid}\n";
 	}
 	my $sql_update_reads_wellid = $dbh->prepare($statement_update_reads_wellid);
@@ -244,7 +244,7 @@ foreach my $wellid_curr (keys %hash_wellid_seqid) {
 
 # status update to STDOUT
 if ($conf{log_level} >= 3) {
-	print STDOUT "[todb_consensus_tags.pl][INFO] Locus $fixed_locus : Assigned $cnt_reads_updated reads to $cnt_wellids_assigned wells.\n"
+	print STDOUT "[todb_consensus_tags.pl][INFO] Locus ${fixed_locus}: Assigned $cnt_reads_updated reads to $cnt_wellids_assigned wells.\n"
 }
 
 
@@ -315,7 +315,7 @@ while (my @wellid_row = $sel_wellid->fetchrow_array) {
 	my $coltag = "C".(substr $well_id,0,3);
 	my $rowtag = "R".(substr $well_id,3,3);
 
-	if ($conf{log_level} >= 3) {
+	if ($conf{log_level} >= 4) {
 		print STDOUT "[todb_consensus_tags.pl][DEBUG] Locus $fixed_locus : Processing well locus ${locus} column ${coltag} row ${rowtag}.\n";
 	}
 
@@ -332,7 +332,7 @@ while (my @wellid_row = $sel_wellid->fetchrow_array) {
 		$sel_seqids->execute($well_id, $Vsegm_id, $Jsegm_id);
 		
 		my $n_seq = $sel_seqids->rows;
-		if ($conf{log_level} >= 3) {
+		if ($conf{log_level} >= 4) {
 			print STDOUT "[todb_consensus_tags.pl][DEBUG] Locus ${locus} column ${coltag} row ${rowtag} : Consensus $consensus_id has $n_seq reads.\n";
 		}
 
@@ -348,7 +348,7 @@ while (my @wellid_row = $sel_wellid->fetchrow_array) {
 		if (scalar @sel_seqid > 0) {
 			# update the reads table with consensus_id
 			my $sql_ins_seq = "UPDATE $conf{database}.reads SET consensus_id=${consensus_id} WHERE seq_id IN (" . join(",", @sel_seqid) . ");";
-			if ($conf{log_level} >= 3) {
+			if ($conf{log_level} >= 5) {
 				print STDOUT "[todb_consensus_tags.pl][DEBUG+] SQL UPDATE statement: ${sql_ins_seq}\n";
 			}
 			my $update_consensus = $dbh->prepare($sql_ins_seq);
@@ -356,7 +356,7 @@ while (my @wellid_row = $sel_wellid->fetchrow_array) {
 			$cnt_reads_consensus_updated = $update_consensus->rows;
 		}
 
-		if ($conf{log_level} >= 3) {
+		if ($conf{log_level} >= 4) {
 			print STDOUT "[todb_consensus_tags.pl][DEBUG] Locus ${locus} column ${coltag} row ${rowtag} consensus $consensus_id : Updated $cnt_reads_consensus_updated reads.\n";
 		}
 	}

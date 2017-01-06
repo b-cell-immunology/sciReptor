@@ -205,53 +205,57 @@ while (<$meta>) {
 		my $count_sequences =0;
 
 		# get the corresponding events
-		my @wells = @{$id_row_col_hash{$identifier}};
-		if ($conf{log_level} >= 4) { print "[todb_sampleinfo_highth.pl][DEBUG] Metainfo identifier $identifier has " . scalar(@wells) . " wells on plates.\n" };
+		if (exists $id_row_col_hash{$identifier}) {
+			my @wells = @{$id_row_col_hash{$identifier}};
+			if ($conf{log_level} >= 4) { print "[todb_sampleinfo_highth.pl][DEBUG] Metainfo identifier $identifier has " . scalar(@wells) . " wells on plates.\n" };
 
-		foreach (@wells) {
-			my ($row_tag, $col_tag) = split("-", $_);
-			my $row = substr $row_tag, 1, 3;
-			my $col = substr $col_tag, 1, 3;
+			foreach (@wells) {
+				my ($row_tag, $col_tag) = split("-", $_);
+				my $row = substr $row_tag, 1, 3;
+				my $col = substr $col_tag, 1, 3;
 
-			# only if correct row and col have been found
-			unless ($row > 0 && $col > 0) {last;}
+				# only if correct row and col have been found
+				unless ($row > 0 && $col > 0) {last;}
 
-			# convert row col information to well plate
-			my $plate = ceil($col/$n_col_per_plate) + ((ceil($row/$n_row_per_plate) - 1 ) * $col_num/$n_col_per_plate);
+				# convert row col information to well plate
+				my $plate = ceil($col/$n_col_per_plate) + ((ceil($row/$n_row_per_plate) - 1 ) * $col_num/$n_col_per_plate);
 
-			# for modulo calculation origin needs to be (0,0)
-			my $new_row = $row -1;
-			my $new_col = $col -1;
-			my $well = ($new_col %= $n_col_per_plate) + (($new_row %= $n_row_per_plate)) * $n_col_per_plate +1;
+				# for modulo calculation origin needs to be (0,0)
+				my $new_row = $row -1;
+				my $new_col = $col -1;
+				my $well = ($new_col %= $n_col_per_plate) + (($new_row %= $n_row_per_plate)) * $n_col_per_plate +1;
 
-			$ins_event->execute($well, $plate, $row, $col, $sort_id, $conf{plate_layout}, $plate_barcode_hash{$plate});
-			my $event_id = $dbh->{mysql_insertid};
-			if ($conf{log_level} >= 4) { print "[todb_sampleinfo_highth.pl][DEBUG] Inserted event $event_id with well $well, plate $plate, row $row, column $col, sort id $sort_id, plate layout $conf{plate_layout}, plate barcode $plate_barcode_hash{$plate}.\n" };
-			$count_events++;
+				$ins_event->execute($well, $plate, $row, $col, $sort_id, $conf{plate_layout}, $plate_barcode_hash{$plate});
+				my $event_id = $dbh->{mysql_insertid};
+				if ($conf{log_level} >= 4) { print "[todb_sampleinfo_highth.pl][DEBUG] Inserted event $event_id with well $well, plate $plate, row $row, column $col, sort id $sort_id, plate layout $conf{plate_layout}, plate barcode $plate_barcode_hash{$plate}.\n" };
+				$count_events++;
 
-			foreach my $locus (@loci_current) {
-				# correct for tag confusion
-				my ($corr_col_tag, $corr_row_tag) = correct_tagconfusion::correct_tags($col_tag, $row_tag, $locus);
+				foreach my $locus (@loci_current) {
+					# correct for tag confusion
+					my ($corr_col_tag, $corr_row_tag) = correct_tagconfusion::correct_tags($col_tag, $row_tag, $locus);
 				
-				# log the tag correction
-				if ($corr_col_tag ne $col_tag || $corr_row_tag ne $row_tag) {
-					if ($conf{log_level} >= 2) {
-						print "[todb_sampleinfo_highth.pl][WARNING] Tag correction performed for event $event_id on $locus locus: $col_tag, $row_tag -> $corr_col_tag, $corr_row_tag (column, row).\n";
+					# log the tag correction
+					if ($corr_col_tag ne $col_tag || $corr_row_tag ne $row_tag) {
+						if ($conf{log_level} >= 2) {
+							print "[todb_sampleinfo_highth.pl][WARNING] Tag correction performed for event $event_id on $locus locus: $col_tag, $row_tag -> $corr_col_tag, $corr_row_tag (column, row).\n";
+						}
+					}
+					# get the corresponding sequence id
+					$sel_seq_id->execute($corr_row_tag, $corr_col_tag, $locus, $experiment_id);
+					while (my @row = $sel_seq_id->fetchrow_array) {
+						my $seq_id = $row[0];
+						$update_event->execute($event_id, $seq_id);
+						$count_sequences++;
 					}
 				}
-				# get the corresponding sequence id
-				$sel_seq_id->execute($corr_row_tag, $corr_col_tag, $locus, $experiment_id);
-				while (my @row = $sel_seq_id->fetchrow_array) {
-					my $seq_id = $row[0];
-					$update_event->execute($event_id, $seq_id);
-					$count_sequences++;
-				}
 			}
-		}
 
-		# log event and sequence count
-		if ($conf{log_level} >= 3) {
-			print "[todb_sampleinfo_highth.pl][INFO] Donor \"$donor_id\", sample \"$sample_id\", sort \"$sort_id\": $count_events events and $count_sequences sequences ( Loci: @loci_current ).\n";
+			# log event and sequence count
+			if ($conf{log_level} >= 3) {
+				print "[todb_sampleinfo_highth.pl][INFO] Donor \"$donor_id\", sample \"$sample_id\", sort \"$sort_id\": $count_events events and $count_sequences sequences ( Loci: @loci_current ).\n";
+			}
+		} else {
+			print "[todb_sampleinfo_highth.pl][WARNING] Metadata identifier $identifier (Donor ID: $donor_id Sample ID: $sample_id Sort ID: $sort_id) has NO assigned events in _plate.tsv\n";
 		}
 	}
 }

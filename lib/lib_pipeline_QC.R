@@ -47,6 +47,8 @@ func.tag.stats <- function(connection.mysql, name.database, name.run, tag.landin
 		"locus" = locus
 	)
 
+	if(debug.level >= 4) cat(paste("[lib_pipeline_QC.R][DEBUG] Selecting seq_id of reads from run ", name.run, " and locus ", locus, "\n", sep=""));
+
 	selected.seq_ids <- dbGetQuery(connection.mysql,
 		paste(
 			"SELECT seq_id ",
@@ -59,10 +61,12 @@ func.tag.stats <- function(connection.mysql, name.database, name.run, tag.landin
 		)
 	)
 
+	if(debug.level >= 4) cat(paste("[lib_pipeline_QC.R][DEBUG] Retrieved ", nrow(selected.seq_ids), " reads for locus ", locus, "\n", sep=""));
+
 	if (nrow(selected.seq_ids) > 0) {
 		for (current.seq_id in selected.seq_ids[,"seq_id"]) {
 
-			if(debug.level >= 4) cat(paste("[lib_pipeline_QC.R][DEBUG] Selecting reads with seq_id ", current.seq_id, " and locus ", locus, "\n", sep=""));
+			if(debug.level >= 5) cat(paste("[lib_pipeline_QC.R][DEBUG+] Selecting tags of read with seq_id ", current.seq_id, " and locus ", locus, "\n", sep=""));
 
 			temp.forward <- dbGetQuery(connection.mysql,
 				paste(
