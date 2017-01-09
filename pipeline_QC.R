@@ -1,16 +1,12 @@
 # Name:			pipeline_QC.R
-# Verson:		0.1.5 (2015-02-08)
+# Verson:		0.1.6 (2017-01-09)
 # Authors:		Christian Busse, Katharina Imkeller
-# Maintainer:	Christian Busse (busse@mpiib-berlin.mpg.de)
+# Maintainer:	Christian Busse (christian.busse@dkfz-heidelberg.de)
 # Licence:		AGPL3
 # Provides:		This script produces all plots required for quality control (QC) of a run.
 # Requires:		lib_pipeline_common, lib_pipeline_QC, lib_authentication_common, RMySQL
 # Notes:		Running QC on a DB with 500 kReads requires: 1 CPU core for 1 hour, 1 GB / 250 MB
 #				network traffic (Rx/Tx), 250 MB / 3.5 GB RAM (ave. / peak), around 80 min. wall clock time
-# Changes:		KI Oct 2014: PDFs are now stored in the quality output directory.
-#				CB Dec 2014: Handles lacking sequence data for individual loci gracefully, less noisy output
-#				CB Feb 2015: config file and output dirs via command line, log levels
-#
 #
 library(RMySQL)
 source("lib/lib_pipeline_common.R")
@@ -69,10 +65,18 @@ if(! is.null(list.config.global[["log_level"]])) {
 # The following lists define loci and directions. The list.config.loci determines which loci will be included in the DB queries. Both lists
 # determine which loci or directions will be included in the print-outs.
 #
+
 list.config.loci <- list(
-	B = "beta",
-	A = "alpha"
-)
+	IG = list(
+		H = "heavy",
+		K = "kappa",
+		L = "lambda"
+	),
+	TCR = list(
+		B = "beta",
+		A = "alpha"
+	)
+)[[ toupper(list.config.global[["receptor_type"]]) ]]
 
 list.config.directions <- list(
 	F = "proximal",
@@ -85,9 +89,16 @@ list.config.directions <- list(
 # Which colors used to mark-up loci in mixed plots
 #
 list.config.colors.locus <- list(
-	B = "#FF1F00",
-	A = "#3F3FFF"
-)
+	IG = list(
+		H = "#FF1F00",
+		K = "#009F00",
+		L = "#3F3FFF"
+	),
+	TCR = list(
+		B = "#FF1F00",
+		A = "#3F3FFF"
+	)
+)[[ toupper(list.config.global[["receptor_type"]]) ]]
 
 # Get a DB connection, using ".my.cnf" group (specify alternative file using "default.file" keyword)
 #
