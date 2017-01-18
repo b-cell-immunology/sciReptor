@@ -27,12 +27,9 @@
 #				- "status"	[vector]	Aggregated numbers of reads with no, distal only, proximal only and both tags are 
 #										in elements 1 to 4, respectively
 #				- "locus"	[char]		The name of the locus as provided in the 'locus' parameter
-# Description:	This function provides a basic statistic of reads and tag identification status of a run. The requests are made
-#				in two stages since MySQL does not  provide an PARTITION function that would allow to obtain the best tag match
-#				for a given read. Therefore this is implemented as a two stage process, first to obtain the list of all reads
-#				that match the criteria (run, locus) and then request the best tags for a given # read and tag position (proximal
-#				or distal). Note that the "F" and "R" used here pertain to *tag* and not to *read* directionality. They are
-#				hardcoded here since they are part of the basic DB structure that is unlikely to change.
+# Description:	This function provides a basic statistic of reads and tag identification status of a run. Note that the "F" and "R"
+#				used here pertain to *tag* and not to *read* directionality. They are hardcoded here since they are part of the basic
+#				DB structure that is unlikely to change.
 #
 func.tag.stats <- function(connection.mysql, name.database, name.run, tag.landing.zone, locus, debug.level) {
 
@@ -47,53 +44,60 @@ func.tag.stats <- function(connection.mysql, name.database, name.run, tag.landin
 		"locus" = locus
 	)
 
-	if(debug.level >= 4) cat(paste("[lib_pipeline_QC.R][DEBUG] Selecting seq_id of reads from run ", name.run, " and locus ", locus, "\n", sep=""));
+	if(debug.level >= 3) cat(paste("[lib_pipeline_QC.R][DEBUG] Selecting all reads from run ", name.run, " and locus ", locus, "\n", sep=""));
 
-	selected.seq_ids <- dbGetQuery(connection.mysql,
-		paste(
-			"SELECT seq_id ",
-			"FROM ", name.database,".reads ",
-			"JOIN (SELECT sequencing_run_id FROM ", name.database,".sequencing_run ",
-			"WHERE sequencing_run.name='", name.run, "') AS selected_run ",
-			"ON reads.sequencing_run_id = selected_run.sequencing_run_id ",
-			"WHERE locus='", locus, "'",
+	selected.seq_ids <- as.matrix(dbGetQuery(connection.mysql,
+		paste("SELECT ",
+			"tags_for.insertion AS F_insertion, tags_for.deletion AS F_deletion, tags_for.replacement AS F_replacement, ",
+			"tags_rev.insertion AS R_insertion, tags_rev.deletion AS R_deletion, tags_rev.replacement AS R_replacement ",
+			"FROM ( ",
+				"SELECT seq_id ",
+				"FROM ", name.database,".reads ",
+				"INNER JOIN ( ",
+					"SELECT sequencing_run_id FROM ", name.database,".sequencing_run WHERE sequencing_run.name='", name.run,"' ",
+				") AS selected_run ",
+				"ON reads.sequencing_run_id = selected_run.sequencing_run_id ",
+				"WHERE locus='", locus,"' ",
+			") AS sel_reads ",
+			"LEFT OUTER JOIN ( ",
+				"SELECT f1.* ",
+				"FROM ( ",
+					"SELECT * FROM ", name.database,".reads_tags WHERE direction='F' ",
+				") AS f1 ",
+				"LEFT OUTER JOIN ( ",
+					"SELECT * FROM ", name.database,".reads_tags WHERE direction='F' ",
+				") AS f2 ",
+				"ON f1.seq_id=f2.seq_id AND ( f1.percid < f2.percid OR (f1.percid = f2.percid AND f1.start > f2.start)) ",
+				"WHERE f2.reads_tagid IS NULL ",
+			") AS tags_for ",
+			"ON sel_reads.seq_id=tags_for.seq_id ",
+			"LEFT OUTER JOIN ( ",
+				"SELECT r1.* ",
+				"FROM ( ",
+					"SELECT * FROM ", name.database,".reads_tags WHERE direction='R' AND start >= ", tag.landing.zone, " ",
+				") AS r1 ",
+				"LEFT OUTER JOIN ( ",
+					"SELECT * FROM ", name.database,".reads_tags WHERE direction='R' AND start >= ", tag.landing.zone, " ",
+				") AS r2 ",
+				"ON r1.seq_id=r2.seq_id ",
+				"AND ( r1.percid < r2.percid OR (r1.percid = r2.percid AND r1.start < r2.start)) ",
+				"WHERE r2.reads_tagid IS NULL ",
+			") AS tags_rev ",
+			"ON sel_reads.seq_id=tags_rev.seq_id;",
 			sep=""
 		)
-	)
+	))
 
-	if(debug.level >= 4) cat(paste("[lib_pipeline_QC.R][DEBUG] Retrieved ", nrow(selected.seq_ids), " reads for locus ", locus, "\n", sep=""));
+	if(debug.level >= 3) cat(paste("[lib_pipeline_QC.R][DEBUG] Retrieved ", nrow(selected.seq_ids), " entries for locus ", locus, "\n", sep=""));
 
 	if (nrow(selected.seq_ids) > 0) {
-		for (current.seq_id in selected.seq_ids[,"seq_id"]) {
+		for (current.line in 1:nrow(selected.seq_ids)) {
+			temp.forward <- selected.seq_ids[current.line, c("F_insertion" ,"F_deletion", "F_replacement")]
+			temp.reverse <- selected.seq_ids[current.line, c("R_insertion" ,"R_deletion", "R_replacement")]
+			names(temp.forward) <- c("insertion", "deletion", "replacement")
+			names(temp.reverse) <- c("insertion", "deletion", "replacement")
 
-			if(debug.level >= 5) cat(paste("[lib_pipeline_QC.R][DEBUG+] Selecting tags of read with seq_id ", current.seq_id, " and locus ", locus, "\n", sep=""));
-
-			temp.forward <- dbGetQuery(connection.mysql,
-				paste(
-					"SELECT insertion, deletion, replacement ",
-					"FROM ", name.database, ".reads_tags ",
-					"WHERE seq_id = ", current.seq_id, " ",
-					"AND direction = 'F' ",
-					"ORDER BY percid DESC, start ASC ",
-					"LIMIT 1;",
-					sep=""
-				)
-			)
-
-			temp.reverse <- dbGetQuery(connection.mysql,
-				paste(
-					"SELECT insertion, deletion, replacement ",
-					"FROM ", name.database, ".reads_tags ",
-					"WHERE seq_id = ", current.seq_id, " ",
-					"AND direction = 'R' ",
-					"AND start >= ", tag.landing.zone ," ",
-					"ORDER BY percid DESC, start DESC ",
-					"LIMIT 1;",
-					sep=""
-				)
-			)
-
-			temp.status <- dim(temp.forward)[1] * 2 + dim(temp.reverse)[1]
+			temp.status <- (! is.na(temp.forward[1])) * 2 + (! is.na(temp.reverse[1])) * 1
 
 			list.output[["status"]][temp.status + 1] <- list.output[["status"]][temp.status + 1] + 1
 

@@ -123,8 +123,7 @@ df.locus.counts <- func.locus.count(
 )
 
 
-# Do the actual database request. This can take a long time (hours), for further information see comment in lib_pipeline_QC.R.
-# Parallelization has not yet been tested, however one potential problem is the simultanious use of the same DB connection.
+# Do the actual database request, for further information see comment in lib_pipeline_QC.R.
 #
 list.tag.stats <- lapply(
 	X = names(list.config.loci),
