@@ -271,7 +271,7 @@ my $sel_VJs = $dbh->prepare("SELECT Vseg.VDJ_id, Jseg.VDJ_id, COUNT(*) as cnt
 	AND Vseg.igblast_rank=1 AND Jseg.igblast_rank=1
 	AND reads.well_id = ?
 	AND sequencing_run.experiment_id = '$experiment_id'
-	GROUP BY CONCAT(Vseg.VDJ_id, Jseg.VDJ_id)
+	GROUP BY Vseg.VDJ_id, Jseg.VDJ_id
 	ORDER BY cnt DESC
 	LIMIT 2;");
 
