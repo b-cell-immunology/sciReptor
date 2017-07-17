@@ -5,6 +5,8 @@ Module for common processes in bcelldb computing:
 """
 
 import re
+re_key_value = re.compile("^\s*([_A-Za-z][_0-9A-Za-z]+)=(.*?)\s*;?\s*$")
+re_inline_comment = re.compile("^(.*?)(?<!\\\\)#.*")
 
 def get_config():
 	"""
@@ -28,13 +30,12 @@ def get_config():
 	
 	# read lines of config
 	for line in config_file:
-		# every line with # is used as a comment line
-		if re.search('=', line) and not re.match('\s?#', line):
-			# split entries into key-value
-			[key, value] = re.split("=", line)
-                # get rid of new line
-			conf[key] = value[:-1]
+		line = line.rstrip()
+		if not re.match("^\s*$", line) and not re.match("^\s*#", line):
+			# Split entries into key-value.
+			line = re_inline_comment.sub('\g<1>', line)
+			key, value = re_key_value.match(line).group(1,2)
+			conf[key] = value
 
-	# return conf[]
 	return conf 
 
