@@ -390,7 +390,7 @@ lapply(
 							),
 							silent=TRUE
 						)
-						if (! is.null(status.insert.event)) {
+						if (class(status.insert.event)[1] == "try-error") {
 							if (config.debug.level >= 2) {
 								cat(
 									paste(
