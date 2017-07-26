@@ -50,6 +50,7 @@ then
 fi;
 
 TEMP_LOGFILE="../pipeline_run_${PIPELINE_RUN}_$( date --utc +%Y-%m-%d-%H-%M-%S )_$( openssl rand -base64 3 | tr [OIl/+=] [oiLXYZ] ).log"
+touch $TEMP_LOGFILE
 echo Logging to $TEMP_LOGFILE
 nohup make -j ${PIPELINE_CORES} all run=${PIPELINE_RUN} experiment_id=${PIPELINE_EXPERIMENT_ID} > ${TEMP_LOGFILE} 2>&1 &
 MAKE_PID=$!
