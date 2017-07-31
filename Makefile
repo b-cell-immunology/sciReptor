@@ -322,8 +322,8 @@ ifndef run
 	@echo "specify run using run=<runname>, i.e. subdirectory where raw data is stored"
 	exit 1
 endif
-	find $(dir) -type f | xargs -r rm
-	find $(quality_control) -type f | xargs -r rm
+	find $(dir) -type f -print0 | xargs -0 -r rm
+	find $(quality_control) -type f -print0 | xargs -0 -r rm
 
 convert-sff: convert-sff-seq convert-sff-qual
 
