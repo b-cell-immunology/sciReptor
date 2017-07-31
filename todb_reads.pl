@@ -73,8 +73,6 @@ exec('perldoc',$0) if $help;
 
 ### 0. Logging information
 
-# all STDOUT will be logged to database
-select LOG;
 my $dbh = get_dbh($conf{database});
 
 
@@ -88,10 +86,10 @@ my $dbh = get_dbh($conf{database});
 my $fasta_in = Bio::SeqIO->new(-file => $fastafile, -format => 'fasta') or die "could not open $fastafile";
 my $qual_in = Bio::SeqIO->new(-file => $qualfile, -format => 'qual') or die "could not open $qualfile";
 
-# hash for sequences
+# hashes for sequences and quality
 my %id_seq_hash;
-# hash for quality
 my %id_qual_hash;
+
 # identifier list
 my @identifiers = ();
 
@@ -172,10 +170,12 @@ my $sequencing_run_id;
 if ($seq_run_bool eq 1) {	# this is true when $query2 returned one, i.e. successfully inserted run
 	$sequencing_run_id = $dbh->{'mysql_insertid'};
 	# print run info to logfile
-	print "Inserted sequencing run $sequencing_run_id, $runname, $rundate into sequencing_run table.\n";
+	printf LOG "Inserted run \"%s\" (%s) from %s as id %i into table \"sequencing_run\".\n", $runname, $optional, $rundate, $sequencing_run_id;
+	printf "[todb_reads.pl][INFO] Inserted run \"%s\" (%s) from %s as id %i into table \"sequencing_run\".\n", $runname, $optional, $rundate, $sequencing_run_id;
 }
 else {
-	print "Sequencing run already exists. Please check the sequencing run settings (date and name), if that is not correct.";
+	printf LOG "Run \"%s\" (%s) from %s was already present in table \"sequencing_run\" and not inserted.\n", $runname, $optional, $rundate;
+	printf "[todb_reads.pl][WARNING] Run \"%s\" (%s) from %s was already present in table \"sequencing_run\" and not inserted.\n", $runname, $optional, $rundate;
 }
 
 
@@ -183,15 +183,13 @@ else {
 ### 4. For each identifier write sequence, length, 
 ### quality and sequencing_run_id into reads table.
 
-# count the number of inserted reads
-my $n_inserted = 0;
-# count the total number of sequences
+# reset counter for the number of total and inserted reads
 my $n_reads = 0;
-#print "Reads inserted into reads table:\nname\tread_id\n";
+my $n_inserted = 0;
+
 foreach (@identifiers) {
 #	print "$_\t";
-	$n_reads++;	# count total reads
-	# update reads table and count the ones that where inserted
+	$n_reads++;
 	$n_inserted += $query1->execute(
 		$_,
 		length($id_seq_hash{$_}),
@@ -201,8 +199,8 @@ foreach (@identifiers) {
 	);
 #	print "$dbh->{'mysql_insertid'}\n";
 }
-print "total number of reads = $n_reads\n";
-print "number of inserted reads = $n_inserted\n";
-unless ($n_reads eq $n_inserted) {
-	print STDOUT "Warning! Not all the reads in fasta file where inserted. Some or all already existed.";
+print LOG "total number of reads = $n_reads\n";
+print LOG "number of inserted reads = $n_inserted\n";
+if ($n_reads ne $n_inserted) {
+	printf "[todb_reads.pl][WARNING] Only %i of the %is in \"%s\" were inserted into the database.\n", $n_inserted, $n_reads, $fastafile;
 }
