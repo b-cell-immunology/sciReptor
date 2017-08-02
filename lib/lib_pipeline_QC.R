@@ -44,7 +44,7 @@ func.tag.stats <- function(connection.mysql, name.database, name.run, tag.landin
 		"locus" = locus
 	)
 
-	if(debug.level >= 3) cat(paste("[lib_pipeline_QC.R][DEBUG] Selecting all reads from run ", name.run, " and locus ", locus, "\n", sep=""));
+	if(debug.level >= 4) cat(paste("[lib_pipeline_QC.R][DEBUG] Selecting all reads from run ", name.run, " and locus ", locus, "\n", sep=""));
 
 	selected.seq_ids <- as.matrix(dbGetQuery(connection.mysql,
 		paste("SELECT ",
@@ -88,7 +88,7 @@ func.tag.stats <- function(connection.mysql, name.database, name.run, tag.landin
 		)
 	))
 
-	if(debug.level >= 3) cat(paste("[lib_pipeline_QC.R][DEBUG] Retrieved ", nrow(selected.seq_ids), " entries for locus ", locus, "\n", sep=""));
+	if(debug.level >= 4) cat(paste("[lib_pipeline_QC.R][DEBUG] Retrieved ", nrow(selected.seq_ids), " entries for locus ", locus, "\n", sep=""));
 
 	if (nrow(selected.seq_ids) > 0) {
 		for (current.line in 1:nrow(selected.seq_ids)) {
@@ -181,11 +181,16 @@ func.locus.count <- function(connection.mysql, name.database, name.run){
 #				direction:			orientation of the tags
 #				aggregation.range	(maximum tag start position [bp] to be included + 1) (700 should be a good default)
 #				bin.size			size of bins in bp
+#				debug.level			[optional, level from config, range 0-5]
 # Returns:		A matrix containing the aggregated position counts for each locus
 # Description:	This function aggregates tag counts versus position and locus. The position binning is done with a width of <bin.size> bp
 #
 
-func.tag.position.aggregate <- function(connection.mysql, name.database, name.run, direction, aggregation.range, bin.size){
+func.tag.position.aggregate <- function(connection.mysql, name.database, name.run, direction, aggregation.range, bin.size, debug.level){
+
+	if(missing(debug.level)) {
+		debug.level <- 2
+	}
 
 	aggregation.bins <- ifelse(
 		aggregation.range/bin.size==trunc(aggregation.range/bin.size),
@@ -194,6 +199,7 @@ func.tag.position.aggregate <- function(connection.mysql, name.database, name.ru
 	)
 
 	func.matrix.aggregate <- function(positions, locus.current) {
+		if(debug.level >= 4) cat(paste("[lib_pipeline_QC.R][DEBUG] Aggregating tag positions for locus ", locus.current, "\n", sep=""));
 		vector.locus.select <- positions[,"locus"]==locus.current
 		vector.locus.range <- positions[,"posstart"] < aggregation.range
 		if (any(vector.locus.select & ! vector.locus.range)) {
@@ -230,6 +236,7 @@ func.tag.position.aggregate <- function(connection.mysql, name.database, name.ru
 		return(vector.output)
 	}
 
+	if(debug.level >= 4) cat(paste("[lib_pipeline_QC.R][DEBUG] Querying run ", name.run, " from database ", name.database, " with direction ", direction, " and bin size ", bin.size, "\n", sep=""));
 	df.tag.positions.binned <- dbGetQuery(
 		connection.mysql,
 		paste(

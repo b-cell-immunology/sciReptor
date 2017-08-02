@@ -370,19 +370,52 @@ list.tag.positions <- lapply(
 	name.database = list.config.global$database,
 	name.run = config.name.run,
 	aggregation.range = config.tag.aggregation.range,
-	bin.size = config.tag.bin.size
+	bin.size = config.tag.bin.size,
+	debug.level = config.debug.level
 )
 names(list.tag.positions) <- unlist(names(list.config.directions))
 
 if(length(list.tag.positions) > 1) {
+	for(temp.direction in names(list.tag.positions)){
+		temp.col.valid <- colnames(list.tag.positions[[temp.direction]])[colnames(list.tag.positions[[temp.direction]]) %in% names(list.config.loci)]
+		temp.col.invalid <- colnames(list.tag.positions[[temp.direction]])[! colnames(list.tag.positions[[temp.direction]]) %in% names(list.config.loci)]
+		if (length(temp.col.invalid) > 0) {
+			for(temp.locus.invalid in temp.col.invalid) {
+				if (config.debug.level >= 3) {
+					cat(paste("[pipeline_QC.R][INFO] Ignoring ", sum(list.tag.positions[[temp.direction]][,temp.locus.invalid])," ", list.config.directions[[temp.direction]] ," tags from invalid locus ", temp.locus.invalid, "\n", sep=""))
+				}
+			}
+			list.tag.positions[[temp.direction]] <- list.tag.positions[[temp.direction]][,temp.col.valid]
+		}
+
+		temp.col.missing <- names(list.config.loci)[! names(list.config.loci) %in% colnames(list.tag.positions[[temp.direction]])]
+		if (length(temp.col.missing) > 0) {
+			for(temp.locus.missing in temp.col.missing) {
+				if (config.debug.level >= 2) {
+					cat(paste("[pipeline_QC.R][WARNING] Tags for locus ", temp.locus.missing, " were expected but not found within the set of ", list.config.directions[[temp.direction]] ," tags\n", sep=""))
+				}
+			}
+			list.tag.positions[[temp.direction]] <- cbind(
+				list.tag.positions[[temp.direction]],
+				matrix(
+					rep(0, length(list.tag.positions[[1]][,1]) * length(temp.col.missing)),
+					ncol=length(temp.col.missing),
+					dimnames=list(NULL, temp.col.missing)
+				)
+			)
+			list.tag.positions[[temp.direction]] <- list.tag.positions[[temp.direction]][,sort(colnames(list.tag.positions[[temp.direction]]))]
+		}
+	}
+
 	temp.array <- matrix(
-		rep(0,length(list.tag.positions[[1]])),
-		ncol=ncol(list.tag.positions[[1]]),
-		dimnames=list(NULL,colnames(list.tag.positions[[1]]))
+		rep(0, length(list.tag.positions[[1]][,1]) * length(list.config.loci)),
+		ncol=length(list.config.loci),
+		dimnames=list(NULL, sort(names(list.config.loci)))
 	)
+
 	for(temp.direction in names(list.tag.positions)){
 		temp.col.exist <- colnames(temp.array)[colnames(temp.array) %in% colnames(list.tag.positions[[temp.direction]])]
-		temp.array[,temp.col.exist] <- temp.array[,temp.col.exist] + list.tag.positions[[temp.direction]]
+		temp.array[,temp.col.exist] <- temp.array[,temp.col.exist] + (list.tag.positions[[temp.direction]][,temp.col.exist])
 	}
 	func.plot.tag.aggregate(direction="A", aggregate.array=list(A=temp.array), text.main="all")
 	rm(temp.array, temp.direction)
