@@ -101,59 +101,60 @@ n_consensus=5
 # lead to an unconditional match at position 0. Further note that the '.*' term at the begin of the CDR3
 # regexp is greedy and will result in matching the LAST occurrence of the motif. Removing it will cause
 # the expression to match the first occurrence.
-
-# The following motifs match the germline J segments of the human and mouse Ig loci
-# heavy
+#
+# Default Ig J segment motifs / human + mouse / based on germline sequence
+# Ig heavy
 h_CDR3_e=".*WG.G"
 h_altCDR3_e1=".*W..G"
 h_altCDR3_e2=".*WG.."
 h_altCDR3_e3=".*.G.G"
 h_Jend="VS[SA]"
 
-# kappa
+# Ig kappa
 k_CDR3_e=".*FG.G"
 k_altCDR3_e1=".*F..G"
 k_altCDR3_e2=".*FG.."
 k_altCDR3_e3=".*.G.G"
 k_Jend="T[KR][LV][ED]IK"
 
-# lambda
+# Ig lambda
 l_CDR3_e=".*FG.G"
 l_altCDR3_e1=".*F..G"
 l_altCDR3_e2=".*FG.."
 l_altCDR3_e3=".*.G.G"
 l_Jend="[TI][VIA]L"
 
-# TCR beta human
-b_CDR3_e=".*FG.G"
-b_altCDR3_e1=".*VG.G"
-b_altCDR3_e2="ZZZZ"
-b_altCDR3_e3="ZZZZ"
-b_Jend="L[LST][VI][LTV]"
-
-# TCR alpha human, uses positive lookahead into constant region since there is no good J segment consensus
-a_CDR3_e=".*FG.G"
-a_altCDR3_e1=".*F..G"
-a_altCDR3_e2=".*FG.."
-a_altCDR3_e3=".*.G.G"
-a_Jend=".(?=.IQNPDP)"
-
-## TCR beta mouse
+## Default TCR J segment motifs / human ONLY / based on germline sequence
+## TCR beta human (use only one altCDR3 as additional motifs tend to produce false (elongated) matches)
 # b_CDR3_e=".*FG.G"
-# b_altCDR3_e1=".*F..G"
-# b_altCDR3_e2=".*FG.."
-# b_altCDR3_e3=".*.G.G"
-# b_Jend="L[ILST]V[ILTV]"
+# b_altCDR3_e1=".*VG.G"
+# b_altCDR3_e2="ZZZZ"
+# b_altCDR3_e3="ZZZZ"
+# b_Jend="L[LST][VI][LTV]"
 
-## TCR alpha mouse ++FILLER ONLY++
+## TCR alpha human (uses positive lookahead into constant region due to the absense of a reliable J segment consensus)
 # a_CDR3_e=".*FG.G"
 # a_altCDR3_e1=".*F..G"
 # a_altCDR3_e2=".*FG.."
 # a_altCDR3_e3=".*.G.G"
-# a_Jend="L.V[LTIV]"
+# a_Jend=".(?=.IQNPDP)"
 
+# Default TCR J segment motifs / mouse ONLY / based on germline sequence
+# TCR beta mouse
+b_CDR3_e=".*FG.G"
+b_altCDR3_e1=".*F..G"
+b_altCDR3_e2=".*FG.."
+b_altCDR3_e3=".*.G.G"
+b_Jend="L[ILST]V[ILTV]"
 
-## The following motifs (heavy and kappa) are refined to work with more highly mutated human sequences
+# TCR alpha mouse (uses positive lookahead into constant region due to the absense of a reliable J segment consensus)
+a_CDR3_e=".*[FLW]G.G"
+a_altCDR3_e1=".*[FLW]..G"
+a_altCDR3_e2=".*[FLW]G.."
+a_altCDR3_e3=".*.G.G"
+a_Jend=".(?=.IQNPEP)"
+
+## Customized Ig J segment motifs / human ONLY / modified to work with highly mutated sequences
 # h_CDR3_e=".*WG.G"
 # h_altCDR3_e1=".*GQG"
 # h_altCDR3_e2=".*(W..G|WG..)"
@@ -183,7 +184,7 @@ blastdb_segments_J=database/${species}_gl_J
 blastdb_segments_C=database/${species}_gl_C
 blastdb_auxiliary=optional_file/${species}_gl.aux
 
-## internal default settings for mouse
+## custom settings for mouse GRCm38 database
 # blastdb_segments_V=database/mouse_grcm38_gl_V
 # blastdb_segments_D=database/mouse_grcm38_gl_D
 # blastdb_segments_J=database/mouse_grcm38_gl_J

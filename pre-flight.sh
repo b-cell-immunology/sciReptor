@@ -22,3 +22,7 @@ fi;
 echo current_tag: $CURRENT_TAG
 echo version    : $version
 
+# Pre-flight checks to be implemented:
+# 1. .fasta.info present for all .fasta files
+# 2. Check whether runname is identical between all *.fasta.info files of a run and with the runname provided via commandline
+# 3. Check whether DB schemes "database" and "library" exist and have the requires access privileges
