@@ -106,7 +106,7 @@ sub start_log
 	if (!$dry_run){
 		my $dbh = get_dbh();
 		my $ra=$dbh->do("INSERT INTO log_table
-				values(0,NOW(),\"$conf{version}\",\"$ENV{USER}\",user(),\"$command_line\",\"\")");
+				VALUES(0,NOW(),\"" . $conf{version} . "\",\"" . $ENV{USER} . "\",USER(),\"" . substr($command_line,0,100) . "\",\"\")");
 		die "no insert possible" unless $ra==1;
 		$log_id=$dbh->last_insert_id("","","","");
 		close_dbh($dbh);

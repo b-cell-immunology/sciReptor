@@ -191,7 +191,7 @@ foreach (@identifiers) {
 #	print "$_\t";
 	$n_reads++;
 	$n_inserted += $query1->execute(
-		$_,
+		substr($_,-45),
 		length($id_seq_hash{$_}),
 		$id_seq_hash{$_},
 		$id_qual_hash{$_},
