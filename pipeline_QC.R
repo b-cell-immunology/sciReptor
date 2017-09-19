@@ -385,7 +385,7 @@ if(length(list.tag.positions) > 1) {
 					cat(paste("[pipeline_QC.R][INFO] Ignoring ", sum(list.tag.positions[[temp.direction]][,temp.locus.invalid])," ", list.config.directions[[temp.direction]] ," tags from invalid locus ", temp.locus.invalid, "\n", sep=""))
 				}
 			}
-			list.tag.positions[[temp.direction]] <- list.tag.positions[[temp.direction]][,temp.col.valid]
+			list.tag.positions[[temp.direction]] <- list.tag.positions[[temp.direction]][,temp.col.valid, drop=FALSE]
 		}
 
 		temp.col.missing <- names(list.config.loci)[! names(list.config.loci) %in% colnames(list.tag.positions[[temp.direction]])]
