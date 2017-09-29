@@ -49,6 +49,15 @@ then
 	exit 1
 fi;
 
+if ( ./pre-flight.sh "$PIPELINE_RUN" );
+then
+	echo "Sanity checks passed."
+else
+	echo "Sanity checks FAILED! Please fix the errors listed above and run again."
+	exit 1;
+fi;
+
+
 TEMP_LOGFILE="../pipeline_run_${PIPELINE_RUN}_$( date --utc +%Y-%m-%d-%H-%M-%S )_$( openssl rand -base64 3 | tr [OIl/+=] [oiLXYZ] ).log"
 touch $TEMP_LOGFILE
 echo Logging to $TEMP_LOGFILE
