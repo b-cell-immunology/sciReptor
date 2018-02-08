@@ -130,6 +130,15 @@ func.read.indexed.FCS <- function(fcs.file.full, debug.level) {
 		)
 	}
 
+	if (nrow(exprs(fcs.data)) != fcs.index.sorting.sorted.location.count) {
+		stop(
+			paste(
+				"Number of entries in the raw data table (n=", nrow(exprs(fcs.data)),
+				") in file ", fcs.file.full, " does not match the number of sorted cells (n=", fcs.index.sorting.sorted.location.count,"). Aborting!",
+				sep=""
+			)
+		)
+	}
 
 	# Get metainfo on the type and size of the sorting device.
 	# ATTENTION: The device definition in BD FACSDiVa software is transposed (rows x columns) in comparision to the "normal" plate format (columns x rows).
@@ -195,6 +204,7 @@ func.read.indexed.FCS <- function(fcs.file.full, debug.level) {
 	# - index sorting locations are outside of the dimensions of the device
 	# - there are any column+row combinations that are non-unique
 	# - there are any event numbers that are non-unique
+	# - the number of parsed locations is identical to the number of recorded cells
 	#
 	if (any(duplicated(paste(fcs.index.sorting.wells[,"line"],fcs.index.sorting.wells[,"element"],sep="_")))) {
 		stop(
@@ -233,10 +243,20 @@ func.read.indexed.FCS <- function(fcs.file.full, debug.level) {
 		)
 	}
 
-	if ( any(duplicated(fcs.index.sorting.wells[,"event"]))) {
+	if (any(duplicated(fcs.index.sorting.wells[,"event"]))) {
 		stop(
 			paste(
 				"Collision in event numbers calculated from the INDEX SORTING LOCATIONS of file ", fcs.file.full, ". Aborting!",
+				sep=""
+			)
+		)
+	}
+
+	if (nrow(fcs.index.sorting.wells) != fcs.index.sorting.sorted.location.count) {
+		stop(
+			paste(
+				"Number of parsed INDEX SORTING LOCATIONS (n=", nrow(fcs.index.sorting.wells),
+				") in file ", fcs.file.full, " does not match the number of sorted events (n=", fcs.index.sorting.sorted.location.count,"). Aborting!",
 				sep=""
 			)
 		)
