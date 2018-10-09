@@ -11,7 +11,7 @@ SHOW WARNINGS;
 CREATE TABLE IF NOT EXISTS `donor` (
   `donor_id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
   `donor_identifier` VARCHAR(45) NOT NULL,
-  `background_treatment` VARCHAR(45) NULL,
+  `background_treatment` VARCHAR(2000) NULL,
   `project` VARCHAR(45) NOT NULL,
   `strain` VARCHAR(45) NULL,
   `add_donor_info` VARCHAR(2000) NULL,
@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS `sample` (
   `donor_id` INT NOT NULL,
   `tissue` VARCHAR(45) NOT NULL,
   `sampling_date` DATETIME NOT NULL,
-  `add_sample_info` VARCHAR(100) NULL,
+  `add_sample_info` VARCHAR(2000) NULL,
   PRIMARY KEY (`sample_id`),
   INDEX `fk_sample_patient1_idx` (`donor_id` ASC),
   UNIQUE INDEX `sample_id_UNIQUE` (`sample_id` ASC),
