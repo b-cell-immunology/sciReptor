@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS `sample` (
   `donor_id` INT NOT NULL,
   `tissue` VARCHAR(45) NOT NULL,
   `sampling_date` DATETIME NOT NULL,
-  `add_sample_info` VARCHAR(2000) NULL,
+  `add_sample_info` VARCHAR(500) NULL,
   PRIMARY KEY (`sample_id`),
   INDEX `fk_sample_patient1_idx` (`donor_id` ASC),
   UNIQUE INDEX `sample_id_UNIQUE` (`sample_id` ASC),
